@@ -20,8 +20,11 @@ def include_name(
     type_: Any,
     parent_names: Any,
 ) -> bool:
-    del parent_names
-    return not (type_ == "table" and name == "spatial_ref_sys")
+    if type_ == "schema":
+        return name in {None, "public"}
+    if type_ == "table":
+        return parent_names.get("schema_name") in {None, "public"} and name != "spatial_ref_sys"
+    return True
 
 
 def include_object(
@@ -31,8 +34,10 @@ def include_object(
     reflected: bool,
     compare_to: Any,
 ) -> bool:
-    del object_, reflected, compare_to
-    return not (type_ == "table" and name == "spatial_ref_sys")
+    del reflected, compare_to
+    if type_ != "table":
+        return True
+    return getattr(object_, "schema", None) in {None, "public"} and name != "spatial_ref_sys"
 
 
 def run_migrations_offline() -> None:
