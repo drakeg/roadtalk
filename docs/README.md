@@ -8,6 +8,10 @@
 - [Agile Workflow](AGILE_WORKFLOW.md)
 - [Architecture Decision Records](adr/README.md)
 
+## Sprint specifications
+
+- [Sprint 0: Planning & Architecture](sprints/sprint-0-planning-architecture.md) — Proposed
+
 ## Templates
 
 - [Sprint specification](templates/SPRINT_TEMPLATE.md)
