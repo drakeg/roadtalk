@@ -21,6 +21,8 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Database readiness checks and local migration commands.
 - Anonymous account/device registration with no profile, location, or audio collection.
 - Device-bound access tokens, hashed rotating refresh credentials, logout, device revocation, and replay-family revocation.
+- Expo/React Native iOS and Android development-build foundation.
+- Accessible navigation shell, typed public configuration, error boundary, and mobile smoke tests.
 
 ### Cost controls
 
@@ -29,7 +31,7 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 
 ### Not yet implemented
 
-- Mobile application foundation.
+- Mobile secure-session client.
 - CI/CD workflows.
 - Terraform infrastructure.
 - Deployment and monitoring.

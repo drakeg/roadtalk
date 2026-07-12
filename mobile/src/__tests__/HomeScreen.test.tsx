@@ -1,0 +1,34 @@
+import { fireEvent, render } from "@testing-library/react-native";
+
+import { HomeScreen } from "../screens/HomeScreen";
+
+describe("foundation screen", () => {
+  it("provides an accessible foundation shell and navigates to diagnostics", async () => {
+    const navigate = jest.fn();
+    const view = await render(
+      <HomeScreen
+        navigation={{ navigate } as never}
+        route={{ key: "foundation", name: "Foundation" }}
+      />,
+    );
+
+    expect(view.getByRole("header", { name: "RoadTalk" })).toBeOnTheScreen();
+    fireEvent.press(
+      view.getByRole("button", { name: "Open app diagnostics" }),
+    );
+    expect(navigate).toHaveBeenCalledWith("Diagnostics");
+  });
+
+  it("does not expose later-sprint features", async () => {
+    const view = await render(
+      <HomeScreen
+        navigation={{ navigate: jest.fn() } as never}
+        route={{ key: "foundation", name: "Foundation" }}
+      />,
+    );
+
+    expect(view.queryByText(/push.to.talk/i)).not.toBeOnTheScreen();
+    expect(view.queryByText(/nearby/i)).not.toBeOnTheScreen();
+    expect(view.queryByText(/channel/i)).not.toBeOnTheScreen();
+  });
+});
