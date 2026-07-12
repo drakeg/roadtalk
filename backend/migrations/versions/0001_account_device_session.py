@@ -3,10 +3,11 @@
 Revision ID: 0001
 Revises:
 """
+
 from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision: str = "0001"
 down_revision: str | None = None
@@ -44,11 +45,11 @@ def upgrade() -> None:
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
-        sa.CheckConstraint(
-            "platform IN ('android', 'ios')", name="ck_device_platform_allowed"
-        ),
+        sa.CheckConstraint("platform IN ('android', 'ios')", name="ck_device_platform_allowed"),
         sa.ForeignKeyConstraint(
-            ["account_id"], ["account.id"], name="fk_device_account_id_account",
+            ["account_id"],
+            ["account.id"],
+            name="fk_device_account_id_account",
             ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id", name="pk_device"),
@@ -68,11 +69,15 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["account_id"], ["account.id"], name="fk_session_account_id_account",
+            ["account_id"],
+            ["account.id"],
+            name="fk_session_account_id_account",
             ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
-            ["device_id"], ["device.id"], name="fk_session_device_id_device",
+            ["device_id"],
+            ["device.id"],
+            name="fk_session_device_id_device",
             ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id", name="pk_session"),
