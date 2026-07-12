@@ -48,6 +48,11 @@ The API listens on `127.0.0.1:8000` by default.
 | `GET /health/ready` | Registered dependency readiness. |
 | `GET /api/v1/system/version` | API version and environment. |
 | `GET /docs` | Local OpenAPI UI when enabled. |
+| `POST /api/v1/auth/anonymous` | Register an anonymous account and device session. |
+| `POST /api/v1/auth/refresh` | Rotate a refresh credential and issue a new token pair. |
+| `GET /api/v1/auth/session` | Validate the current access token/session. |
+| `POST /api/v1/auth/logout` | Revoke the current session. |
+| `DELETE /api/v1/auth/devices/{device_id}` | Revoke all active sessions for an owned device. |
 
 ## Checks
 
