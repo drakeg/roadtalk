@@ -1,6 +1,6 @@
 # ADR-0002: Control API architecture
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-07-12
 - Deciders: Product owner and RoadTalk architecture review
 - Sprint: 0
