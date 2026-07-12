@@ -4,7 +4,7 @@ set -eu
 terraform fmt -check -recursive infrastructure
 
 for root in infrastructure/bootstrap infrastructure/environments/field-test; do
-  terraform -chdir="$root" init -backend=false -input=false -no-color
+  terraform -chdir="$root" init -backend=false -reconfigure -input=false -no-color
   terraform -chdir="$root" validate -no-color
   AWS_ACCESS_KEY_ID=disabled-plan \
     AWS_SECRET_ACCESS_KEY=disabled-plan \
