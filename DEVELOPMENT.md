@@ -17,6 +17,20 @@ Do not implement profile/callsign, continuous location, PTT, proximity, channels
 7. Merge only after required checks and review pass.
 8. Update tracker/evidence; do not close dependent work prematurely.
 
+## Local dependencies
+
+The local PostgreSQL/PostGIS service and optional Redis profile are documented in the [local development runbook](docs/runbooks/local-development.md).
+
+Quick start:
+
+```sh
+make setup
+make up
+make verify-database
+```
+
+This creates no AWS resources. Application services and migrations are added by their assigned Sprint 1 deliverables.
+
 ## Component guides
 
 - [Mobile](mobile/README.md)
@@ -25,8 +39,6 @@ Do not implement profile/callsign, continuous location, PTT, proximity, channels
 - [Scripts](scripts/README.md)
 - [Documentation](docs/README.md)
 
-Each component guide currently describes ownership and boundaries. Executable setup commands arrive with the deliverable that creates the component; placeholders must not claim a working setup.
-
 ## Secrets and configuration
 
 - Never commit credentials, tokens, private keys, Terraform state, or populated environment files.
@@ -34,12 +46,13 @@ Each component guide currently describes ownership and boundaries. Executable se
 - Mobile builds never contain server or media-provider secrets.
 - Terraform references approved secret stores instead of receiving plaintext secrets.
 - Logs and test fixtures must not contain real user, location, credential, or audio data.
+- Local example credentials must never be reused outside a developer machine.
 
 ## Repository quality
 
 All text uses UTF-8 and LF line endings. Formatters and linters introduced by later Sprint 1 deliverables must respect `.editorconfig`.
 
-Generated dependencies, build output, local runtime data, reports, and Terraform state are excluded by `.gitignore`.
+Generated dependencies, build output, local runtime data, reports, populated environment files, and Terraform state are excluded by `.gitignore`.
 
 ## Definition of done for a change
 

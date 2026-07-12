@@ -10,13 +10,20 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Shared editor and ignore rules.
 - Development workflow and component boundary documentation.
 - GitHub pull-request and issue templates.
+- Local PostgreSQL/PostGIS Docker Compose service.
+- Optional Redis Compose profile.
+- Safe local environment example, prerequisite checks, lifecycle commands, and local-development runbook.
+
+### Cost controls
+
+- Local development creates no AWS resources.
+- Managed AWS database/cache services remain disabled until their approved implementation and cost decision.
 
 ### Not yet implemented
 
 - Mobile application foundation.
 - Backend application foundation.
-- Database and authentication.
-- Local Docker environment.
+- Database schema/migrations and authentication.
 - CI/CD workflows.
 - Terraform infrastructure.
 - Deployment and monitoring.
