@@ -13,6 +13,9 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Local PostgreSQL/PostGIS Docker Compose service.
 - Optional Redis Compose profile.
 - Safe local environment example, prerequisite checks, lifecycle commands, and local-development runbook.
+- FastAPI backend foundation with typed configuration.
+- Versioned system API plus liveness, readiness, and version endpoints.
+- Request correlation, privacy-safe JSON logging, problem-details errors, and foundation tests.
 
 ### Cost controls
 
@@ -22,7 +25,6 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 ### Not yet implemented
 
 - Mobile application foundation.
-- Backend application foundation.
 - Database schema/migrations and authentication.
 - CI/CD workflows.
 - Terraform infrastructure.
