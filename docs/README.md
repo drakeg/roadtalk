@@ -7,22 +7,32 @@
 - [Original RoadTalk Development Plan](reference/RoadTalk_Development_Plan.docx)
 - [Agile Workflow](AGILE_WORKFLOW.md)
 
-## Sprint specifications
+## Sprint 0 — Complete
 
-- [Sprint 0: Planning & Architecture](sprints/sprint-0-planning-architecture.md) — Proposed
+- [Sprint 0 specification](sprints/sprint-0-planning-architecture.md)
+- [Sprint 0 traceability](sprints/sprint-0-traceability.md)
+- [Sprint 0 review record](sprints/sprint-0-review.md)
+- [Sprint 1 readiness](sprints/sprint-1-readiness.md) — READY
 
 ## Architecture
 
-- [System Architecture](architecture/system-architecture.md) — Proposed baseline
-- [Architecture Decision Records](adr/README.md)
-- [ADR-0001: Mobile application platform](adr/0001-mobile-application-platform.md) — Proposed
-- [ADR-0002: Control API architecture](adr/0002-control-api-architecture.md) — Proposed
-- [ADR-0003: Geospatial data platform](adr/0003-geospatial-data-platform.md) — Proposed
-- [ADR-0004: Realtime audio platform](adr/0004-realtime-audio-platform.md) — Proposed
+- [System architecture](architecture/system-architecture.md)
+- [API architecture](architecture/api-architecture.md)
+- [Logical data model](architecture/data-model.md)
+- [AWS architecture](architecture/aws-architecture.md)
+- [AWS cost model](architecture/aws-cost-model.md)
+- [Terraform design](architecture/terraform-design.md)
+- [Non-functional requirements](architecture/non-functional-requirements.md)
+- [Accepted Architecture Decision Records](adr/README.md)
+
+## Product, security, and privacy
+
+- [MVP wireframes](design/mvp-wireframes.md)
+- [Phone-screen wireframe sheet](design/wireframes/mvp-phone-screens.svg)
+- [Threat model](security/threat-model.md)
+- [Privacy model](privacy/privacy-model.md)
 
 ## Templates
 
 - [Sprint specification](templates/SPRINT_TEMPLATE.md)
 - [Architecture decision record](templates/ADR_TEMPLATE.md)
-
-Approved sprint specifications should be stored under `docs/sprints/` and must include requirements, acceptance tests, and deliverables.
