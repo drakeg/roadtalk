@@ -6,7 +6,7 @@ The backend is a Python/FastAPI modular-monolith control API.
 
 ## Current foundation
 
-S01-D03 provides:
+S01-D03 and S01-D04 provide:
 
 - typed environment configuration
 - privacy-safe JSON logging
@@ -15,8 +15,11 @@ S01-D03 provides:
 - liveness, readiness, and version endpoints
 - extensible readiness-check registry
 - automated foundation tests
+- SQLAlchemy account, device, and session models
+- Alembic migrations with PostGIS enablement
+- database readiness checks
 
-No database, authentication, location, proximity, channel, or media behavior exists yet.
+No authentication API, location, proximity, channel, or media behavior exists yet.
 
 ## Local setup
 
@@ -25,6 +28,9 @@ From the repository root:
 ```sh
 python3.12 -m venv backend/.venv
 backend/.venv/bin/pip install -e 'backend[dev]'
+make up
+make backend-migrate
+make backend-migration-check
 make backend-test
 make backend-run
 ```
@@ -51,4 +57,4 @@ make backend-test
 
 ## Scope boundary
 
-D04 adds PostgreSQL/PostGIS models and migrations. D05 adds anonymous device/session authentication. Later domains remain unimplemented until their approved sprints.
+D05 adds anonymous device/session authentication. The database remains local and containerized; this deliverable provisions no AWS resources or managed database. Later domains remain unimplemented until their approved sprints.

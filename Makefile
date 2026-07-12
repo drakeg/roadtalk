@@ -7,10 +7,10 @@ BACKEND_BIN := $(BACKEND_VENV)/bin
 
 .DEFAULT_GOAL := help
 
-.PHONY: help prerequisites setup config up up-redis wait ps logs down reset database-shell redis-cli verify-database backend-install backend-run backend-format-check backend-lint backend-typecheck backend-test
+.PHONY: help prerequisites setup config up up-redis wait ps logs down reset database-shell redis-cli verify-database backend-install backend-run backend-migrate backend-migration-check backend-migration-downgrade backend-format-check backend-lint backend-typecheck backend-test
 
 help: ## Show local development commands.
-	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_-]+:.*## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_-]+:.*## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 prerequisites: ## Verify required local tools.
 	@sh scripts/check-prerequisites.sh
@@ -61,6 +61,18 @@ backend-install: ## Create the backend virtual environment and install developme
 backend-run: ## Run the local FastAPI development server.
 	@test -f "$(ENV_FILE)" || { echo "Missing $(ENV_FILE). Run 'make setup'."; exit 1; }
 	@set -a; . ./$(ENV_FILE); set +a; cd backend && ../$(BACKEND_BIN)/uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+
+backend-migrate: ## Upgrade the configured database to the latest migration.
+	@test -f "$(ENV_FILE)" || { echo "Missing $(ENV_FILE). Run 'make setup'."; exit 1; }
+	@set -a; . ./$(ENV_FILE); set +a; cd backend && ../$(BACKEND_BIN)/alembic upgrade head
+
+backend-migration-check: ## Fail when metadata differs from the migrated database.
+	@test -f "$(ENV_FILE)" || { echo "Missing $(ENV_FILE). Run 'make setup'."; exit 1; }
+	@set -a; . ./$(ENV_FILE); set +a; cd backend && ../$(BACKEND_BIN)/alembic check
+
+backend-migration-downgrade: ## Downgrade one revision (local recovery/testing only).
+	@test -f "$(ENV_FILE)" || { echo "Missing $(ENV_FILE). Run 'make setup'."; exit 1; }
+	@set -a; . ./$(ENV_FILE); set +a; cd backend && ../$(BACKEND_BIN)/alembic downgrade -1
 
 backend-format-check: ## Check backend formatting.
 	@$(BACKEND_BIN)/ruff format --check backend
