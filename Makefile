@@ -7,7 +7,7 @@ BACKEND_BIN := $(BACKEND_VENV)/bin
 
 .DEFAULT_GOAL := help
 
-.PHONY: help prerequisites setup config up up-redis wait ps logs down reset database-shell redis-cli verify-database backend-install backend-run backend-migrate backend-migration-check backend-migration-downgrade backend-format-check backend-lint backend-typecheck backend-test
+.PHONY: help prerequisites setup config up up-redis wait ps logs down reset database-shell redis-cli verify-database backend-install backend-run backend-migrate backend-migration-check backend-migration-downgrade backend-format-check backend-lint backend-typecheck backend-test mobile-install mobile-start mobile-ios mobile-android mobile-doctor mobile-typecheck mobile-test
 
 help: ## Show local development commands.
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_-]+:.*## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -85,3 +85,24 @@ backend-typecheck: ## Type-check the backend.
 
 backend-test: ## Run backend tests with branch coverage.
 	@cd backend && ../$(BACKEND_BIN)/pytest --cov=app --cov-branch --cov-report=term-missing
+
+mobile-install: ## Install the locked mobile dependencies.
+	@cd mobile && npm ci
+
+mobile-start: ## Start Metro for the Expo development client.
+	@cd mobile && npm start
+
+mobile-ios: ## Generate/run the local iOS development build.
+	@cd mobile && npm run ios
+
+mobile-android: ## Generate/run the local Android development build.
+	@cd mobile && npm run android
+
+mobile-doctor: ## Validate Expo dependency and project configuration.
+	@cd mobile && npm run doctor
+
+mobile-typecheck: ## Type-check the mobile application.
+	@cd mobile && npm run typecheck
+
+mobile-test: ## Run mobile foundation tests.
+	@cd mobile && npm test
