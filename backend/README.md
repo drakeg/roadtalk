@@ -61,6 +61,7 @@ make backend-format-check
 make backend-lint
 make backend-typecheck
 make backend-test
+ROADTALK_RUN_DATABASE_TESTS=1 make backend-test  # migrated disposable database only
 ```
 
 ## Scope boundary
