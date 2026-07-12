@@ -1,10 +1,11 @@
-from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
 from app.api.system import router as system_router
 from app.config import Settings, get_settings
+from app.db.session import check_database, dispose_database
 from app.health import ReadinessRegistry
 from app.logging import configure_logging
 from app.middleware import RequestContextMiddleware
@@ -18,6 +19,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         yield
+        await dispose_database()
 
     app = FastAPI(
         title=resolved.app_name,
@@ -29,6 +31,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = resolved
     app.state.readiness = ReadinessRegistry()
+    if resolved.database_check_enabled:
+        app.state.readiness.register("database", check_database)
     app.add_middleware(RequestContextMiddleware, settings=resolved)
     install_problem_handlers(app)
     app.include_router(system_router)
