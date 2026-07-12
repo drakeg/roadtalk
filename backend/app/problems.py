@@ -32,9 +32,7 @@ def problem(
 
 def install_problem_handlers(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
-    async def validation_handler(
-        request: Request, exc: RequestValidationError
-    ) -> JSONResponse:
+    async def validation_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
         errors = [
             {"location": list(error["loc"]), "message": error["msg"], "type": error["type"]}
             for error in exc.errors()
@@ -71,12 +69,16 @@ def install_problem_handlers(app: FastAPI) -> None:
     @app.exception_handler(Exception)
     async def unhandled_handler(request: Request, exc: Exception) -> JSONResponse:
         logger.exception("request.unhandled")
+        request_id = str(getattr(request.state, "request_id", "unknown"))
+        content = problem(
+            status=500,
+            code="INTERNAL_ERROR",
+            title="Internal server error",
+            detail="The request could not be completed.",
+        )
+        content["request_id"] = request_id
         return JSONResponse(
             status_code=500,
-            content=problem(
-                status=500,
-                code="INTERNAL_ERROR",
-                title="Internal server error",
-                detail="The request could not be completed.",
-            ),
+            headers={"X-Request-ID": request_id},
+            content=content,
         )

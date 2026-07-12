@@ -1,6 +1,7 @@
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from typing import Any, cast
 
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
@@ -30,9 +31,7 @@ def utcnow() -> datetime:
     return datetime.now(UTC).replace(tzinfo=None)
 
 
-def token_pair(
-    session: Session, refresh_token: str, settings: Settings
-) -> TokenPair:
+def token_pair(session: Session, refresh_token: str, settings: Settings) -> TokenPair:
     return TokenPair(
         access_token=issue_access_token(
             account_id=session.account_id,
@@ -92,12 +91,8 @@ async def create_anonymous_session(
     )
 
 
-async def rotate_refresh_token(
-    db: AsyncSession, raw_token: str, settings: Settings
-) -> TokenPair:
-    digest = hash_refresh_token(
-        raw_token, settings.refresh_token_pepper.get_secret_value()
-    )
+async def rotate_refresh_token(db: AsyncSession, raw_token: str, settings: Settings) -> TokenPair:
+    digest = hash_refresh_token(raw_token, settings.refresh_token_pepper.get_secret_value())
     current = await db.scalar(
         select(Session).where(Session.refresh_token_hash == digest).with_for_update()
     )
@@ -193,4 +188,4 @@ async def revoke_device_sessions(
         .values(revoked_at=utcnow(), revoke_reason="device_revoked")
     )
     await db.commit()
-    return result.rowcount or 0
+    return cast(int, cast(Any, result).rowcount or 0)

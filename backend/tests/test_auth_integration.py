@@ -47,9 +47,7 @@ async def _lifecycle() -> None:
             )
             assert identity.account.account_type == "anonymous"
 
-            replacement = await rotate_refresh_token(
-                db, created.refresh_token, settings
-            )
+            replacement = await rotate_refresh_token(db, created.refresh_token, settings)
             with pytest.raises(AuthenticationError) as replay:
                 await rotate_refresh_token(db, created.refresh_token, settings)
             assert replay.value.code == "REFRESH_REPLAY_DETECTED"

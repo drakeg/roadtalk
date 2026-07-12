@@ -84,9 +84,7 @@ async def register_anonymous(
 
 
 @router.post("/refresh", response_model=TokenPair)
-async def refresh(
-    request: Request, payload: RefreshRequest, db: DatabaseSession
-) -> TokenPair:
+async def refresh(request: Request, payload: RefreshRequest, db: DatabaseSession) -> TokenPair:
     try:
         return await rotate_refresh_token(db, payload.refresh_token, request.app.state.settings)
     except AuthenticationError as exc:
@@ -114,9 +112,7 @@ async def revoke_device(
     device_id: uuid.UUID, db: DatabaseSession, current: CurrentSession
 ) -> DeviceRevocationResponse:
     try:
-        count = await revoke_device_sessions(
-            db, account_id=current.account.id, device_id=device_id
-        )
+        count = await revoke_device_sessions(db, account_id=current.account.id, device_id=device_id)
     except AuthenticationError as exc:
         raise auth_error(exc, status.HTTP_404_NOT_FOUND) from exc
     return DeviceRevocationResponse(device_id=device_id, revoked_sessions=count)

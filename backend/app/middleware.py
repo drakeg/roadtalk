@@ -29,6 +29,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             if supplied and len(supplied) <= self.settings.trusted_request_id_max_length
             else str(uuid4())
         )
+        request.state.request_id = request_id
         token = bind_request_id(request_id)
         started = time.perf_counter()
 
