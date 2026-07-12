@@ -1,10 +1,13 @@
 SHELL := /bin/sh
 COMPOSE ?= docker compose
 ENV_FILE ?= .env
+BACKEND_PYTHON ?= python3.12
+BACKEND_VENV ?= backend/.venv
+BACKEND_BIN := $(BACKEND_VENV)/bin
 
 .DEFAULT_GOAL := help
 
-.PHONY: help prerequisites setup config up up-redis wait ps logs down reset database-shell redis-cli verify-database
+.PHONY: help prerequisites setup config up up-redis wait ps logs down reset database-shell redis-cli verify-database backend-install backend-run backend-format-check backend-lint backend-typecheck backend-test
 
 help: ## Show local development commands.
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_-]+:.*## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -50,3 +53,23 @@ redis-cli: ## Open redis-cli when the optional Redis profile is running.
 
 verify-database: ## Verify PostgreSQL and PostGIS are available.
 	@$(COMPOSE) --env-file "$(ENV_FILE)" exec -T database psql -U "$${POSTGRES_USER:-roadtalk}" -d "$${POSTGRES_DB:-roadtalk}" -v ON_ERROR_STOP=1 -c "SELECT current_database(), PostGIS_Full_Version();"
+
+backend-install: ## Create the backend virtual environment and install development dependencies.
+	@$(BACKEND_PYTHON) -m venv "$(BACKEND_VENV)"
+	@$(BACKEND_BIN)/pip install -e 'backend[dev]'
+
+backend-run: ## Run the local FastAPI development server.
+	@test -f "$(ENV_FILE)" || { echo "Missing $(ENV_FILE). Run 'make setup'."; exit 1; }
+	@set -a; . ./$(ENV_FILE); set +a; cd backend && ../$(BACKEND_BIN)/uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+
+backend-format-check: ## Check backend formatting.
+	@$(BACKEND_BIN)/ruff format --check backend
+
+backend-lint: ## Lint the backend.
+	@$(BACKEND_BIN)/ruff check backend
+
+backend-typecheck: ## Type-check the backend.
+	@cd backend && ../$(BACKEND_BIN)/mypy app tests
+
+backend-test: ## Run backend tests with branch coverage.
+	@cd backend && ../$(BACKEND_BIN)/pytest --cov=app --cov-branch --cov-report=term-missing
