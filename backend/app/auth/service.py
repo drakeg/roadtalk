@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.schemas import AnonymousSessionRequest, AnonymousSessionResponse, TokenPair
@@ -73,7 +74,14 @@ async def create_anonymous_session(
         expires_at=utcnow() + timedelta(seconds=settings.refresh_token_ttl_seconds),
     )
     db.add(account)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        raise AuthenticationError(
+            "DEVICE_ALREADY_REGISTERED",
+            "This installation is already registered; refresh its existing session.",
+        ) from exc
     await db.refresh(session)
     pair = token_pair(session, refresh_token, settings)
     return AnonymousSessionResponse(
