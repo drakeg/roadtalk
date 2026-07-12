@@ -1,4 +1,6 @@
-from sqlalchemy import CheckConstraint
+from typing import cast
+
+from sqlalchemy import CheckConstraint, Table
 
 from app.db import Account, Base, Device, Session
 
@@ -10,10 +12,13 @@ def test_foundation_tables_are_registered() -> None:
 def test_account_constraints_protect_enumerated_values() -> None:
     names = {
         constraint.name
-        for constraint in Account.__table__.constraints
+        for constraint in cast(Table, Account.__table__).constraints
         if isinstance(constraint, CheckConstraint)
     }
-    assert names == {"account_type_allowed", "status_allowed"}
+    assert names == {
+        "ck_account_account_type_allowed",
+        "ck_account_status_allowed",
+    }
 
 
 def test_device_and_session_relationships_are_bidirectional() -> None:
@@ -23,8 +28,8 @@ def test_device_and_session_relationships_are_bidirectional() -> None:
 
 
 def test_lookup_indexes_cover_foreign_keys_and_expiry() -> None:
-    device_indexes = {index.name for index in Device.__table__.indexes}
-    session_indexes = {index.name for index in Session.__table__.indexes}
+    device_indexes = {index.name for index in cast(Table, Device.__table__).indexes}
+    session_indexes = {index.name for index in cast(Table, Session.__table__).indexes}
 
     assert "ix_device_account_id" in device_indexes
     assert {
