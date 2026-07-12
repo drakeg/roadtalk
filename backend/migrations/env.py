@@ -24,6 +24,17 @@ def include_name(
     return not (type_ == "table" and name == "spatial_ref_sys")
 
 
+def include_object(
+    object_: Any,
+    name: str | None,
+    type_: Any,
+    reflected: bool,
+    compare_to: Any,
+) -> bool:
+    del object_, reflected, compare_to
+    return not (type_ == "table" and name == "spatial_ref_sys")
+
+
 def run_migrations_offline() -> None:
     context.configure(
         url=config.get_main_option("sqlalchemy.url"),
@@ -32,6 +43,7 @@ def run_migrations_offline() -> None:
         dialect_opts={"paramstyle": "named"},
         compare_type=True,
         include_name=include_name,
+        include_object=include_object,
     )
     with context.begin_transaction():
         context.run_migrations()
@@ -49,6 +61,7 @@ def run_migrations_online() -> None:
             target_metadata=target_metadata,
             compare_type=True,
             include_name=include_name,
+            include_object=include_object,
         )
         with context.begin_transaction():
             context.run_migrations()
