@@ -16,6 +16,9 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - FastAPI backend foundation with typed configuration.
 - Versioned system API plus liveness, readiness, and version endpoints.
 - Request correlation, privacy-safe JSON logging, problem-details errors, and foundation tests.
+- SQLAlchemy account, device, and session persistence models.
+- Alembic baseline migration with PostGIS enablement, schema constraints, and indexes.
+- Database readiness checks and local migration commands.
 
 ### Cost controls
 
