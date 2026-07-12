@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.auth.service import AuthenticationError, rotate_refresh_token, utcnow
 from app.auth.security import hash_refresh_token
+from app.auth.service import AuthenticationError, rotate_refresh_token, utcnow
 from app.config import Settings
 from app.db.models import Session
 
@@ -50,6 +50,11 @@ def test_unknown_refresh_token_fails_closed() -> None:
     db.scalar.return_value = None
 
     with pytest.raises(AuthenticationError) as raised:
-        asyncio.run(\n            rotate_refresh_token(\n                db, "unknown-refresh-token-value-long-enough", settings()\n            )\n        )\n
+        asyncio.run(
+            rotate_refresh_token(
+                db, "unknown-refresh-token-value-long-enough", settings()
+            )
+        )
+
     assert raised.value.code == "INVALID_REFRESH_TOKEN"
     db.commit.assert_not_awaited()
