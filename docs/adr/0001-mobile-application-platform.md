@@ -1,6 +1,6 @@
 # ADR-0001: Mobile application platform
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-07-12
 - Deciders: Product owner and RoadTalk architecture review
 - Sprint: 0
