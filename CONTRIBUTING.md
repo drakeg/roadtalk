@@ -1,12 +1,18 @@
 # Contributing to RoadTalk
 
+## Initial documentation phase
+
+During the initial documentation-only phase, focused documentation changes may be committed directly to `main`. Each commit must remain within the active sprint and preserve requirements, decisions, tests, and history.
+
+This exception ends when application code or infrastructure implementation begins.
+
 ## Branches
 
-Create focused branches from `main`:
+For application code, infrastructure implementation, and post-initialization work, create focused branches from `main`:
 
 - `sprint/<number>-<description>` for planned sprint work
 - `fix/<description>` for approved corrective work
-- `docs/<description>` for documentation-only work
+- `docs/<description>` for later documentation-only work that requires review
 
 ## Pull requests
 
