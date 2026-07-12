@@ -1,6 +1,6 @@
 # ADR-0004: Realtime audio platform
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-07-12
 - Deciders: Product owner and RoadTalk architecture review
 - Sprint: 0
@@ -28,7 +28,7 @@ The RoadTalk control API:
 
 Use audio-only rooms/tracks. Disable recording, egress, transcription, and durable media storage for Sprints 1–5.
 
-The choice between LiveKit Cloud and self-hosted LiveKit remains open until the AWS cost model, operational-risk review, field-test needs, and privacy requirements are compared.
+Use LiveKit Cloud initially for field testing and the managed production baseline. Self-hosting requires a superseding ADR supported by measured cost, control, compliance, and operational evidence.
 
 ## Rationale
 
