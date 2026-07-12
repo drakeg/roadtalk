@@ -1,0 +1,10 @@
+enable_field_test = false
+aws_region         = "us-east-1"
+aws_account_id     = "000000000000"
+availability_zones = ["us-east-1a", "us-east-1b"]
+
+instance_type          = "t4g.small"
+root_volume_size_gb    = 40
+backup_bucket_name     = "replace-with-a-globally-unique-roadtalk-backup-bucket"
+backup_retention_days  = 30
+owner                  = "roadtalk"
