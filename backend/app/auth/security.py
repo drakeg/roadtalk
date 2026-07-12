@@ -20,9 +20,7 @@ def new_refresh_token() -> str:
 
 
 def hash_refresh_token(token: str, pepper: str) -> str:
-    return hmac.new(
-        pepper.encode("utf-8"), token.encode("utf-8"), hashlib.sha256
-    ).hexdigest()
+    return hmac.new(pepper.encode("utf-8"), token.encode("utf-8"), hashlib.sha256).hexdigest()
 
 
 def issue_access_token(
