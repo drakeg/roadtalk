@@ -2,17 +2,53 @@
 
 Sprint 1 owner: S01-D03, S01-D04, and S01-D05.
 
-This directory will contain the Python/FastAPI modular-monolith control API, Alembic migrations, and backend tests.
+The backend is a Python/FastAPI modular-monolith control API.
 
-## Approved domain boundaries
+## Current foundation
 
-- identity/session foundation
-- location
-- proximity
-- channels
-- media authorization
-- operations/observability
+S01-D03 provides:
 
-Only the anonymous account/device/session foundation is implemented in Sprint 1. Other domains may have inert package boundaries but no later-sprint behavior.
+- typed environment configuration
+- privacy-safe JSON logging
+- request correlation IDs
+- RFC 9457-style problem responses
+- liveness, readiness, and version endpoints
+- extensible readiness-check registry
+- automated foundation tests
 
-No executable backend project exists yet. S01-D03 creates it.
+No database, authentication, location, proximity, channel, or media behavior exists yet.
+
+## Local setup
+
+From the repository root:
+
+```sh
+python3.12 -m venv backend/.venv
+backend/.venv/bin/pip install -e 'backend[dev]'
+make backend-test
+make backend-run
+```
+
+The API listens on `127.0.0.1:8000` by default.
+
+## Endpoints
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /health/live` | Process liveness. |
+| `GET /health/ready` | Registered dependency readiness. |
+| `GET /api/v1/system/version` | API version and environment. |
+| `GET /docs` | Local OpenAPI UI when enabled. |
+
+## Checks
+
+```sh
+make backend-format-check
+make backend-lint
+make backend-typecheck
+make backend-test
+```
+
+## Scope boundary
+
+D04 adds PostgreSQL/PostGIS models and migrations. D05 adds anonymous device/session authentication. Later domains remain unimplemented until their approved sprints.
