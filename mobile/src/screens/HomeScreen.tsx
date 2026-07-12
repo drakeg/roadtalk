@@ -2,11 +2,15 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { RootStackParamList } from "../AppNavigator";
+import { useSession } from "../session/SessionContext";
 import { colors, spacing } from "../theme";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Foundation">;
 
 export function HomeScreen({ navigation }: Props) {
+  const { snapshot, logout, reconnect } = useSession();
+  const authenticated = snapshot.status === "authenticated";
+
   return (
     <View style={styles.container}>
       <Text accessibilityRole="header" style={styles.title}>
@@ -16,6 +20,28 @@ export function HomeScreen({ navigation }: Props) {
         The project foundation is installed. Communication features arrive in
         later approved sprints.
       </Text>
+      <View accessibilityLiveRegion="polite" style={styles.status}>
+        <Text style={styles.statusLabel}>Anonymous session</Text>
+        <Text style={styles.statusValue}>
+          {snapshot.status === "loading"
+            ? "Connecting securely…"
+            : authenticated
+              ? "Connected"
+              : "Not connected"}
+        </Text>
+        {snapshot.status === "signed_out" && snapshot.message !== undefined ? (
+          <Text style={styles.message}>{snapshot.message}</Text>
+        ) : null}
+      </View>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => void (authenticated ? logout() : reconnect())}
+        style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}
+      >
+        <Text style={styles.secondaryButtonText}>
+          {authenticated ? "Log out" : "Connect anonymously"}
+        </Text>
+      </Pressable>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Open app diagnostics"
@@ -53,6 +79,41 @@ const styles = StyleSheet.create({
     minHeight: 48,
     justifyContent: "center",
     paddingHorizontal: spacing.large,
+  },
+  secondaryButton: {
+    alignItems: "center",
+    borderColor: colors.primary,
+    borderRadius: 12,
+    borderWidth: 2,
+    minHeight: 48,
+    justifyContent: "center",
+    paddingHorizontal: spacing.large,
+  },
+  secondaryButtonText: {
+    color: colors.primary,
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  status: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: spacing.medium,
+    gap: spacing.small,
+  },
+  statusLabel: {
+    color: colors.muted,
+    fontSize: 15,
+  },
+  statusValue: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  message: {
+    color: colors.danger,
+    fontSize: 15,
   },
   buttonPressed: {
     opacity: 0.8,
