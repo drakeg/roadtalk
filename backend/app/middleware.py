@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.types import ASGIApp
 
 from app.config import Settings
 from app.context import bind_request_id, reset_request_id
@@ -13,7 +14,7 @@ logger = logging.getLogger("roadtalk.request")
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app: object, settings: Settings) -> None:
+    def __init__(self, app: ASGIApp, settings: Settings) -> None:
         super().__init__(app)
         self.settings = settings
 
@@ -33,18 +34,17 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
 
         try:
             response = await call_next(request)
-        finally:
             duration_ms = round((time.perf_counter() - started) * 1000, 2)
-
-        response.headers["X-Request-ID"] = request_id
-        logger.info(
-            "request.complete",
-            extra={
-                "method": request.method,
-                "path": request.url.path,
-                "status_code": response.status_code,
-                "duration_ms": duration_ms,
-            },
-        )
-        reset_request_id(token)
-        return response
+            response.headers["X-Request-ID"] = request_id
+            logger.info(
+                "request.complete",
+                extra={
+                    "method": request.method,
+                    "path": request.url.path,
+                    "status_code": response.status_code,
+                    "duration_ms": duration_ms,
+                },
+            )
+            return response
+        finally:
+            reset_request_id(token)
