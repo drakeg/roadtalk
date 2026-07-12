@@ -3,8 +3,9 @@
 ## Authoritative documents
 
 - [Project Governance](PROJECT_GOVERNANCE.md)
+- [Approved Sprint Plan](SPRINT_PLAN.md)
+- [Original RoadTalk Development Plan](reference/RoadTalk_Development_Plan.docx)
 - [Agile Workflow](AGILE_WORKFLOW.md)
-- [Sprint Plan Status](SPRINT_PLAN.md)
 - [Architecture Decision Records](adr/README.md)
 
 ## Templates
