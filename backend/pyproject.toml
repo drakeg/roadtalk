@@ -8,8 +8,11 @@ version = "0.1.0"
 description = "RoadTalk control API"
 requires-python = ">=3.12"
 dependencies = [
+  "alembic>=1.14,<2",
   "fastapi>=0.139,<0.140",
+  "psycopg[binary,pool]>=3.2,<4",
   "pydantic-settings>=2.14,<3",
+  "sqlalchemy>=2.0,<3",
   "uvicorn[standard]>=0.35,<1",
 ]
 
