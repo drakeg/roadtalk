@@ -23,8 +23,9 @@ Every implementation change must identify:
 
 ## Repository workflow
 
-- Use feature branches and pull requests.
+- During the initial documentation-only phase, focused documentation commits may be made directly to `main`.
+- Once application code or infrastructure implementation begins, use feature branches and pull requests.
 - Prefer small, reviewable commits.
-- Update documentation in the same pull request when behavior or decisions change.
+- Update documentation with the behavior or decision it describes.
 - Record material architecture choices as ADRs under `docs/adr/`.
 - Do not mark work complete until its acceptance tests pass.
