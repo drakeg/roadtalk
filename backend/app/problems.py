@@ -1,9 +1,10 @@
 import logging
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.context import request_id_context
 
@@ -49,8 +50,8 @@ def install_problem_handlers(app: FastAPI) -> None:
             ),
         )
 
-    @app.exception_handler(HTTPException)
-    async def http_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    @app.exception_handler(StarletteHTTPException)
+    async def http_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
         code = "HTTP_ERROR"
         detail = str(exc.detail)
         if isinstance(exc.detail, dict):
