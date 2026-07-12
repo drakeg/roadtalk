@@ -6,7 +6,7 @@ The backend is a Python/FastAPI modular-monolith control API.
 
 ## Current foundation
 
-S01-D03 provides:
+S01-D03 and S01-D04 provide:
 
 - typed environment configuration
 - privacy-safe JSON logging
