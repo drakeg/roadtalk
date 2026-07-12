@@ -93,4 +93,3 @@ def downgrade() -> None:
     op.drop_table("session")
     op.drop_table("device")
     op.drop_table("account")
-    op.execute("DROP EXTENSION IF EXISTS postgis")
