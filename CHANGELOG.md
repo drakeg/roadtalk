@@ -26,6 +26,8 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Mobile anonymous-session bootstrap with refresh rotation and fail-closed recovery.
 - Platform SecureStore persistence for refresh credentials and in-memory-only access tokens.
 - Mobile logout and current-device revocation handling.
+- Pull-request CI for backend, PostGIS migrations, mobile quality, and security scans.
+- Immutable action pins, read-only permissions, concurrency cancellation, caching, and job timeouts.
 
 ### Cost controls
 
