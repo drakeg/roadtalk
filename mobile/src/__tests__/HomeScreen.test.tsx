@@ -2,6 +2,20 @@ import { fireEvent, render } from "@testing-library/react-native";
 
 import { HomeScreen } from "../screens/HomeScreen";
 
+jest.mock("../session/SessionContext", () => ({
+  useSession: () => ({
+    snapshot: {
+      status: "authenticated",
+      accountId: "account",
+      deviceId: "device",
+      sessionId: "session",
+    },
+    logout: jest.fn(),
+    reconnect: jest.fn(),
+    revokeCurrentDevice: jest.fn(),
+  }),
+}));
+
 describe("foundation screen", () => {
   it("provides an accessible foundation shell and navigates to diagnostics", async () => {
     const navigate = jest.fn();

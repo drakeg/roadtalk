@@ -6,7 +6,7 @@ This directory contains the Expo/React Native/TypeScript development-build appli
 
 ## Current foundation
 
-S01-D02 provides:
+S01-D02 and S01-D06 provide:
 
 - Expo SDK 57 with React Native 0.86 and the New Architecture
 - iOS and Android development-client configuration
@@ -16,6 +16,10 @@ S01-D02 provides:
 - Jest and React Native Testing Library smoke tests
 - strict TypeScript and Expo Doctor validation
 - no profile, location, audio, PTT, proximity, or channel behavior
+- anonymous device registration and session bootstrap
+- refresh credentials stored only through Expo SecureStore
+- access credentials held only in process memory
+- refresh rotation, logout, device revocation, and fail-closed recovery
 
 ## Setup
 
@@ -58,6 +62,21 @@ Before S01-D02 is accepted:
 4. verify text scaling, screen-reader labels, button target size, light/dark system behavior, and error fallback;
 5. confirm no profile, location, microphone, notification, or tracking permission is requested.
 
+## Credential-storage verification
+
+The client intentionally has no AsyncStorage dependency. Before accepting S01-D06:
+
+1. inspect iOS Keychain and Android Keystore-backed SecureStore behavior on development builds;
+2. verify raw access and refresh credentials do not appear in logs, screenshots, URLs,
+   errors, analytics, ordinary files/preferences, or unencrypted backups;
+3. rotate refresh credentials and confirm the old value is replaced;
+4. log out and revoke the current device, then confirm secure storage is empty;
+5. replay or revoke a credential and confirm the client clears local state and fails closed.
+
+Android backup exclusion is configured by the Expo SecureStore config plugin. Shared
+development logs must never print request bodies, authorization headers, or storage values.
+
 ## Scope boundary
 
-S01-D06 adds secure anonymous-session handling with platform secure storage. No ordinary application storage may hold access or refresh credentials.
+The authenticated shell exposes no profile, location, audio, PTT, proximity, or channel
+feature. Later domains remain unavailable until their approved sprints.
