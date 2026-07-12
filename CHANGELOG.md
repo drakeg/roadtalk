@@ -19,6 +19,8 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - SQLAlchemy account, device, and session persistence models.
 - Alembic baseline migration with PostGIS enablement, schema constraints, and indexes.
 - Database readiness checks and local migration commands.
+- Anonymous account/device registration with no profile, location, or audio collection.
+- Device-bound access tokens, hashed rotating refresh credentials, logout, device revocation, and replay-family revocation.
 
 ### Cost controls
 
@@ -28,7 +30,6 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 ### Not yet implemented
 
 - Mobile application foundation.
-- Anonymous device/session authentication.
 - CI/CD workflows.
 - Terraform infrastructure.
 - Deployment and monitoring.

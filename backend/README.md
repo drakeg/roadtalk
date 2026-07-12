@@ -18,8 +18,11 @@ S01-D03 and S01-D04 provide:
 - SQLAlchemy account, device, and session models
 - Alembic migrations with PostGIS enablement
 - database readiness checks
+- anonymous account/device registration
+- short-lived device-bound access tokens
+- hashed rotating refresh credentials, logout, device revocation, and replay-family revocation
 
-No authentication API, location, proximity, channel, or media behavior exists yet.
+No profile, location, proximity, channel, media, or account-recovery behavior exists yet.
 
 ## Local setup
 
@@ -45,6 +48,11 @@ The API listens on `127.0.0.1:8000` by default.
 | `GET /health/ready` | Registered dependency readiness. |
 | `GET /api/v1/system/version` | API version and environment. |
 | `GET /docs` | Local OpenAPI UI when enabled. |
+| `POST /api/v1/auth/anonymous` | Register an anonymous account and device session. |
+| `POST /api/v1/auth/refresh` | Rotate a refresh credential and issue a new token pair. |
+| `GET /api/v1/auth/session` | Validate the current access token/session. |
+| `POST /api/v1/auth/logout` | Revoke the current session. |
+| `DELETE /api/v1/auth/devices/{device_id}` | Revoke all active sessions for an owned device. |
 
 ## Checks
 
@@ -53,8 +61,9 @@ make backend-format-check
 make backend-lint
 make backend-typecheck
 make backend-test
+ROADTALK_RUN_DATABASE_TESTS=1 make backend-test  # migrated disposable database only
 ```
 
 ## Scope boundary
 
-D05 adds anonymous device/session authentication. The database remains local and containerized; this deliverable provisions no AWS resources or managed database. Later domains remain unimplemented until their approved sprints.
+D06 adds the mobile secure-session client. Authentication collects only installation platform/identifier and generated security identifiers; it does not collect profile, location, or audio data. The database remains local and containerized; this deliverable provisions no AWS resources or managed database. Later domains remain unimplemented until their approved sprints.

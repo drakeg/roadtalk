@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.auth import router as auth_router
 from app.api.system import router as system_router
 from app.config import Settings, get_settings
 from app.db.session import check_database, dispose_database
@@ -36,6 +37,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(RequestContextMiddleware, settings=resolved)
     install_problem_handlers(app)
     app.include_router(system_router)
+    app.include_router(auth_router)
     return app
 
 

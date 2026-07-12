@@ -28,6 +28,12 @@ class Settings(BaseSettings):
     )
     database_echo: bool = False
     database_check_enabled: bool = True
+    token_signing_key: SecretStr = SecretStr("local-only-signing-key-change-me")
+    refresh_token_pepper: SecretStr = SecretStr("local-only-refresh-pepper-change-me")
+    token_issuer: str = "roadtalk-api"
+    token_audience: str = "roadtalk-mobile"
+    access_token_ttl_seconds: int = Field(default=900, ge=60, le=3600)
+    refresh_token_ttl_seconds: int = Field(default=2_592_000, ge=3600)
 
 
 @lru_cache
