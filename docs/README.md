@@ -6,11 +6,19 @@
 - [Approved Sprint Plan](SPRINT_PLAN.md)
 - [Original RoadTalk Development Plan](reference/RoadTalk_Development_Plan.docx)
 - [Agile Workflow](AGILE_WORKFLOW.md)
-- [Architecture Decision Records](adr/README.md)
 
 ## Sprint specifications
 
 - [Sprint 0: Planning & Architecture](sprints/sprint-0-planning-architecture.md) — Proposed
+
+## Architecture
+
+- [System Architecture](architecture/system-architecture.md) — Proposed baseline
+- [Architecture Decision Records](adr/README.md)
+- [ADR-0001: Mobile application platform](adr/0001-mobile-application-platform.md) — Proposed
+- [ADR-0002: Control API architecture](adr/0002-control-api-architecture.md) — Proposed
+- [ADR-0003: Geospatial data platform](adr/0003-geospatial-data-platform.md) — Proposed
+- [ADR-0004: Realtime audio platform](adr/0004-realtime-audio-platform.md) — Proposed
 
 ## Templates
 
