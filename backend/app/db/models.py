@@ -11,9 +11,7 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "account"
     __table_args__ = (
         CheckConstraint("status IN ('active', 'disabled', 'deleted')", name="status_allowed"),
-        CheckConstraint(
-            "account_type IN ('anonymous', 'registered')", name="account_type_allowed"
-        ),
+        CheckConstraint("account_type IN ('anonymous', 'registered')", name="account_type_allowed"),
     )
 
     status: Mapped[str] = mapped_column(String(16), default="active", server_default="active")
@@ -37,9 +35,7 @@ class Device(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_device_account_id", "account_id"),
     )
 
-    account_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("account.id", ondelete="CASCADE")
-    )
+    account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("account.id", ondelete="CASCADE"))
     platform: Mapped[str] = mapped_column(String(16))
     installation_id: Mapped[str] = mapped_column(String(255), unique=True)
     push_token: Mapped[str | None] = mapped_column(Text)
@@ -60,12 +56,8 @@ class Session(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_session_expires_at", "expires_at"),
     )
 
-    account_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("account.id", ondelete="CASCADE")
-    )
-    device_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("device.id", ondelete="CASCADE")
-    )
+    account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("account.id", ondelete="CASCADE"))
+    device_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
     refresh_family_id: Mapped[uuid.UUID] = mapped_column(default=uuid.uuid4)
     refresh_token_hash: Mapped[str] = mapped_column(String(255), unique=True)
     expires_at: Mapped[datetime]
