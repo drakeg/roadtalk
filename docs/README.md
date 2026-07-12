@@ -7,13 +7,16 @@
 - [Original RoadTalk Development Plan](reference/RoadTalk_Development_Plan.docx)
 - [Agile Workflow](AGILE_WORKFLOW.md)
 
+## Sprint 1 — Ready for implementation
+
+- [Sprint 1: Project Foundation](sprints/sprint-1-project-foundation.md) — APPROVED
+- [Sprint 1 readiness](sprints/sprint-1-readiness.md) — READY
+
 ## Sprint 0 — Complete
 
 - [Sprint 0 specification](sprints/sprint-0-planning-architecture.md)
 - [Sprint 0 traceability](sprints/sprint-0-traceability.md)
 - [Sprint 0 review record](sprints/sprint-0-review.md)
-- [Sprint 1 readiness](sprints/sprint-1-readiness.md) — READY
-
 ## Architecture
 
 - [System architecture](architecture/system-architecture.md)
