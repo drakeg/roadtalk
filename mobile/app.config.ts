@@ -17,7 +17,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: "#10212b",
     },
   },
-  plugins: ["expo-dev-client"],
+  plugins: [
+    "expo-dev-client",
+    [
+      "expo-secure-store",
+      {
+        configureAndroidBackup: true,
+      },
+    ],
+  ],
   extra: {
     apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1",
   },
