@@ -1,32 +1,34 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, render } from "@testing-library/react-native";
 
 import { HomeScreen } from "../screens/HomeScreen";
 
 describe("foundation screen", () => {
-  it("provides an accessible foundation shell and navigates to diagnostics", () => {
+  it("provides an accessible foundation shell and navigates to diagnostics", async () => {
     const navigate = jest.fn();
-    render(
+    const view = await render(
       <HomeScreen
         navigation={{ navigate } as never}
         route={{ key: "foundation", name: "Foundation" }}
       />,
     );
 
-    expect(screen.getByRole("header", { name: "RoadTalk" })).toBeOnTheScreen();
-    fireEvent.press(screen.getByRole("button", { name: "Open app diagnostics" }));
+    expect(view.getByRole("header", { name: "RoadTalk" })).toBeOnTheScreen();
+    fireEvent.press(
+      view.getByRole("button", { name: "Open app diagnostics" }),
+    );
     expect(navigate).toHaveBeenCalledWith("Diagnostics");
   });
 
-  it("does not expose later-sprint features", () => {
-    render(
+  it("does not expose later-sprint features", async () => {
+    const view = await render(
       <HomeScreen
         navigation={{ navigate: jest.fn() } as never}
         route={{ key: "foundation", name: "Foundation" }}
       />,
     );
 
-    expect(screen.queryByText(/push.to.talk/i)).not.toBeOnTheScreen();
-    expect(screen.queryByText(/nearby/i)).not.toBeOnTheScreen();
-    expect(screen.queryByText(/channel/i)).not.toBeOnTheScreen();
+    expect(view.queryByText(/push.to.talk/i)).not.toBeOnTheScreen();
+    expect(view.queryByText(/nearby/i)).not.toBeOnTheScreen();
+    expect(view.queryByText(/channel/i)).not.toBeOnTheScreen();
   });
 });
