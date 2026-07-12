@@ -1,6 +1,6 @@
 # RoadTalk System Architecture
 
-- Status: Proposed baseline
+- Status: Approved baseline
 - Sprint: 0 — Planning & Architecture
 - Requirements: S00-R01, S00-R02, S00-R03, S00-R04, S00-R05, S00-R09, S00-R10, S00-R11
 - Last updated: 2026-07-12
@@ -158,7 +158,7 @@ The initial design requires:
 - containerized FastAPI service
 - PostgreSQL with PostGIS
 - Redis only when presence/fanout behavior requires it
-- one LiveKit node plus TURN-capable networking for controlled testing
+- LiveKit Cloud for controlled media testing
 - S3 for non-sensitive build/operational artifacts where required
 - CloudWatch logs, metrics, and alarms
 - Secrets Manager or SSM Parameter Store for secrets according to sensitivity and rotation requirements
@@ -168,11 +168,11 @@ The initial design requires:
 - multiple API tasks across Availability Zones
 - managed PostgreSQL with Multi-AZ and tested restore
 - managed Redis with replication
-- multiple LiveKit nodes using Redis coordination and layer-4 media load balancing
+- LiveKit Cloud initially; self-hosting requires a superseding ADR and dedicated media topology
 - separate worker processes only after measured workload or isolation requirements justify them
 - WAF, enhanced detection, and dedicated operational controls as exposure and abuse risk grow
 
-The exact services, topology, and costs remain deliverables S00-D05 and S00-D06.
+The exact services, topology, and planning costs are defined by S00-D05 and S00-D06.
 
 ## Data minimization rules
 
@@ -198,18 +198,14 @@ The exact services, topology, and costs remain deliverables S00-D05 and S00-D06.
 | Permission revoked | Stop the affected collection or publication immediately and update UI state. |
 | Network transition | Re-establish control and media sessions; re-evaluate proximity and authorization. |
 
-## Open decisions
+## Accepted decisions and implementation-time validation
 
-The following must be resolved through ADRs and later Sprint 0 deliverables:
-
-- managed versus self-hosted LiveKit for initial field testing
-- initial AWS compute and database topology
-- Redis introduction threshold
-- exact location precision, update frequency, and retention
-- authentication mechanism and anonymous-account recovery
-- API schema/versioning details
-- measurable voice latency and packet-loss targets
-- initial supported OS versions and accessibility targets
+- LiveKit Cloud is the initial media plane; self-hosting requires a superseding ADR.
+- AWS uses local, controlled field-test, and managed production stages from ADR-0005.
+- Redis is introduced only when implemented presence/fanout behavior requires it.
+- API and event versioning are defined in the API architecture.
+- Voice, battery, data, recovery, capacity, accessibility, and platform targets are defined in the NFR document.
+- Exact operational location constants and anonymous recovery behavior remain correctly assigned to their approved implementation sprints, with privacy/security bounds already fixed.
 
 ## Validation mapping
 
