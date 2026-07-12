@@ -30,7 +30,6 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 ### Not yet implemented
 
 - Mobile application foundation.
-- Anonymous device/session authentication.
 - CI/CD workflows.
 - Terraform infrastructure.
 - Deployment and monitoring.
