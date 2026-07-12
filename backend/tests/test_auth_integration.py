@@ -64,5 +64,7 @@ async def _lifecycle() -> None:
                 device_id=created.device_id,
             )
             assert count == 0
+            await db.delete(identity.account)
+            await db.commit()
     finally:
         await engine.dispose()
