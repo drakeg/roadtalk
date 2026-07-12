@@ -15,8 +15,11 @@ S01-D03 and S01-D04 provide:
 - liveness, readiness, and version endpoints
 - extensible readiness-check registry
 - automated foundation tests
+- SQLAlchemy account, device, and session models
+- Alembic migrations with PostGIS enablement
+- database readiness checks
 
-No database, authentication, location, proximity, channel, or media behavior exists yet.
+No authentication API, location, proximity, channel, or media behavior exists yet.
 
 ## Local setup
 
