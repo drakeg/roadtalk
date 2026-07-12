@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -19,6 +19,15 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     docs_enabled: bool = True
     trusted_request_id_max_length: int = Field(default=128, ge=16, le=256)
+    database_url: SecretStr = Field(
+        default=SecretStr(
+            "postgresql+psycopg://roadtalk:roadtalk_local_only_change_me"
+            "@localhost:5432/roadtalk"
+        ),
+        validation_alias=AliasChoices("ROADTALK_DATABASE_URL", "DATABASE_URL"),
+    )
+    database_echo: bool = False
+    database_check_enabled: bool = True
 
 
 @lru_cache
