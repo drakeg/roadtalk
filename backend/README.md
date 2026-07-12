@@ -57,4 +57,4 @@ make backend-test
 
 ## Scope boundary
 
-D04 adds PostgreSQL/PostGIS models and migrations. D05 adds anonymous device/session authentication. Later domains remain unimplemented until their approved sprints.
+D05 adds anonymous device/session authentication. The database remains local and containerized; this deliverable provisions no AWS resources or managed database. Later domains remain unimplemented until their approved sprints.
