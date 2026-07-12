@@ -1,17 +1,20 @@
+from typing import Any
+
 from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.main import create_app
 
 
-def test_settings(**overrides: object) -> Settings:
-    return Settings(
-        environment="test",
-        docs_enabled=False,
-        log_level="CRITICAL",
-        database_check_enabled=False,
-        **overrides,
-    )
+def test_settings(**overrides: Any) -> Settings:
+    values: dict[str, Any] = {
+        "environment": "test",
+        "docs_enabled": False,
+        "log_level": "CRITICAL",
+        "database_check_enabled": False,
+    }
+    values.update(overrides)
+    return Settings(**values)
 
 
 def client() -> TestClient:
@@ -46,8 +49,7 @@ def test_readiness_is_ready_without_registered_dependencies() -> None:
 
 def test_database_readiness_is_registered_by_default() -> None:
     application = create_app(test_settings(database_check_enabled=True))
-    names = [check.name for check in application.state.readiness._checks]
-    assert names == ["database"]
+    assert [check.name for check in application.state.readiness._checks] == ["database"]
 
 
 def test_version_endpoint_is_versioned() -> None:
