@@ -23,6 +23,9 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Device-bound access tokens, hashed rotating refresh credentials, logout, device revocation, and replay-family revocation.
 - Expo/React Native iOS and Android development-build foundation.
 - Accessible navigation shell, typed public configuration, error boundary, and mobile smoke tests.
+- Mobile anonymous-session bootstrap with refresh rotation and fail-closed recovery.
+- Platform SecureStore persistence for refresh credentials and in-memory-only access tokens.
+- Mobile logout and current-device revocation handling.
 
 ### Cost controls
 
@@ -31,7 +34,6 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 
 ### Not yet implemented
 
-- Mobile secure-session client.
 - CI/CD workflows.
 - Terraform infrastructure.
 - Deployment and monitoring.
