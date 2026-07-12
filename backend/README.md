@@ -28,6 +28,9 @@ From the repository root:
 ```sh
 python3.12 -m venv backend/.venv
 backend/.venv/bin/pip install -e 'backend[dev]'
+make up
+make backend-migrate
+make backend-migration-check
 make backend-test
 make backend-run
 ```
