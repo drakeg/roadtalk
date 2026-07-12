@@ -18,8 +18,11 @@ S01-D03 and S01-D04 provide:
 - SQLAlchemy account, device, and session models
 - Alembic migrations with PostGIS enablement
 - database readiness checks
+- anonymous account/device registration
+- short-lived device-bound access tokens
+- hashed rotating refresh credentials, logout, device revocation, and replay-family revocation
 
-No authentication API, location, proximity, channel, or media behavior exists yet.
+No profile, location, proximity, channel, media, or account-recovery behavior exists yet.
 
 ## Local setup
 
