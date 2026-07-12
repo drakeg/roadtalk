@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 from datetime import timedelta
 from unittest.mock import AsyncMock
@@ -18,8 +19,7 @@ def settings() -> Settings:
     )
 
 
-@pytest.mark.asyncio
-async def test_replayed_refresh_revokes_the_active_token_family() -> None:
+def test_replayed_refresh_revokes_the_active_token_family() -> None:
     raw_token = "replayed-refresh-token-with-enough-random-looking-content"
     config = settings()
     current = Session(
@@ -38,20 +38,18 @@ async def test_replayed_refresh_revokes_the_active_token_family() -> None:
     db.scalar.return_value = current
 
     with pytest.raises(AuthenticationError) as raised:
-        await rotate_refresh_token(db, raw_token, config)
+        asyncio.run(rotate_refresh_token(db, raw_token, config))
 
     assert raised.value.code == "REFRESH_REPLAY_DETECTED"
     db.execute.assert_awaited_once()
     db.commit.assert_awaited_once()
 
 
-@pytest.mark.asyncio
-async def test_unknown_refresh_token_fails_closed() -> None:
+def test_unknown_refresh_token_fails_closed() -> None:
     db = AsyncMock()
     db.scalar.return_value = None
 
     with pytest.raises(AuthenticationError) as raised:
-        await rotate_refresh_token(db, "unknown-refresh-token-value-long-enough", settings())
-
+        asyncio.run(\n            rotate_refresh_token(\n                db, "unknown-refresh-token-value-long-enough", settings()\n            )\n        )\n
     assert raised.value.code == "INVALID_REFRESH_TOKEN"
     db.commit.assert_not_awaited()
