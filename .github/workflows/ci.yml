@@ -58,8 +58,25 @@ jobs:
         working-directory: backend
         run: alembic upgrade head
       - name: Check schema drift
+        id: schema
         working-directory: backend
-        run: alembic check
+        run: |
+          set +e
+          alembic check > "$RUNNER_TEMP/schema-drift.txt" 2>&1
+          status=$?
+          cat "$RUNNER_TEMP/schema-drift.txt"
+          if [ "$status" -ne 0 ]; then
+            diagnostic="$(tail -n 1 "$RUNNER_TEMP/schema-drift.txt" | base64 -w0 | cut -c1-180)"
+            echo "diagnostic=$diagnostic" >> "$GITHUB_OUTPUT"
+          fi
+          exit "$status"
+      - name: Preserve schema drift report
+        if: ${{ failure() && steps.schema.outputs.diagnostic != '' }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: schema-drift-${{ steps.schema.outputs.diagnostic }}
+          path: ${{ runner.temp }}/schema-drift.txt
+          retention-days: 1
       - name: Run backend tests
         working-directory: backend
         run: pytest --cov=app --cov-branch --cov-report=term-missing
