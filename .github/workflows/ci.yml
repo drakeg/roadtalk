@@ -125,6 +125,13 @@ jobs:
           node-version: "24"
           cache: npm
           cache-dependency-path: mobile/package-lock.json
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: 1.15.0
+          terraform_wrapper: false
+      - uses: terraform-linters/setup-tflint@c750028ac0f3831886a261f96da68ab58a92e7ec # v6
+        with:
+          tflint_version: v0.59.1
       - name: Audit Python dependencies
         run: |
           python -m pip install --disable-pip-version-check -e backend pip-audit==2.10.1
@@ -134,6 +141,8 @@ jobs:
         run: |
           npm ci
           npm audit --omit=dev --audit-level=high
+      - name: Validate and lint Terraform
+        run: sh scripts/ci/validate-terraform.sh
       - name: Scan dependencies, secrets, Dockerfiles, and Terraform
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
