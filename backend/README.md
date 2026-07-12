@@ -60,4 +60,4 @@ make backend-test
 
 ## Scope boundary
 
-D05 adds anonymous device/session authentication. The database remains local and containerized; this deliverable provisions no AWS resources or managed database. Later domains remain unimplemented until their approved sprints.
+D06 adds the mobile secure-session client. Authentication collects only installation platform/identifier and generated security identifiers; it does not collect profile, location, or audio data. The database remains local and containerized; this deliverable provisions no AWS resources or managed database. Later domains remain unimplemented until their approved sprints.
