@@ -1,9 +1,7 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
-from app.config import Settings, get_settings
+from app.config import Settings
 
 router = APIRouter(tags=["system"])
 
@@ -36,9 +34,8 @@ async def ready(request: Request) -> ReadinessResponse:
 
 
 @router.get("/api/v1/system/version", response_model=VersionResponse)
-async def version(
-    settings: Annotated[Settings, Depends(get_settings)],
-) -> VersionResponse:
+async def version(request: Request) -> VersionResponse:
+    settings: Settings = request.app.state.settings
     return VersionResponse(
         name=settings.app_name,
         version=settings.version,
