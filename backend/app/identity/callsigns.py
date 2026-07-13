@@ -85,9 +85,16 @@ def validate_callsign(value: str) -> Callsign:
 
 
 class CallsignAvailabilityLimiter:
-    def __init__(self, *, limit: int, window_seconds: int) -> None:
+    def __init__(
+        self,
+        *,
+        limit: int,
+        window_seconds: int,
+        max_buckets: int = 10_000,
+    ) -> None:
         self.limit = limit
         self.window_seconds = window_seconds
+        self.max_buckets = max_buckets
         self._events: dict[tuple[uuid.UUID, uuid.UUID], deque[float]] = {}
 
     def check(
@@ -99,7 +106,12 @@ class CallsignAvailabilityLimiter:
     ) -> None:
         key = (account_id, device_id)
         cutoff = now - self.window_seconds
-        events = self._events.setdefault(key, deque())
+        events = self._events.get(key)
+        if events is None:
+            if len(self._events) >= self.max_buckets:
+                self._events.pop(next(iter(self._events)))
+            events = deque()
+            self._events[key] = events
         while events and events[0] <= cutoff:
             events.popleft()
 
@@ -108,5 +120,3 @@ class CallsignAvailabilityLimiter:
             raise CallsignRateLimitError(retry_after)
 
         events.append(now)
-        if not events:
-            self._events.pop(key, None)
