@@ -7,7 +7,7 @@ BACKEND_BIN := $(BACKEND_VENV)/bin
 
 .DEFAULT_GOAL := help
 
-.PHONY: help prerequisites setup config up up-redis wait ps logs down reset database-shell redis-cli verify-database backend-install backend-run backend-migrate backend-migration-check backend-migration-downgrade backend-format-check backend-lint backend-typecheck backend-test mobile-install mobile-start mobile-ios mobile-android mobile-doctor mobile-typecheck mobile-test
+.PHONY: help prerequisites setup config up up-redis wait ps logs down reset database-shell redis-cli verify-database backend-install backend-run backend-migrate backend-migration-check backend-migration-downgrade backend-format-check backend-lint backend-typecheck backend-test mobile-install mobile-start mobile-ios mobile-android mobile-doctor mobile-typecheck mobile-test terraform-validate
 
 help: ## Show local development commands.
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_-]+:.*## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -106,3 +106,6 @@ mobile-typecheck: ## Type-check the mobile application.
 
 mobile-test: ## Run mobile foundation tests.
 	@cd mobile && npm test
+
+terraform-validate: ## Validate disabled Terraform plans and cost/security guardrails.
+	@sh scripts/ci/validate-terraform.sh

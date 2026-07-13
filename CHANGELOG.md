@@ -28,14 +28,16 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Mobile logout and current-device revocation handling.
 - Pull-request CI for backend, PostGIS migrations, mobile quality, and security scans.
 - Immutable action pins, read-only permissions, concurrency cancellation, caching, and job timeouts.
+- Disabled-by-default Terraform bootstrap and controlled field-test roots.
+- Low-cost VPC, ARM EC2/SSM, encrypted gp3, and encrypted S3 backup modules.
+- Terraform formatting, validation, disabled-plan, TFLint, Trivy, cost, network, and module-contract gates.
 
 ### Cost controls
 
 - Local development creates no AWS resources.
 - Managed AWS database/cache services remain disabled until their approved implementation and cost decision.
+- Field-test Terraform defaults to zero resources and excludes NAT Gateway, RDS, managed Redis, ALB, and Fargate.
 
 ### Not yet implemented
 
-- CI/CD workflows.
-- Terraform infrastructure.
 - Deployment and monitoring.
