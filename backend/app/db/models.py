@@ -98,9 +98,7 @@ class Profile(TimestampMixin, Base):
     normalized_callsign: Mapped[str | None] = mapped_column(String(32))
     display_callsign: Mapped[str | None] = mapped_column(String(32))
     avatar_id: Mapped[str | None] = mapped_column(String(64))
-    setup_completed: Mapped[bool] = mapped_column(
-        Boolean, default=False, server_default="false"
-    )
+    setup_completed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
     callsign_changed_at: Mapped[datetime | None]
 
