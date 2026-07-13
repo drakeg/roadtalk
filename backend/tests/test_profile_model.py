@@ -54,9 +54,7 @@ def test_profile_metadata_preserves_incomplete_identity_state() -> None:
 def test_profile_callsign_index_is_unique_and_null_tolerant() -> None:
     table = cast(Table, Profile.__table__)
     callsign_index = next(
-        index
-        for index in table.indexes
-        if index.name == "uq_profile_normalized_callsign"
+        index for index in table.indexes if index.name == "uq_profile_normalized_callsign"
     )
 
     assert callsign_index.unique
