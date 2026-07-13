@@ -16,6 +16,8 @@ root is disabled by default; the default plans create zero resources.
   and least-privilege backup/parameter access.
 - `modules/backup/` — encrypted, versioned, private S3 backup bucket with short
   lifecycle retention.
+- `modules/registry/` — immutable encrypted ECR repository retaining only three
+  rollback images.
 
 Every module keeps inputs in `variables.tf` and outputs in `outputs.tf`.
 
@@ -34,9 +36,10 @@ The field-test root deliberately excludes:
 - Multi-AZ or autoscaling resources.
 
 When explicitly enabled, recurring charges are primarily one `t4g.small` instance,
-40 GB encrypted gp3 storage, one public IPv4 address, and low-volume S3 usage. Increase
-the instance size only after measured load requires it. Stop or destroy the field test
-when it is not actively needed, after verifying off-instance backups.
+40 GB encrypted gp3 storage, one public IPv4 address, low-volume S3 usage, and at most
+three compressed ECR images. Increase the instance size only after measured load
+requires it. Stop or destroy the field test when it is not actively needed, after
+verifying off-instance backups.
 
 ## Prerequisites
 

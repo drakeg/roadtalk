@@ -17,3 +17,8 @@ output "runtime_parameter_path" {
   description = "Out-of-band SSM path; secret values are never Terraform inputs."
   value       = var.enable_field_test ? "/roadtalk/field-test/" : null
 }
+
+output "repository_url" {
+  description = "Immutable ECR repository URL, or null while disabled."
+  value       = try(module.registry[0].repository_url, null)
+}

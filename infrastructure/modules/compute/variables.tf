@@ -40,6 +40,11 @@ variable "backup_bucket_arn" {
   type        = string
 }
 
+variable "repository_arn" {
+  description = "ECR repository the host may pull."
+  type        = string
+}
+
 variable "runtime_parameter_prefix" {
   description = "SSM parameter path populated out-of-band; secret values never enter Terraform."
   type        = string
