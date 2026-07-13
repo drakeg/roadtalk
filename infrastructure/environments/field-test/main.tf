@@ -16,9 +16,21 @@ resource "terraform_data" "validation" {
     precondition {
       condition = (
         can(regex("^[0-9]{12}$", var.aws_account_id)) &&
-        length(var.backup_bucket_name) >= 3
+        length(var.backup_bucket_name) >= 3 &&
+        var.enable_monitoring
       )
-      error_message = "Enabled field test requires a 12-digit account ID and backup bucket name."
+      error_message = "Enabled field test requires account ID, backup bucket, and monitoring."
+    }
+  }
+}
+
+resource "terraform_data" "monitoring_validation" {
+  count = var.enable_field_test && var.enable_monitoring ? 1 : 0
+
+  lifecycle {
+    precondition {
+      condition     = can(regex("^[^@[:space:]]+@[^@[:space:]]+$", var.alert_email))
+      error_message = "A valid operational alert_email is required for monitoring."
     }
   }
 }
@@ -64,6 +76,21 @@ module "compute" {
   root_volume_size_gb      = var.root_volume_size_gb
   backup_bucket_arn        = module.backup[0].bucket_arn
   repository_arn           = module.registry[0].repository_arn
+  logs_resource_arn        = "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/roadtalk/field-test/*"
   runtime_parameter_prefix = "arn:aws:ssm:${var.aws_region}:${var.aws_account_id}:parameter/roadtalk/field-test/*"
   tags                     = local.tags
+}
+
+module "monitoring" {
+  count  = var.enable_field_test && var.enable_monitoring ? 1 : 0
+  source = "../../modules/monitoring"
+
+  name               = local.name
+  instance_id        = module.compute[0].instance_id
+  alert_email        = var.alert_email
+  monthly_budget_usd = var.monthly_budget_usd
+  log_retention_days = 3
+  tags               = local.tags
+
+  depends_on = [terraform_data.monitoring_validation]
 }
