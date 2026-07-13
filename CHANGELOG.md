@@ -40,6 +40,8 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
   and privacy-safe manual evidence template.
 - Sprint 1 review, acceptance results, known limitations, cost decision,
   retrospective, and approval-withheld decision pending manual evidence.
+- Conditional Sprint 1 approval with named device, CI-rehearsal, and AWS exceptions
+  that must close before the first field test.
 
 ### Cost controls
 
