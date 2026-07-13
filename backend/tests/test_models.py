@@ -5,8 +5,8 @@ from sqlalchemy import CheckConstraint, Table
 from app.db import Account, Base, Device, Session
 
 
-def test_foundation_tables_are_registered() -> None:
-    assert set(Base.metadata.tables) == {"account", "device", "session"}
+def test_active_sprint_tables_are_registered() -> None:
+    assert set(Base.metadata.tables) == {"account", "device", "profile", "session"}
 
 
 def test_account_constraints_protect_enumerated_values() -> None:
