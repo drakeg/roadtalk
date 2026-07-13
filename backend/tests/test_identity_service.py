@@ -8,9 +8,7 @@ from app.identity.service import callsign_availability
 def test_invalid_and_reserved_callsigns_do_not_query_database() -> None:
     db = AsyncMock()
 
-    invalid = asyncio.run(
-        callsign_availability(db, account_id=uuid.uuid4(), candidate="not valid")
-    )
+    invalid = asyncio.run(callsign_availability(db, account_id=uuid.uuid4(), candidate="not valid"))
     reserved = asyncio.run(
         callsign_availability(db, account_id=uuid.uuid4(), candidate="roadtalk-help")
     )
