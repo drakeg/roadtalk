@@ -82,8 +82,8 @@ credentials and does not apply Terraform, so this evidence incurs no AWS cost.
 | S01-D10 | #28 | #43 | Merged |
 | S01-D11 | #29 | #44 | Merged |
 | S01-D12 | #31 | #45 | Merged |
-| S01-D13 | #32 | current PR | In review |
-| S01-D14 | #30 | not opened | Pending |
+| S01-D13 | #32 | #46 | Merged |
+| S01-D14 | #30 | current PR | In review |
 
 ## Scope and cost audit
 
@@ -100,7 +100,6 @@ resource was created to produce this record.
 
 ## Exit decision
 
-D13 can close after this matrix and its CI are reviewed. Sprint 1 itself cannot be
-declared complete until the pending manual evidence is executed or explicitly
-accepted as a documented exception in S01-D14. Sprint 2 remains blocked until its
-specification is approved.
+D13 is complete. The Sprint 1 review record withholds approval until pending manual
+evidence is executed or explicitly accepted as a documented exception. Sprint 2
+remains blocked until Sprint 1 is approved and its own specification is approved.

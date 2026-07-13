@@ -38,6 +38,8 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
   backup/restore, credential rotation, monitoring, and low-cost shutdown.
 - Sprint 1 requirement/test/deliverable traceability, automated evidence baseline,
   and privacy-safe manual evidence template.
+- Sprint 1 review, acceptance results, known limitations, cost decision,
+  retrospective, and approval-withheld decision pending manual evidence.
 
 ### Cost controls
 
