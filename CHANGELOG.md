@@ -2,6 +2,15 @@
 
 All notable RoadTalk changes are recorded here. The repository history and sprint review records remain the detailed source of truth.
 
+## Unreleased — Sprint 2: Identity
+
+### Planning
+
+- Sprint 2 Identity requirements, acceptance tests, deliverables, readiness, security,
+  privacy, compatibility, and scope boundaries.
+- Bundled avatar catalog and PII-free optional recovery-key decisions.
+- Zero-incremental-AWS-cost gate; no avatar upload/storage/CDN or email/SMS service.
+
 ## Unreleased — Sprint 1: Project Foundation
 
 ### Added
