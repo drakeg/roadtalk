@@ -44,6 +44,15 @@ module "backup" {
   tags           = local.tags
 }
 
+module "registry" {
+  count  = var.enable_field_test ? 1 : 0
+  source = "../../modules/registry"
+
+  name            = "roadtalk/backend"
+  retained_images = 3
+  tags            = local.tags
+}
+
 module "compute" {
   count  = var.enable_field_test ? 1 : 0
   source = "../../modules/compute"
@@ -54,6 +63,7 @@ module "compute" {
   instance_type            = var.instance_type
   root_volume_size_gb      = var.root_volume_size_gb
   backup_bucket_arn        = module.backup[0].bucket_arn
+  repository_arn           = module.registry[0].repository_arn
   runtime_parameter_prefix = "arn:aws:ssm:${var.aws_region}:${var.aws_account_id}:parameter/roadtalk/field-test/*"
   tags                     = local.tags
 }
