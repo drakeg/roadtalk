@@ -19,6 +19,12 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
   uniqueness, setup-state, version, and cascade constraints.
 - Profile model invariant tests with no new AWS resources.
 
+- Deterministic NFKC/ASCII callsign policy with reserved system names and
+  confusable rejection.
+- Authenticated, non-enumerating callsign availability endpoint with bounded
+  per-account/device rate limiting.
+- Unit, route, service, and PostgreSQL uniqueness tests for identity policy.
+
 ## Unreleased — Sprint 1: Project Foundation
 
 ### Added
