@@ -1,6 +1,6 @@
 # Backend
 
-Sprint 1 owner: S01-D03, S01-D04, and S01-D05.
+Sprint 2 active owner: S02-D02 Profile persistence.
 
 The backend is a Python/FastAPI modular-monolith control API.
 
@@ -15,14 +15,14 @@ S01-D03 and S01-D04 provide:
 - liveness, readiness, and version endpoints
 - extensible readiness-check registry
 - automated foundation tests
-- SQLAlchemy account, device, and session models
+- SQLAlchemy account, device, session, and optional one-to-one profile models
 - Alembic migrations with PostGIS enablement
 - database readiness checks
 - anonymous account/device registration
 - short-lived device-bound access tokens
 - hashed rotating refresh credentials, logout, device revocation, and replay-family revocation
 
-No profile, location, proximity, channel, media, or account-recovery behavior exists yet.
+Profile persistence now supports an incomplete identity without inventing a callsign or avatar for existing accounts. Profile APIs, callsign policy, avatar behavior, location, proximity, channels, media, and account recovery are not implemented by S02-D02.
 
 ## Local setup
 
@@ -66,4 +66,4 @@ ROADTALK_RUN_DATABASE_TESTS=1 make backend-test  # migrated disposable database 
 
 ## Scope boundary
 
-D06 adds the mobile secure-session client. Authentication collects only installation platform/identifier and generated security identifiers; it does not collect profile, location, or audio data. The database remains local and containerized; this deliverable provisions no AWS resources or managed database. Later domains remain unimplemented until their approved sprints.
+S02-D02 adds only the nullable profile persistence boundary. It collects no callsign or avatar until a later explicit user action. The database remains local and containerized; this deliverable provisions no AWS resources or managed database. Later domains remain unimplemented until their approved deliverables.
