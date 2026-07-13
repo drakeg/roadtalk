@@ -35,6 +35,17 @@
 - [Threat model](security/threat-model.md)
 - [Privacy model](privacy/privacy-model.md)
 
+## Operations
+
+- [Runbook index](runbooks/README.md)
+- [Clean setup](runbooks/clean-setup.md)
+- [Authentication operations](runbooks/authentication-operations.md)
+- [CI quality and security](runbooks/ci-quality-security.md)
+- [Field-test deployment and rollback](runbooks/field-test-deployment.md)
+- [Database backup and restore](runbooks/database-backup-restore.md)
+- [Credential rotation](runbooks/credential-rotation.md)
+- [Monitoring and cost controls](runbooks/monitoring-cost-controls.md)
+
 ## Templates
 
 - [Sprint specification](templates/SPRINT_TEMPLATE.md)

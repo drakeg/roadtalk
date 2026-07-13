@@ -61,7 +61,9 @@ Both ports bind only to loopback. Redis is optional and excluded from the defaul
 
 ## Application integration
 
-D03/D04 add the backend service, migrations, and tests. D02 documents physical-device and emulator API addressing. Until those deliverables land, this environment intentionally supplies only database and optional cache dependencies.
+For the end-to-end backend and mobile sequence, follow [Clean setup](clean-setup.md).
+This Compose environment supplies the database and optional cache; the backend and
+mobile development client run as host processes.
 
 ## Troubleshooting
 
