@@ -31,6 +31,8 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Disabled-by-default Terraform bootstrap and controlled field-test roots.
 - Low-cost VPC, ARM EC2/SSM, encrypted gp3, and encrypted S3 backup modules.
 - Terraform formatting, validation, disabled-plan, TFLint, Trivy, cost, network, and module-contract gates.
+- Immutable ARM backend image, minimal ECR registry, SSM deployment, and application rollback workflow.
+- Migration-before-replacement ordering and field-test deployment rehearsal runbook.
 
 ### Cost controls
 
@@ -40,4 +42,4 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 
 ### Not yet implemented
 
-- Deployment and monitoring.
+- Monitoring.
