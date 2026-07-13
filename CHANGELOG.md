@@ -36,6 +36,8 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Opt-in three-day API logs, two essential EC2 alarms, operational routing, and a small monthly budget.
 - Operator runbooks for clean setup, authentication, CI, deployment, rollback,
   backup/restore, credential rotation, monitoring, and low-cost shutdown.
+- Sprint 1 requirement/test/deliverable traceability, automated evidence baseline,
+  and privacy-safe manual evidence template.
 
 ### Cost controls
 
