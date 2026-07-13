@@ -45,6 +45,11 @@ variable "repository_arn" {
   type        = string
 }
 
+variable "logs_resource_arn" {
+  description = "CloudWatch Logs ARN prefix for field-test application logs."
+  type        = string
+}
+
 variable "runtime_parameter_prefix" {
   description = "SSM parameter path populated out-of-band; secret values never enter Terraform."
   type        = string

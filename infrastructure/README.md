@@ -18,6 +18,8 @@ root is disabled by default; the default plans create zero resources.
   lifecycle retention.
 - `modules/registry/` — immutable encrypted ECR repository retaining only three
   rollback images.
+- `modules/monitoring/` — two essential alarms, three-day API logs, SNS routing,
+  and monthly budget notifications.
 
 Every module keeps inputs in `variables.tf` and outputs in `outputs.tf`.
 
@@ -40,6 +42,10 @@ When explicitly enabled, recurring charges are primarily one `t4g.small` instanc
 three compressed ECR images. Increase the instance size only after measured load
 requires it. Stop or destroy the field test when it is not actively needed, after
 verifying off-instance backups.
+
+The monitoring baseline adds small CloudWatch alarm/log charges and is required before
+an enabled field test can remain running. Detailed monitoring and custom metrics stay
+off.
 
 ## Prerequisites
 

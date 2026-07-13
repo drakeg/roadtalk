@@ -22,3 +22,8 @@ output "repository_url" {
   description = "Immutable ECR repository URL, or null while disabled."
   value       = try(module.registry[0].repository_url, null)
 }
+
+output "api_log_group" {
+  description = "Short-retention API log group, or null while monitoring is disabled."
+  value       = try(module.monitoring[0].log_group_name, null)
+}

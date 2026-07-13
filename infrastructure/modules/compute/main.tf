@@ -96,6 +96,12 @@ resource "aws_iam_role_policy" "runtime" {
           "ecr:GetDownloadUrlForLayer"
         ]
         Resource = var.repository_arn
+      },
+      {
+        Sid      = "WriteApplicationLogs"
+        Effect   = "Allow"
+        Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+        Resource = var.logs_resource_arn
       }
     ]
   })
