@@ -1,6 +1,7 @@
 import uuid
+from typing import cast
 
-from sqlalchemy import CheckConstraint
+from sqlalchemy import CheckConstraint, Table
 
 from app.db.models import Account, Profile
 
@@ -22,14 +23,16 @@ def test_profile_has_one_to_one_account_ownership() -> None:
         version=1,
     )
 
+    table = cast(Table, Profile.__table__)
+
     assert account.profile is profile
     assert profile.account is account
-    assert list(Profile.__table__.primary_key.columns.keys()) == ["account_id"]
-    assert next(iter(Profile.__table__.c.account_id.foreign_keys)).ondelete == "CASCADE"
+    assert list(table.primary_key.columns.keys()) == ["account_id"]
+    assert next(iter(table.c.account_id.foreign_keys)).ondelete == "CASCADE"
 
 
 def test_profile_metadata_preserves_incomplete_identity_state() -> None:
-    table = Profile.__table__
+    table = cast(Table, Profile.__table__)
     check_names = {
         constraint.name
         for constraint in table.constraints
@@ -49,9 +52,10 @@ def test_profile_metadata_preserves_incomplete_identity_state() -> None:
 
 
 def test_profile_callsign_index_is_unique_and_null_tolerant() -> None:
+    table = cast(Table, Profile.__table__)
     callsign_index = next(
         index
-        for index in Profile.__table__.indexes
+        for index in table.indexes
         if index.name == "uq_profile_normalized_callsign"
     )
 
