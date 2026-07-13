@@ -1,0 +1,45 @@
+services:
+  database:
+    image: postgis/postgis:17-3.5@sha256:6916f5cc87001fa99bc44dbaa3f906d60ef7c813074e943ae4a3cd5a94a16947
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: roadtalk
+      POSTGRES_USER: roadtalk
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+    volumes:
+      - database_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U roadtalk -d roadtalk"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    image: ${ROADTALK_IMAGE:?}
+    restart: unless-stopped
+    env_file: runtime.env
+    depends_on:
+      database:
+        condition: service_healthy
+    expose: ["8000"]
+
+  caddy:
+    image: caddy:2.10-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+    restart: unless-stopped
+    environment:
+      ROADTALK_HOSTNAME: ${ROADTALK_HOSTNAME:?}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  database_data:
+  caddy_data:
+  caddy_config:
