@@ -1,7 +1,7 @@
 # Sprint 1 review record
 
 - Sprint: 1 — Project Foundation
-- Status: Review complete — approval withheld pending manual acceptance
+- Status: Complete — conditionally approved with named exceptions
 - Review date: 2026-07-13
 - Deliverable: S01-D14
 - Issue: #30
@@ -14,10 +14,11 @@ implemented repository foundation, automated test suite, CI/security gates,
 disabled-by-default field-test infrastructure, deployment controls, monitoring, and
 runbooks were reviewed.
 
-The automated demonstration passed. The physical-device and enabled AWS portions
-were not executed, so the Sprint 1 product demonstration is incomplete and final
-approval is withheld. Merging this record does not waive an acceptance test or
-authorize Sprint 2 implementation.
+The automated demonstration passed. The product owner conditionally accepts the
+unperformed manual portions through [named exceptions](sprint-1-acceptance-exceptions.md).
+This approves Sprint 1 and authorizes Sprint 2 planning. It does not claim the
+deferred tests passed, authorize a field test while an exception is open, or
+authorize Sprint 2 coding before its specification is approved.
 
 ## Demonstration record
 
@@ -53,20 +54,20 @@ Not yet demonstrated:
 
 | Test | Result | Review evidence/action |
 |---|---|---|
-| S01-T01 clean setup | PENDING | Automated dependency/database path passes; clean-machine record required |
-| S01-T02 mobile targets | PENDING | Automated mobile suite passes; iOS and Android install/smoke required |
+| S01-T01 clean setup | ACCEPTED EXCEPTION S01-E01 | Automated dependency/database path passes; clean-machine record deferred |
+| S01-T02 mobile targets | ACCEPTED EXCEPTION S01-E01 | Automated mobile suite passes; iOS and Android install/smoke deferred |
 | S01-T03 API foundation | PASS | Backend endpoint, problem, readiness, logging, and correlation tests |
 | S01-T04 database lifecycle | PASS | CI PostGIS migration, drift, constraint, downgrade/forward cycle |
 | S01-T05 auth lifecycle | PASS | Migrated-database integration plus route/service/security tests |
 | S01-T06 replay defense | PASS | Rotated-token replay and family revocation tests |
-| S01-T07 credential storage | PENDING | Client persistence boundaries tested; native device audit required |
-| S01-T08 CI gates | PENDING | Compliant pipelines pass; full controlled-failure matrix required |
-| S01-T09 Terraform | PENDING | Static/zero-resource gates pass; enabled reviewed plan required |
-| S01-T10 deploy/rollback | PENDING | Image and scripts pass gates; live A/B/rollback rehearsal required |
-| S01-T11 monitoring | PENDING | Log tests/contracts pass; notification and budget rehearsal required |
-| S01-T12 runbooks | PENDING | Runbook review passes; restore/rotation execution record required |
+| S01-T07 credential storage | ACCEPTED EXCEPTION S01-E01 | Client persistence boundaries tested; native audit deferred |
+| S01-T08 CI gates | ACCEPTED EXCEPTION S01-E02 | Compliant pipelines pass; controlled-failure matrix deferred |
+| S01-T09 Terraform | ACCEPTED EXCEPTION S01-E03 | Static/zero-resource gates pass; enabled reviewed plan deferred |
+| S01-T10 deploy/rollback | ACCEPTED EXCEPTION S01-E03 | Image and scripts pass gates; live A/B/rollback deferred |
+| S01-T11 monitoring | ACCEPTED EXCEPTION S01-E03 | Log tests/contracts pass; notification/budget rehearsal deferred |
+| S01-T12 runbooks | ACCEPTED EXCEPTION S01-E03 | Runbook review passes; restore/rotation execution deferred |
 | S01-T13 scope protection | PASS | Repository inspection finds no Sprint 2–15 behavior or data collection |
-| S01-T14 full demonstration | PENDING | Remains pending until every required manual record passes or is explicitly waived |
+| S01-T14 full demonstration | PASS — CONDITIONAL | Automated demonstration passed; S01-E01–E03 explicitly accepted with pre-field-test deadline |
 
 The detailed mapping and evidence locations are in
 [Sprint 1 traceability and evidence](sprint-1-traceability.md).
@@ -79,9 +80,9 @@ The detailed mapping and evidence locations are in
 - [x] documentation and runbooks updated
 - [x] no later-sprint feature behavior introduced
 - [x] AWS defaults create zero resources
-- [ ] required clean-machine and physical-device evidence accepted
-- [ ] required enabled field-test, recovery, and alarm evidence accepted
-- [ ] S01-T14 demonstration approved by the product owner
+- [x] clean-machine and physical-device evidence conditionally accepted as S01-E01
+- [x] enabled field-test, recovery, and alarm evidence conditionally accepted as S01-E03
+- [x] S01-T14 demonstration conditionally approved by the product owner
 - [ ] Sprint 1 tracker closed as completed
 
 ## Cost decision
@@ -126,15 +127,9 @@ Improvements:
 
 ## Approval decision and next action
 
-**Decision: approval withheld.** The code and documentation baseline is suitable for
-manual acceptance, but Sprint 1 is not complete while required evidence remains
-pending. Use the records under `docs/evidence/sprint-1/` to execute the outstanding
-tests. The product owner may then either:
-
-1. approve Sprint 1 after all required tests pass; or
-2. explicitly accept a named exception with rationale, risk, owner, and target date.
-
-After that decision, update this record, the traceability matrix, issue #30, and the
-Sprint 1 tracker. Sprint 2 planning may proceed only after Sprint 1 approval and an
-approved Sprint 2 specification; Sprint 2 implementation may not begin from this
-record alone.
+**Decision: conditionally approved.** The product owner selected conditional
+acceptance on 2026-07-13 to preserve zero AWS cost now. S01-E01 through S01-E03 state
+the rationale, risk, controls, and hard pre-field-test deadline. Sprint 1 may close
+and Sprint 2 planning may begin. Sprint 2 implementation still requires an approved
+Sprint 2 specification, and no field-test environment may be enabled while an
+exception remains open.
