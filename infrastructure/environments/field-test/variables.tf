@@ -65,3 +65,21 @@ variable "owner" {
   type        = string
   default     = "roadtalk"
 }
+
+variable "enable_monitoring" {
+  description = "Explicit opt-in for minimal alarms, logs, and budget controls."
+  type        = bool
+  default     = false
+}
+
+variable "alert_email" {
+  description = "Operational contact; required only when monitoring is enabled."
+  type        = string
+  default     = ""
+}
+
+variable "monthly_budget_usd" {
+  description = "Monthly field-test budget limit."
+  type        = number
+  default     = 20
+}
