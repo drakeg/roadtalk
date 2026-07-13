@@ -33,13 +33,13 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Terraform formatting, validation, disabled-plan, TFLint, Trivy, cost, network, and module-contract gates.
 - Immutable ARM backend image, minimal ECR registry, SSM deployment, and application rollback workflow.
 - Migration-before-replacement ordering and field-test deployment rehearsal runbook.
+- Opt-in three-day API logs, two essential EC2 alarms, operational routing, and a small monthly budget.
 
 ### Cost controls
 
 - Local development creates no AWS resources.
 - Managed AWS database/cache services remain disabled until their approved implementation and cost decision.
 - Field-test Terraform defaults to zero resources and excludes NAT Gateway, RDS, managed Redis, ALB, and Fargate.
+- Detailed monitoring, custom metrics, paid dashboards, tracing, and high-volume logs remain disabled.
 
 ### Not yet implemented
-
-- Monitoring.
