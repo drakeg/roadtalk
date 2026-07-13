@@ -34,6 +34,8 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Immutable ARM backend image, minimal ECR registry, SSM deployment, and application rollback workflow.
 - Migration-before-replacement ordering and field-test deployment rehearsal runbook.
 - Opt-in three-day API logs, two essential EC2 alarms, operational routing, and a small monthly budget.
+- Operator runbooks for clean setup, authentication, CI, deployment, rollback,
+  backup/restore, credential rotation, monitoring, and low-cost shutdown.
 
 ### Cost controls
 
