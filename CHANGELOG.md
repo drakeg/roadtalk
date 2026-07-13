@@ -11,6 +11,14 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Bundled avatar catalog and PII-free optional recovery-key decisions.
 - Zero-incremental-AWS-cost gate; no avatar upload/storage/CDN or email/SMS service.
 
+### Added
+
+- Optional one-to-one profile persistence with nullable callsign/avatar state for
+  existing anonymous accounts.
+- Backward-compatible profile migration with account ownership, normalized callsign
+  uniqueness, setup-state, version, and cascade constraints.
+- Profile model invariant tests with no new AWS resources.
+
 ## Unreleased — Sprint 1: Project Foundation
 
 ### Added

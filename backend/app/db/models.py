@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, ForeignKey, Index, String, Text
+from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -25,6 +25,12 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     sessions: Mapped[list["Session"]] = relationship(
         back_populates="account", cascade="all, delete-orphan"
+    )
+    profile: Mapped["Profile | None"] = relationship(
+        back_populates="account",
+        cascade="all, delete-orphan",
+        single_parent=True,
+        uselist=False,
     )
 
 
@@ -66,3 +72,34 @@ class Session(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     account: Mapped[Account] = relationship(back_populates="sessions")
     device: Mapped[Device] = relationship(back_populates="sessions")
+
+
+class Profile(TimestampMixin, Base):
+    __tablename__ = "profile"
+    __table_args__ = (
+        CheckConstraint(
+            "(normalized_callsign IS NULL AND display_callsign IS NULL) OR "
+            "(normalized_callsign IS NOT NULL AND display_callsign IS NOT NULL)",
+            name="callsign_pair",
+        ),
+        CheckConstraint(
+            "NOT setup_completed OR "
+            "(normalized_callsign IS NOT NULL AND display_callsign IS NOT NULL "
+            "AND avatar_id IS NOT NULL)",
+            name="completed_fields",
+        ),
+        CheckConstraint("version >= 1", name="version_positive"),
+        Index("uq_profile_normalized_callsign", "normalized_callsign", unique=True),
+    )
+
+    account_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE"), primary_key=True
+    )
+    normalized_callsign: Mapped[str | None] = mapped_column(String(32))
+    display_callsign: Mapped[str | None] = mapped_column(String(32))
+    avatar_id: Mapped[str | None] = mapped_column(String(64))
+    setup_completed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    callsign_changed_at: Mapped[datetime | None]
+
+    account: Mapped[Account] = relationship(back_populates="profile")
