@@ -6,6 +6,7 @@ import type { SessionStorage } from "./storage";
 import type { SessionSnapshot, StoredSession, TokenPair } from "./types";
 
 type Listener = (snapshot: SessionSnapshot) => void;
+type Fetch = typeof fetch;
 
 export class SessionClient {
   private accessToken: string | null = null;
@@ -77,6 +78,39 @@ export class SessionClient {
     return pair.access_token;
   }
 
+  async authenticatedFetch(
+    url: string,
+    init: RequestInit,
+    fetcher: Fetch = fetch,
+  ): Promise<Response> {
+    if (this.accessToken === null) {
+      throw new Error("No authenticated session.");
+    }
+    let response = await this.fetchWithToken(
+      url,
+      init,
+      this.accessToken,
+      fetcher,
+    );
+    if (response.status !== 401) {
+      return response;
+    }
+
+    try {
+      const rotatedAccessToken = await this.refresh();
+      response = await this.fetchWithToken(
+        url,
+        init,
+        rotatedAccessToken,
+        fetcher,
+      );
+      return response;
+    } catch {
+      await this.clear("Your session expired. Connect again to continue.");
+      throw new Error("The authenticated session expired.");
+    }
+  }
+
   async logout(): Promise<void> {
     const token = this.accessToken;
     try {
@@ -102,6 +136,17 @@ export class SessionClient {
     } finally {
       await this.clear();
     }
+  }
+
+  private async fetchWithToken(
+    url: string,
+    init: RequestInit,
+    token: string,
+    fetcher: Fetch,
+  ): Promise<Response> {
+    const headers = new Headers(init.headers);
+    headers.set("Authorization", `Bearer ${token}`);
+    return fetcher(url, { ...init, headers });
   }
 
   private async acceptRotation(pair: TokenPair): Promise<void> {

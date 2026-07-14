@@ -17,7 +17,7 @@ jest.mock("../session/SessionContext", () => ({
 }));
 
 describe("foundation screen", () => {
-  it("provides an accessible foundation shell and navigates to diagnostics", async () => {
+  it("provides accessible identity and diagnostics navigation", async () => {
     const navigate = jest.fn();
     const view = await render(
       <HomeScreen
@@ -27,6 +27,10 @@ describe("foundation screen", () => {
     );
 
     expect(view.getByRole("header", { name: "RoadTalk" })).toBeOnTheScreen();
+    fireEvent.press(
+      view.getByRole("button", { name: "Set up or edit identity" }),
+    );
+    expect(navigate).toHaveBeenCalledWith("Identity");
     fireEvent.press(
       view.getByRole("button", { name: "Open app diagnostics" }),
     );

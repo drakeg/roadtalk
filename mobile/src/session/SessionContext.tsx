@@ -32,16 +32,21 @@ export function SessionProvider({
   return <Context.Provider value={client}>{children}</Context.Provider>;
 }
 
+export function useSessionClient(): SessionClient {
+  const client = useContext(Context);
+  if (client === null) {
+    throw new Error("Identity and session hooks require SessionProvider.");
+  }
+  return client;
+}
+
 export function useSession(): {
   snapshot: SessionSnapshot;
   logout(): Promise<void>;
   reconnect(): Promise<void>;
   revokeCurrentDevice(): Promise<void>;
 } {
-  const client = useContext(Context);
-  if (client === null) {
-    throw new Error("useSession must be used inside SessionProvider.");
-  }
+  const client = useSessionClient();
   const snapshot = useSyncExternalStore(
     (listener) => client.subscribe(listener),
     () => client.getSnapshot(),
