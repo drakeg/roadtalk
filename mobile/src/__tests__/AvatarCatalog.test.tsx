@@ -21,11 +21,11 @@ describe("bundled avatar catalog", () => {
 
   it("renders active and retained retired avatars accessibly", async () => {
     const active = await render(<AvatarBadge avatarId="road-runner" />);
-    const retired = await render(<AvatarBadge avatarId="classic-rig" />);
-
     expect(
       active.getByRole("image", { name: "Orange horizon avatar" }),
     ).toBeOnTheScreen();
+
+    const retired = await render(<AvatarBadge avatarId="classic-rig" />);
     expect(
       retired.getByRole("image", { name: "Brown classic rig avatar" }),
     ).toBeOnTheScreen();
