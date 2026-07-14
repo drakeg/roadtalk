@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     refresh_token_ttl_seconds: int = Field(default=2_592_000, ge=3600)
     callsign_availability_limit: int = Field(default=30, ge=1, le=300)
     callsign_availability_window_seconds: int = Field(default=60, ge=1, le=3600)
+    callsign_change_cooldown_seconds: int = Field(default=86_400, ge=0, le=2_592_000)
 
 
 @lru_cache
