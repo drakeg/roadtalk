@@ -9,8 +9,8 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.identity.avatars import (
-    AVATARS,
     AVATAR_CATALOG_VERSION,
+    AVATARS,
     AvatarSelectionError,
     avatar_catalog,
     validate_avatar_selection,
