@@ -9,7 +9,7 @@ import {
   useIdentityApi,
 } from "../identity/api";
 import type { IdentityApi } from "../identity/api";
-import type { Profile } from "../identity/types";
+import type { CallsignAvailability, Profile } from "../identity/types";
 import { IdentityScreen } from "../screens/IdentityScreen";
 
 jest.mock("../identity/api", () => {
@@ -39,10 +39,12 @@ function completeProfile(): Profile {
 function api() {
   return {
     getProfile: jest.fn(async () => incompleteProfile()),
-    checkCallsign: jest.fn(async () => ({
-      available: true as const,
-      reason: "available" as const,
-    })),
+    checkCallsign: jest.fn(
+      async (): Promise<CallsignAvailability> => ({
+        available: true,
+        reason: "available",
+      }),
+    ),
     updateProfile: jest.fn(async () => completeProfile()),
   };
 }
