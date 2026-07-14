@@ -94,6 +94,43 @@ describe("secure session client", () => {
     );
   });
 
+  it("refreshes once when an authenticated identity request receives 401", async () => {
+    const remote = api();
+    const secure = storage();
+    remote.register.mockResolvedValue(created);
+    remote.refresh.mockResolvedValue({
+      access_token: "rotated-access",
+      refresh_token: "rotated-refresh",
+      token_type: "bearer",
+      expires_in: 900,
+    });
+    const fetcher = jest
+      .fn()
+      .mockResolvedValueOnce({ status: 401 })
+      .mockResolvedValueOnce({ status: 200 });
+    const client = new SessionClient(
+      remote as unknown as AuthApi,
+      secure as SessionStorage,
+    );
+    await client.bootstrap();
+
+    await client.authenticatedFetch(
+      "https://roadtalk.test/api/v1/me/profile",
+      { method: "GET" },
+      fetcher as typeof fetch,
+    );
+
+    expect(remote.refresh).toHaveBeenCalledWith("refresh-token");
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    const firstHeaders = fetcher.mock.calls[0]?.[1]?.headers as Headers;
+    const secondHeaders = fetcher.mock.calls[1]?.[1]?.headers as Headers;
+    expect(firstHeaders.get("Authorization")).toBe("Bearer access-token");
+    expect(secondHeaders.get("Authorization")).toBe("Bearer rotated-access");
+    expect(JSON.stringify(secure.writeSession.mock.calls)).not.toContain(
+      "rotated-access",
+    );
+  });
+
   it("clears credentials when refresh is rejected", async () => {
     const remote = api();
     const secure = storage(stored());
@@ -106,6 +143,29 @@ describe("secure session client", () => {
     await client.bootstrap();
 
     expect(client.getAccessToken()).toBeNull();
+    expect(secure.clearSession).toHaveBeenCalled();
+    expect(client.getSnapshot().status).toBe("signed_out");
+  });
+
+  it("clears credentials if an authenticated request cannot refresh", async () => {
+    const remote = api();
+    const secure = storage();
+    remote.register.mockResolvedValue(created);
+    remote.refresh.mockRejectedValue(new Error("revoked"));
+    const client = new SessionClient(
+      remote as unknown as AuthApi,
+      secure as SessionStorage,
+    );
+    await client.bootstrap();
+
+    await expect(
+      client.authenticatedFetch(
+        "https://roadtalk.test/api/v1/me/profile",
+        { method: "GET" },
+        jest.fn(async () => ({ status: 401 })) as unknown as typeof fetch,
+      ),
+    ).rejects.toThrow("expired");
+
     expect(secure.clearSession).toHaveBeenCalled();
     expect(client.getSnapshot().status).toBe("signed_out");
   });
