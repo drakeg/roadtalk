@@ -300,7 +300,7 @@ export function IdentityScreen(_props: Props) {
           </Text>
         ) : null}
         {saved ? (
-          <Text accessibilityRole="status" style={styles.success}>
+          <Text style={styles.success}>
             Identity saved.
           </Text>
         ) : null}
