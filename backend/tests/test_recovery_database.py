@@ -69,12 +69,10 @@ async def _recovery_lifecycle() -> None:
             assert recovered.account_id == original.account_id
             assert recovered.device_id == temporary.device_id
             assert recovered.recovery_key != issued.recovery_key
-            assert (
-                await db.scalar(
-                    select(Account.id).where(Account.id == temporary.account_id)
-                )
-                is None
+            temporary_account = await db.scalar(
+                select(Account.id).where(Account.id == temporary.account_id)
             )
+            assert temporary_account is None
 
             for session in (original, temporary):
                 with pytest.raises(AuthenticationError):
@@ -122,9 +120,7 @@ async def _recovery_lifecycle() -> None:
             assert issued.recovery_key not in credential.key_hash
             assert recovered.recovery_key not in credential.key_hash
 
-            await db.execute(
-                delete(Account).where(Account.id == original.account_id)
-            )
+            await db.execute(delete(Account).where(Account.id == original.account_id))
             await db.commit()
     finally:
         await engine.dispose()
