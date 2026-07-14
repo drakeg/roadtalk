@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import Profile
+from app.identity.avatars import AvatarSelectionError, validate_avatar_selection
 from app.identity.callsigns import CallsignPolicyError, validate_callsign
 from app.identity.schemas import (
     CallsignAvailabilityResponse,
@@ -48,15 +49,31 @@ async def update_profile(
     db: AsyncSession,
     *,
     account_id: uuid.UUID,
-    candidate: str,
+    candidate: str | None,
     expected_version: int,
     cooldown_seconds: int,
+    avatar_id: str | None = None,
     now: datetime | None = None,
 ) -> ProfileResponse:
-    try:
-        callsign = validate_callsign(candidate)
-    except CallsignPolicyError as exc:
-        raise ProfileMutationError(exc.code, exc.detail) from exc
+    callsign = None
+    if candidate is not None:
+        try:
+            callsign = validate_callsign(candidate)
+        except CallsignPolicyError as exc:
+            raise ProfileMutationError(exc.code, exc.detail) from exc
+
+    avatar = None
+    if avatar_id is not None:
+        try:
+            avatar = validate_avatar_selection(avatar_id)
+        except AvatarSelectionError as exc:
+            raise ProfileMutationError("AVATAR_UNAVAILABLE", str(exc)) from exc
+
+    if callsign is None and avatar is None:
+        raise ProfileMutationError(
+            "PROFILE_UPDATE_EMPTY",
+            "At least one profile field must be supplied.",
+        )
 
     changed_at = now or datetime.now(UTC).replace(tzinfo=None)
     profile = await db.scalar(
@@ -71,9 +88,11 @@ async def update_profile(
             )
         profile = Profile(
             account_id=account_id,
-            normalized_callsign=callsign.normalized,
-            display_callsign=callsign.display,
-            callsign_changed_at=changed_at,
+            normalized_callsign=callsign.normalized if callsign else None,
+            display_callsign=callsign.display if callsign else None,
+            avatar_id=avatar.id if avatar else None,
+            setup_completed=callsign is not None and avatar is not None,
+            callsign_changed_at=changed_at if callsign else None,
         )
         db.add(profile)
     else:
@@ -83,7 +102,9 @@ async def update_profile(
                 "PROFILE_VERSION_CONFLICT",
                 "The profile changed. Reload it before saving.",
             )
-        normalized_changed = profile.normalized_callsign != callsign.normalized
+        normalized_changed = (
+            callsign is not None and profile.normalized_callsign != callsign.normalized
+        )
         if normalized_changed and profile.callsign_changed_at is not None:
             available_at = profile.callsign_changed_at + timedelta(seconds=cooldown_seconds)
             if available_at > changed_at:
@@ -93,9 +114,14 @@ async def update_profile(
                     "The callsign cannot be changed yet.",
                     retry_after=retry_after,
                 )
-        profile.normalized_callsign = callsign.normalized
-        profile.display_callsign = callsign.display
-        profile.setup_completed = profile.avatar_id is not None
+        if callsign is not None:
+            profile.normalized_callsign = callsign.normalized
+            profile.display_callsign = callsign.display
+        if avatar is not None:
+            profile.avatar_id = avatar.id
+        profile.setup_completed = (
+            profile.normalized_callsign is not None and profile.avatar_id is not None
+        )
         profile.version += 1
         if normalized_changed:
             profile.callsign_changed_at = changed_at
