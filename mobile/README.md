@@ -20,6 +20,8 @@ Sprint 1 and S02-D05 provide:
 - refresh rotation, logout, device revocation, and fail-closed recovery
 - a versioned, code-native bundled avatar catalog with accessible labels
 - retained rendering metadata for retired avatar identifiers
+- accessible callsign setup and settings editing with availability checks
+- bundled-avatar selection, optimistic conflict handling, and offline retry
 - no downloaded or user-uploaded avatar media
 
 ## Avatar catalog
@@ -32,6 +34,22 @@ groups each local glyph and palette into one screen-reader image with a descript
 Catalog changes must preserve existing identifiers and synchronize with the backend
 contract test. User uploads, remote image URLs, object storage, and image-processing
 services are outside Sprint 2.
+
+## Identity setup and settings
+
+Authenticated users can open **Identity settings** without enabling any later-sprint
+feature. The same screen handles first-time setup and later edits:
+
+- callsigns receive local shape validation and an authenticated server availability check;
+- the UI discloses that callsigns are public pseudonyms;
+- only active bundled avatars can be selected, while a retained retired avatar still renders;
+- saves use the current profile version and require a reload after a conflict;
+- loading, availability, save, offline, cooldown, and retired-avatar errors remain retryable;
+- controls include screen-reader roles, labels, live status updates, and 48-point targets.
+
+The client holds access tokens only inside the existing session client. Identity requests
+reuse its bearer transport and perform at most one refresh-and-retry after a 401.
+No callsign, account identifier, token, or request body is logged or stored by this flow.
 
 ## Setup
 
