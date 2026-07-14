@@ -32,6 +32,12 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         single_parent=True,
         uselist=False,
     )
+    recovery_credential: Mapped["RecoveryCredential | None"] = relationship(
+        back_populates="account",
+        cascade="all, delete-orphan",
+        single_parent=True,
+        uselist=False,
+    )
 
 
 class Device(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -103,3 +109,16 @@ class Profile(TimestampMixin, Base):
     callsign_changed_at: Mapped[datetime | None]
 
     account: Mapped[Account] = relationship(back_populates="profile")
+
+
+class RecoveryCredential(TimestampMixin, Base):
+    __tablename__ = "recovery_credential"
+
+    account_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE"), primary_key=True
+    )
+    key_id: Mapped[uuid.UUID] = mapped_column(unique=True)
+    key_hash: Mapped[str] = mapped_column(String(255))
+    rotated_at: Mapped[datetime]
+
+    account: Mapped[Account] = relationship(back_populates="recovery_credential")
