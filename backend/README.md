@@ -54,6 +54,8 @@ The API listens on `127.0.0.1:8000` by default.
 | `POST /api/v1/auth/logout` | Revoke the current session. |
 | `DELETE /api/v1/auth/devices/{device_id}` | Revoke all active sessions for an owned device. |
 | `GET /api/v1/callsigns/availability?callsign=...` | Authenticated, rate-limited callsign check. |
+| `POST /api/v1/me/recovery-key` | Create or rotate an authenticated account recovery key. |
+| `POST /api/v1/sessions/recover` | Transfer an anonymous account and establish a replacement session. |
 | `GET /api/v1/me/profile` | Read the authenticated account's private setup state and minimal public identity. |
 | `PATCH /api/v1/me/profile` | Conditionally update the authenticated account's callsign. |
 
@@ -76,3 +78,22 @@ collisions, and cooldown violations fail closed. The reusable public identity DT
 contains only display callsign and bundled-avatar identifier. Avatar changes remain
 read-only until S02-D05 supplies catalog validation. No AWS resources, Terraform
 changes, or managed services are added.
+
+
+## Anonymous recovery
+
+S02-D07 adds optional recovery without email, SMS, passwords, or hosted identity.
+A recovery key contains a non-secret random lookup selector and at least 256 bits of
+secret entropy. The server stores the selector plus only a salted, versioned scrypt
+hash of the complete key, protected by a separate application pepper.
+
+Creating or rotating a key returns plaintext once. Successful recovery atomically
+rotates the key, revokes every existing account session, transfers an eligible fresh
+installation, and creates a replacement session. Invalid, unknown, and replayed keys
+share the same failure response. Abuse controls are bounded and process-local for the
+current single-worker field-test design; direct peer address, installation, selector,
+account, and device dimensions are checked without logging their values.
+
+Recovery material must never enter logs, analytics, URLs, ordinary storage, or support
+workflows. A multi-worker deployment requires a separately approved shared rate-limit
+design. This implementation adds no AWS resources or managed cache.
