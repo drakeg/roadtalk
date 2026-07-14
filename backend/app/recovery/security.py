@@ -1,4 +1,5 @@
 import base64
+import binascii
 import hashlib
 import hmac
 import secrets
@@ -41,7 +42,7 @@ def parse_recovery_key(raw: str) -> tuple[uuid.UUID, bytes]:
         key_id = uuid.UUID(hex=parts[1])
         padding = "=" * (-len(parts[2]) % 4)
         secret = base64.urlsafe_b64decode(parts[2] + padding)
-    except (ValueError, TypeError) as exc:
+    except (binascii.Error, ValueError, TypeError) as exc:
         raise RecoveryKeyFormatError("Recovery key format is invalid.") from exc
     if len(secret) != RECOVERY_SECRET_BYTES:
         raise RecoveryKeyFormatError("Recovery key format is invalid.")
@@ -110,13 +111,13 @@ def verify_recovery_key(raw: str, encoded: str, pepper: str) -> bool:
             p=parameters[2],
             dklen=len(expected),
         )
-    except (ValueError, TypeError):
+    except (binascii.Error, ValueError, TypeError):
         return False
     return hmac.compare_digest(actual, expected)
 
 
 DUMMY_RECOVERY_HASH = hash_recovery_key(
     "rtk1.00000000000000000000000000000000.invalid",
-    "roadtalk-dummy-recovery-pepper",
+    "",
     salt=b"roadtalk-dummy!!",
 )
