@@ -5,13 +5,25 @@ from fastapi import APIRouter, HTTPException, Query, Request, status
 
 from app.api.auth import CurrentSession, DatabaseSession
 from app.identity.callsigns import CallsignAvailabilityLimiter, CallsignRateLimitError
-from app.identity.schemas import CallsignAvailabilityResponse
-from app.identity.service import callsign_availability
+from app.identity.schemas import (
+    CallsignAvailabilityResponse,
+    ProfileResponse,
+    ProfileUpdateRequest,
+)
+from app.identity.service import (
+    ProfileMutationError,
+    callsign_availability,
+    read_profile,
+    update_profile,
+)
 
-router = APIRouter(prefix="/api/v1/callsigns", tags=["identity"])
+router = APIRouter(tags=["identity"])
 
 
-@router.get("/availability", response_model=CallsignAvailabilityResponse)
+@router.get(
+    "/api/v1/callsigns/availability",
+    response_model=CallsignAvailabilityResponse,
+)
 async def availability(
     request: Request,
     db: DatabaseSession,
@@ -40,3 +52,38 @@ async def availability(
         account_id=current.account.id,
         candidate=candidate,
     )
+
+
+@router.get("/api/v1/me/profile", response_model=ProfileResponse)
+async def get_profile(db: DatabaseSession, current: CurrentSession) -> ProfileResponse:
+    return await read_profile(db, account_id=current.account.id)
+
+
+@router.patch("/api/v1/me/profile", response_model=ProfileResponse)
+async def patch_profile(
+    request: Request,
+    payload: ProfileUpdateRequest,
+    db: DatabaseSession,
+    current: CurrentSession,
+) -> ProfileResponse:
+    try:
+        return await update_profile(
+            db,
+            account_id=current.account.id,
+            candidate=payload.callsign,
+            expected_version=payload.version,
+            cooldown_seconds=request.app.state.settings.callsign_change_cooldown_seconds,
+        )
+    except ProfileMutationError as exc:
+        status_code = status.HTTP_422_UNPROCESSABLE_CONTENT
+        headers: dict[str, str] | None = None
+        if exc.code in {"PROFILE_VERSION_CONFLICT", "CALLSIGN_UNAVAILABLE"}:
+            status_code = status.HTTP_409_CONFLICT
+        elif exc.code == "CALLSIGN_CHANGE_COOLDOWN":
+            status_code = status.HTTP_429_TOO_MANY_REQUESTS
+            headers = {"Retry-After": str(exc.retry_after)}
+        raise HTTPException(
+            status_code=status_code,
+            detail={"code": exc.code, "detail": exc.detail},
+            headers=headers,
+        ) from exc

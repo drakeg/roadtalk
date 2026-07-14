@@ -24,6 +24,10 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Authenticated, non-enumerating callsign availability endpoint with bounded
   per-account/device rate limiting.
 - Unit, route, service, and PostgreSQL uniqueness tests for identity policy.
+- Owner-scoped private profile read and conditional callsign update endpoints.
+- Minimal public identity DTO limited to display callsign and bundled-avatar ID.
+- Optimistic version conflicts, configurable callsign cooldown, over-posting guards,
+  and database lifecycle tests with no new AWS resources.
 
 ## Unreleased — Sprint 1: Project Foundation
 
