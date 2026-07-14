@@ -175,15 +175,12 @@ async def recover_account(
             refresh_token,
             settings.refresh_token_pepper.get_secret_value(),
         ),
-        expires_at=changed_at
-        + timedelta(seconds=settings.refresh_token_ttl_seconds),
+        expires_at=changed_at + timedelta(seconds=settings.refresh_token_ttl_seconds),
     )
     db.add(session)
 
     if source_account_id is not None:
-        await db.execute(
-            delete(Account).where(Account.id == source_account_id)
-        )
+        await db.execute(delete(Account).where(Account.id == source_account_id))
 
     try:
         await db.commit()
