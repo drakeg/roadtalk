@@ -1,6 +1,6 @@
 # Backend
 
-Sprint 2 active owner: S02-D02 Profile persistence.
+Sprint 2 active owner: S02-D03 Callsign policy and availability.
 
 The backend is a Python/FastAPI modular-monolith control API.
 
@@ -22,7 +22,7 @@ S01-D03 and S01-D04 provide:
 - short-lived device-bound access tokens
 - hashed rotating refresh credentials, logout, device revocation, and replay-family revocation
 
-Profile persistence now supports an incomplete identity without inventing a callsign or avatar for existing accounts. Profile APIs, callsign policy, avatar behavior, location, proximity, channels, media, and account recovery are not implemented by S02-D02.
+Profile persistence supports an incomplete identity without inventing a callsign or avatar. S02-D03 adds authenticated, rate-limited availability checks and the shared callsign policy; profile mutation, avatar behavior, location, proximity, channels, media, and account recovery remain unimplemented.
 
 ## Local setup
 
@@ -53,6 +53,7 @@ The API listens on `127.0.0.1:8000` by default.
 | `GET /api/v1/auth/session` | Validate the current access token/session. |
 | `POST /api/v1/auth/logout` | Revoke the current session. |
 | `DELETE /api/v1/auth/devices/{device_id}` | Revoke all active sessions for an owned device. |
+| `GET /api/v1/callsigns/availability?callsign=...` | Authenticated, rate-limited callsign check. |
 
 ## Checks
 
@@ -66,4 +67,10 @@ ROADTALK_RUN_DATABASE_TESTS=1 make backend-test  # migrated disposable database 
 
 ## Scope boundary
 
-S02-D02 adds only the nullable profile persistence boundary. It collects no callsign or avatar until a later explicit user action. The database remains local and containerized; this deliverable provisions no AWS resources or managed database. Later domains remain unimplemented until their approved deliverables.
+S02-D03 normalizes NFKC input to an ASCII, case-insensitive identifier of 3–24
+characters; letters, numbers, and single internal hyphens are allowed. System-like
+names and prefixes are reserved, and non-ASCII confusables fail closed. Availability
+returns only `available` and a stable reason, excludes the current account's own
+callsign, and uses a bounded per-account/device in-process limiter suitable for the
+single-worker field-test design. Scaling to multiple API workers requires a separate
+shared rate-limit decision. No AWS resources or managed cache are added.

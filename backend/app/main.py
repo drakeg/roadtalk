@@ -4,10 +4,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api.auth import router as auth_router
+from app.api.identity import router as identity_router
 from app.api.system import router as system_router
 from app.config import Settings, get_settings
 from app.db.session import check_database, dispose_database
 from app.health import ReadinessRegistry
+from app.identity.callsigns import CallsignAvailabilityLimiter
 from app.logging import configure_logging
 from app.middleware import RequestContextMiddleware
 from app.problems import install_problem_handlers
@@ -32,12 +34,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = resolved
     app.state.readiness = ReadinessRegistry()
+    app.state.callsign_limiter = CallsignAvailabilityLimiter(
+        limit=resolved.callsign_availability_limit,
+        window_seconds=resolved.callsign_availability_window_seconds,
+    )
     if resolved.database_check_enabled:
         app.state.readiness.register("database", check_database)
     app.add_middleware(RequestContextMiddleware, settings=resolved)
     install_problem_handlers(app)
     app.include_router(system_router)
     app.include_router(auth_router)
+    app.include_router(identity_router)
     return app
 
 
