@@ -204,18 +204,10 @@ async def _temporary_account_is_transferable(
     account_id: uuid.UUID,
     device_id: uuid.UUID,
 ) -> bool:
-    account = await db.scalar(
-        select(Account).where(Account.id == account_id).with_for_update()
-    )
-    if (
-        account is None
-        or account.status != "active"
-        or account.account_type != "anonymous"
-    ):
+    account = await db.scalar(select(Account).where(Account.id == account_id).with_for_update())
+    if account is None or account.status != "active" or account.account_type != "anonymous":
         return False
-    profile = await db.scalar(
-        select(Profile.account_id).where(Profile.account_id == account_id)
-    )
+    profile = await db.scalar(select(Profile.account_id).where(Profile.account_id == account_id))
     recovery = await db.scalar(
         select(RecoveryCredential.account_id).where(
             RecoveryCredential.account_id == account_id
