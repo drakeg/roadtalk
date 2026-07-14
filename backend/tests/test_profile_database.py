@@ -2,6 +2,7 @@ import asyncio
 import os
 
 import pytest
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.config import Settings
@@ -28,13 +29,15 @@ async def _profile_lifecycle() -> None:
         async with factory() as db:
             db.add_all([first, second])
             await db.commit()
+            first_id = first.id
+            second_id = second.id
 
-            missing = await read_profile(db, account_id=first.id)
+            missing = await read_profile(db, account_id=first_id)
             assert missing.version == 0
 
             created = await update_profile(
                 db,
-                account_id=first.id,
+                account_id=first_id,
                 candidate="Road-Runner",
                 expected_version=0,
                 cooldown_seconds=0,
@@ -44,7 +47,7 @@ async def _profile_lifecycle() -> None:
 
             updated = await update_profile(
                 db,
-                account_id=first.id,
+                account_id=first_id,
                 candidate="Night-Owl",
                 expected_version=1,
                 cooldown_seconds=0,
@@ -54,7 +57,7 @@ async def _profile_lifecycle() -> None:
             with pytest.raises(ProfileMutationError) as stale:
                 await update_profile(
                     db,
-                    account_id=first.id,
+                    account_id=first_id,
                     candidate="Road-Ranger",
                     expected_version=1,
                     cooldown_seconds=0,
@@ -64,20 +67,19 @@ async def _profile_lifecycle() -> None:
             with pytest.raises(ProfileMutationError) as collision:
                 await update_profile(
                     db,
-                    account_id=second.id,
+                    account_id=second_id,
                     candidate="NIGHT-OWL",
                     expected_version=0,
                     cooldown_seconds=0,
                 )
             assert collision.value.code == "CALLSIGN_UNAVAILABLE"
 
-            first_read = await read_profile(db, account_id=first.id)
-            second_read = await read_profile(db, account_id=second.id)
+            first_read = await read_profile(db, account_id=first_id)
+            second_read = await read_profile(db, account_id=second_id)
             assert first_read.identity.callsign == "Night-Owl"
             assert second_read.version == 0
 
-            await db.delete(first)
-            await db.delete(second)
+            await db.execute(delete(Account).where(Account.id.in_([first_id, second_id])))
             await db.commit()
     finally:
         await engine.dispose()
