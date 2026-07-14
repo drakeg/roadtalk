@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     database_check_enabled: bool = True
     token_signing_key: SecretStr = SecretStr("local-only-signing-key-change-me")
     refresh_token_pepper: SecretStr = SecretStr("local-only-refresh-pepper-change-me")
+    recovery_key_pepper: SecretStr = SecretStr("local-only-recovery-pepper-change-me")
     token_issuer: str = "roadtalk-api"
     token_audience: str = "roadtalk-mobile"
     access_token_ttl_seconds: int = Field(default=900, ge=60, le=3600)
@@ -36,6 +37,10 @@ class Settings(BaseSettings):
     callsign_availability_limit: int = Field(default=30, ge=1, le=300)
     callsign_availability_window_seconds: int = Field(default=60, ge=1, le=3600)
     callsign_change_cooldown_seconds: int = Field(default=86_400, ge=0, le=2_592_000)
+    recovery_attempt_limit: int = Field(default=5, ge=1, le=30)
+    recovery_attempt_window_seconds: int = Field(default=900, ge=60, le=86_400)
+    recovery_mutation_limit: int = Field(default=5, ge=1, le=30)
+    recovery_mutation_window_seconds: int = Field(default=3_600, ge=60, le=86_400)
 
 
 @lru_cache
