@@ -76,9 +76,7 @@ async def recover_session(
     raw_key = payload.recovery_key.get_secret_value()
     parsed_key_id = recovery_key_id(raw_key)
     selector = hashlib.sha256(
-        (str(parsed_key_id) if parsed_key_id is not None else "invalid").encode(
-            "ascii"
-        )
+        (str(parsed_key_id) if parsed_key_id is not None else "invalid").encode("ascii")
     ).hexdigest()
     peer = request.client.host if request.client is not None else "unknown"
     limiter = cast(RecoveryLimiter, request.app.state.recovery_limiter)
