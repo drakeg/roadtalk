@@ -32,6 +32,11 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Backend profile validation that rejects unknown and retired avatar selections.
 - Accessible code-native mobile avatar assets with backend/mobile contract tests.
 - Atomic callsign/avatar profile updates and setup-completion state.
+- Accessible mobile identity setup and settings flow with callsign preflight and
+  authenticated availability checks.
+- Bundled-avatar selection, optimistic conflict reload, explicit offline retry, and
+  retained retired-avatar rendering.
+- Session-bound identity transport with one refresh retry and no new credential storage.
 
 ## Unreleased — Sprint 1: Project Foundation
 
