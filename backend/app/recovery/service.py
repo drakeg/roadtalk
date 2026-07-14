@@ -209,14 +209,9 @@ async def _temporary_account_is_transferable(
         return False
     profile = await db.scalar(select(Profile.account_id).where(Profile.account_id == account_id))
     recovery = await db.scalar(
-        select(RecoveryCredential.account_id).where(
-            RecoveryCredential.account_id == account_id
-        )
+        select(RecoveryCredential.account_id).where(RecoveryCredential.account_id == account_id)
     )
     other_device = await db.scalar(
-        select(Device.id).where(
-            Device.account_id == account_id,
-            Device.id != device_id,
-        )
+        select(Device.id).where(Device.account_id == account_id, Device.id != device_id)
     )
     return profile is None and recovery is None and other_device is None
