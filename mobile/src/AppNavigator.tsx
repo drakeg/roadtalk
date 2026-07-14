@@ -3,11 +3,13 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { DiagnosticsScreen } from "./screens/DiagnosticsScreen";
 import { HomeScreen } from "./screens/HomeScreen";
+import { IdentityScreen } from "./screens/IdentityScreen";
 import { colors } from "./theme";
 
 export type RootStackParamList = {
   Foundation: undefined;
   Diagnostics: undefined;
+  Identity: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -37,6 +39,11 @@ export function AppNavigator() {
           component={HomeScreen}
           name="Foundation"
           options={{ title: "RoadTalk" }}
+        />
+        <Stack.Screen
+          component={IdentityScreen}
+          name="Identity"
+          options={{ title: "Identity" }}
         />
         <Stack.Screen
           component={DiagnosticsScreen}
