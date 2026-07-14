@@ -22,11 +22,7 @@ from app.main import create_app
 def test_catalog_is_versioned_accessible_and_matches_mobile_bundle() -> None:
     response = avatar_catalog()
     mobile_path = (
-        Path(__file__).resolve().parents[2]
-        / "mobile"
-        / "src"
-        / "identity"
-        / "avatarCatalog.json"
+        Path(__file__).resolve().parents[2] / "mobile" / "src" / "identity" / "avatarCatalog.json"
     )
     mobile = json.loads(mobile_path.read_text(encoding="utf-8"))
 
