@@ -28,6 +28,10 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Minimal public identity DTO limited to display callsign and bundled-avatar ID.
 - Optimistic version conflicts, configurable callsign cooldown, over-posting guards,
   and database lifecycle tests with no new AWS resources.
+- Versioned bundled avatar catalog endpoint with active and retained-retired metadata.
+- Backend profile validation that rejects unknown and retired avatar selections.
+- Accessible code-native mobile avatar assets with backend/mobile contract tests.
+- Atomic callsign/avatar profile updates and setup-completion state.
 
 ## Unreleased — Sprint 1: Project Foundation
 
