@@ -17,8 +17,8 @@ export function HomeScreen({ navigation }: Props) {
         RoadTalk
       </Text>
       <Text style={styles.body}>
-        The project foundation is installed. Communication features arrive in
-        later approved sprints.
+        Set up a public pseudonymous identity now. Communication features arrive
+        in later approved sprints.
       </Text>
       <View accessibilityLiveRegion="polite" style={styles.status}>
         <Text style={styles.statusLabel}>Anonymous session</Text>
@@ -33,10 +33,26 @@ export function HomeScreen({ navigation }: Props) {
           <Text style={styles.message}>{snapshot.message}</Text>
         ) : null}
       </View>
+      {authenticated ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Set up or edit identity"
+          onPress={() => navigation.navigate("Identity")}
+          style={({ pressed }) => [
+            styles.button,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          <Text style={styles.buttonText}>Identity settings</Text>
+        </Pressable>
+      ) : null}
       <Pressable
         accessibilityRole="button"
         onPress={() => void (authenticated ? logout() : reconnect())}
-        style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}
+        style={({ pressed }) => [
+          styles.secondaryButton,
+          pressed && styles.buttonPressed,
+        ]}
       >
         <Text style={styles.secondaryButtonText}>
           {authenticated ? "Log out" : "Connect anonymously"}
@@ -46,7 +62,10 @@ export function HomeScreen({ navigation }: Props) {
         accessibilityRole="button"
         accessibilityLabel="Open app diagnostics"
         onPress={() => navigation.navigate("Diagnostics")}
-        style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+        style={({ pressed }) => [
+          styles.button,
+          pressed && styles.buttonPressed,
+        ]}
       >
         <Text style={styles.buttonText}>View diagnostics</Text>
       </Pressable>
