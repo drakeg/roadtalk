@@ -90,9 +90,7 @@ async def recover_account(
     credential: RecoveryCredential | None = None
     if key_id is not None:
         credential = await db.scalar(
-            select(RecoveryCredential)
-            .where(RecoveryCredential.key_id == key_id)
-            .with_for_update()
+            select(RecoveryCredential).where(RecoveryCredential.key_id == key_id).with_for_update()
         )
 
     encoded = credential.key_hash if credential is not None else DUMMY_RECOVERY_HASH
@@ -101,17 +99,13 @@ async def recover_account(
         raise recovery_failed()
 
     account = await db.scalar(
-        select(Account)
-        .where(Account.id == credential.account_id)
-        .with_for_update()
+        select(Account).where(Account.id == credential.account_id).with_for_update()
     )
     if account is None or account.status != "active":
         raise recovery_failed()
 
     device = await db.scalar(
-        select(Device)
-        .where(Device.installation_id == installation_id)
-        .with_for_update()
+        select(Device).where(Device.installation_id == installation_id).with_for_update()
     )
     if device is not None and device.platform != platform:
         raise recovery_failed()
