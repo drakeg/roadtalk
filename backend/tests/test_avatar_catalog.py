@@ -1,5 +1,6 @@
 import asyncio
 import json
+import uuid
 from pathlib import Path
 from unittest.mock import AsyncMock
 
@@ -79,7 +80,7 @@ def test_retired_avatar_update_fails_before_database_access() -> None:
         asyncio.run(
             update_profile(
                 db,
-                account_id=__import__("uuid").uuid4(),
+                account_id=uuid.uuid4(),
                 candidate="Road-Runner",
                 avatar_id="classic-rig",
                 expected_version=0,
