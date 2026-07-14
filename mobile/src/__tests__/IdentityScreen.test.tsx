@@ -1,4 +1,5 @@
 import {
+  act,
   fireEvent,
   render,
   waitFor,
@@ -58,6 +59,14 @@ async function renderScreen() {
   );
 }
 
+async function flushInteraction(interaction: () => void) {
+  await act(async () => {
+    interaction();
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+}
+
 describe("mobile identity experience", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -71,16 +80,24 @@ describe("mobile identity experience", () => {
     expect(
       await view.findByRole("header", { name: "Set up your identity" }),
     ).toBeOnTheScreen();
-    fireEvent.changeText(view.getByLabelText("Callsign"), " Road-Runner ");
-    fireEvent.press(
-      view.getByRole("radio", { name: "Select Orange horizon avatar" }),
+    await flushInteraction(() =>
+      fireEvent.changeText(view.getByLabelText("Callsign"), " Road-Runner "),
     );
-    fireEvent.press(
-      view.getByRole("button", { name: "Check callsign availability" }),
+    await flushInteraction(() =>
+      fireEvent.press(
+        view.getByRole("radio", { name: "Select Orange horizon avatar" }),
+      ),
+    );
+    await flushInteraction(() =>
+      fireEvent.press(
+        view.getByRole("button", { name: "Check callsign availability" }),
+      ),
     );
     expect(await view.findByText("This callsign is available.")).toBeOnTheScreen();
 
-    fireEvent.press(view.getByRole("button", { name: "Save identity" }));
+    await flushInteraction(() =>
+      fireEvent.press(view.getByRole("button", { name: "Save identity" })),
+    );
 
     await waitFor(() =>
       expect(remote.updateProfile).toHaveBeenCalledWith({
@@ -99,9 +116,13 @@ describe("mobile identity experience", () => {
     const view = await renderScreen();
     await view.findByRole("header", { name: "Set up your identity" });
 
-    fireEvent.changeText(view.getByLabelText("Callsign"), "road talk");
-    fireEvent.press(
-      view.getByRole("button", { name: "Check callsign availability" }),
+    await flushInteraction(() =>
+      fireEvent.changeText(view.getByLabelText("Callsign"), "road talk"),
+    );
+    await flushInteraction(() =>
+      fireEvent.press(
+        view.getByRole("button", { name: "Check callsign availability" }),
+      ),
     );
 
     expect(
@@ -120,9 +141,13 @@ describe("mobile identity experience", () => {
     const view = await renderScreen();
     await view.findByRole("header", { name: "Set up your identity" });
 
-    fireEvent.changeText(view.getByLabelText("Callsign"), "Night-Owl");
-    fireEvent.press(
-      view.getByRole("button", { name: "Check callsign availability" }),
+    await flushInteraction(() =>
+      fireEvent.changeText(view.getByLabelText("Callsign"), "Night-Owl"),
+    );
+    await flushInteraction(() =>
+      fireEvent.press(
+        view.getByRole("button", { name: "Check callsign availability" }),
+      ),
     );
 
     expect(
@@ -142,8 +167,10 @@ describe("mobile identity experience", () => {
     expect(
       await view.findByText(/Identity is unavailable/i),
     ).toBeOnTheScreen();
-    fireEvent.press(
-      view.getByRole("button", { name: "Retry loading identity" }),
+    await flushInteraction(() =>
+      fireEvent.press(
+        view.getByRole("button", { name: "Retry loading identity" }),
+      ),
     );
 
     expect(
@@ -166,12 +193,16 @@ describe("mobile identity experience", () => {
     const view = await renderScreen();
     await view.findByRole("header", { name: "Edit your identity" });
 
-    fireEvent.press(view.getByRole("button", { name: "Save identity" }));
+    await flushInteraction(() =>
+      fireEvent.press(view.getByRole("button", { name: "Save identity" })),
+    );
 
     expect(
       await view.findByText(/changed on another session/i),
     ).toBeOnTheScreen();
-    fireEvent.press(view.getByRole("button", { name: "Reload profile" }));
+    await flushInteraction(() =>
+      fireEvent.press(view.getByRole("button", { name: "Reload profile" })),
+    );
     await waitFor(() => expect(remote.getProfile).toHaveBeenCalledTimes(2));
   });
 
