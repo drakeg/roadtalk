@@ -26,9 +26,14 @@ def test_recovery_routes_have_intended_authentication_boundaries() -> None:
     recover_operation = schema["paths"]["/api/v1/sessions/recover"]["post"]
     assert create_operation["security"] == [{"HTTPBearer": []}]
     assert "security" not in recover_operation
-    assert set(
-        schema["components"]["schemas"]["RecoverySessionRequest"]["properties"]
-    ) == {"recovery_key", "installation_id", "platform"}
+    request_properties = schema["components"]["schemas"]["RecoverySessionRequest"][
+        "properties"
+    ]
+    assert set(request_properties) == {
+        "recovery_key",
+        "installation_id",
+        "platform",
+    }
 
 
 def test_recovery_key_creation_requires_auth_without_database_access() -> None:
