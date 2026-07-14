@@ -1,12 +1,12 @@
 # Mobile
 
-Sprint 1 owner: S01-D02 and S01-D06.
+Sprint 2 owner: S02-D05 and S02-D06.
 
 This directory contains the Expo/React Native/TypeScript development-build application.
 
 ## Current foundation
 
-S01-D02 and S01-D06 provide:
+Sprint 1 and S02-D05 provide:
 
 - Expo SDK 57 with React Native 0.86 and the New Architecture
 - iOS and Android development-client configuration
@@ -14,12 +14,24 @@ S01-D02 and S01-D06 provide:
 - accessible native-stack navigation shell
 - application-level error boundary with retry behavior
 - Jest and React Native Testing Library smoke tests
-- strict TypeScript and Expo Doctor validation
-- no profile, location, audio, PTT, proximity, or channel behavior
 - anonymous device registration and session bootstrap
 - refresh credentials stored only through Expo SecureStore
 - access credentials held only in process memory
 - refresh rotation, logout, device revocation, and fail-closed recovery
+- a versioned, code-native bundled avatar catalog with accessible labels
+- retained rendering metadata for retired avatar identifiers
+- no downloaded or user-uploaded avatar media
+
+## Avatar catalog
+
+`src/identity/avatarCatalog.json` is the mobile catalog contract. Active entries are
+available for selection. Retired entries remain bundled so an existing public identity
+continues to render, but the backend rejects new retired selections. `AvatarBadge`
+groups each local glyph and palette into one screen-reader image with a descriptive label.
+
+Catalog changes must preserve existing identifiers and synchronize with the backend
+contract test. User uploads, remote image URLs, object storage, and image-processing
+services are outside Sprint 2.
 
 ## Setup
 
@@ -54,17 +66,17 @@ The native commands create local iOS/Android development projects and run the Ex
 
 ## Physical-device acceptance
 
-Before S01-D02 is accepted:
+Before a field test:
 
 1. install a development build on one supported iOS target and one supported Android target;
 2. confirm the RoadTalk foundation screen launches;
 3. confirm the diagnostics screen shows the intended API URL;
 4. verify text scaling, screen-reader labels, button target size, light/dark system behavior, and error fallback;
-5. confirm no profile, location, microphone, notification, or tracking permission is requested.
+5. confirm no location, microphone, notification, or tracking permission is requested.
 
 ## Credential-storage verification
 
-The client intentionally has no AsyncStorage dependency. Before accepting S01-D06:
+The client intentionally has no AsyncStorage dependency. Before field testing:
 
 1. inspect iOS Keychain and Android Keystore-backed SecureStore behavior on development builds;
 2. verify raw access and refresh credentials do not appear in logs, screenshots, URLs,
@@ -78,5 +90,5 @@ development logs must never print request bodies, authorization headers, or stor
 
 ## Scope boundary
 
-The authenticated shell exposes no profile, location, audio, PTT, proximity, or channel
-feature. Later domains remain unavailable until their approved sprints.
+The authenticated shell exposes no location, audio, PTT, proximity, or channel feature.
+Later domains remain unavailable until their approved sprints.
