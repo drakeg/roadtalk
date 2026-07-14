@@ -1,6 +1,6 @@
 # Backend
 
-Sprint 2 active owner: S02-D03 Callsign policy and availability.
+Sprint 2 active owner: S02-D04 Profile and identity API.
 
 The backend is a Python/FastAPI modular-monolith control API.
 
@@ -22,7 +22,7 @@ S01-D03 and S01-D04 provide:
 - short-lived device-bound access tokens
 - hashed rotating refresh credentials, logout, device revocation, and replay-family revocation
 
-Profile persistence supports an incomplete identity without inventing a callsign or avatar. S02-D03 adds authenticated, rate-limited availability checks and the shared callsign policy; profile mutation, avatar behavior, location, proximity, channels, media, and account recovery remain unimplemented.
+Profile persistence supports an incomplete identity without inventing a callsign or avatar. S02-D04 adds owner-scoped profile reads and conditional callsign updates using the shared policy. Avatar mutation remains gated on the bundled catalog in S02-D05; location, proximity, channels, media, and account recovery remain unimplemented.
 
 ## Local setup
 
@@ -54,6 +54,8 @@ The API listens on `127.0.0.1:8000` by default.
 | `POST /api/v1/auth/logout` | Revoke the current session. |
 | `DELETE /api/v1/auth/devices/{device_id}` | Revoke all active sessions for an owned device. |
 | `GET /api/v1/callsigns/availability?callsign=...` | Authenticated, rate-limited callsign check. |
+| `GET /api/v1/me/profile` | Read the authenticated account's private setup state and minimal public identity. |
+| `PATCH /api/v1/me/profile` | Conditionally update the authenticated account's callsign. |
 
 ## Checks
 
@@ -67,10 +69,10 @@ ROADTALK_RUN_DATABASE_TESTS=1 make backend-test  # migrated disposable database 
 
 ## Scope boundary
 
-S02-D03 normalizes NFKC input to an ASCII, case-insensitive identifier of 3–24
-characters; letters, numbers, and single internal hyphens are allowed. System-like
-names and prefixes are reserved, and non-ASCII confusables fail closed. Availability
-returns only `available` and a stable reason, excludes the current account's own
-callsign, and uses a bounded per-account/device in-process limiter suitable for the
-single-worker field-test design. Scaling to multiple API workers requires a separate
-shared rate-limit decision. No AWS resources or managed cache are added.
+S02-D04 exposes only the authenticated account at `/api/v1/me/profile`; callers cannot
+select another account. Version `0` represents an uninitialized profile, and every
+write must supply the current version. Stale writes, unknown fields, callsign
+collisions, and cooldown violations fail closed. The reusable public identity DTO
+contains only display callsign and bundled-avatar identifier. Avatar changes remain
+read-only until S02-D05 supplies catalog validation. No AWS resources, Terraform
+changes, or managed services are added.
