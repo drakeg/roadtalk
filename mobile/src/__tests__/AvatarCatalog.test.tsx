@@ -31,9 +31,9 @@ describe("bundled avatar catalog", () => {
     ).toBeOnTheScreen();
   });
 
-  it("fails closed for an unknown identifier", () => {
+  it("fails closed for an unknown identifier", async () => {
     expect(getAvatarAsset("unknown")).toBeUndefined();
-    const view = render(<AvatarBadge avatarId="unknown" />);
+    const view = await render(<AvatarBadge avatarId="unknown" />);
     expect(view.toJSON()).toBeNull();
   });
 });
