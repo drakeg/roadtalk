@@ -1,0 +1,61 @@
+{
+  "version": "2026.1",
+  "avatars": [
+    {
+      "id": "road-runner",
+      "label": "Orange horizon avatar",
+      "glyph": "RR",
+      "background_color": "#9C3D10",
+      "foreground_color": "#FFFFFF",
+      "status": "active"
+    },
+    {
+      "id": "night-owl",
+      "label": "Indigo night avatar",
+      "glyph": "NO",
+      "background_color": "#273469",
+      "foreground_color": "#FFFFFF",
+      "status": "active"
+    },
+    {
+      "id": "pine-trail",
+      "label": "Green pine trail avatar",
+      "glyph": "PT",
+      "background_color": "#1F6B4F",
+      "foreground_color": "#FFFFFF",
+      "status": "active"
+    },
+    {
+      "id": "desert-sun",
+      "label": "Amber desert sun avatar",
+      "glyph": "DS",
+      "background_color": "#8A4B08",
+      "foreground_color": "#FFFFFF",
+      "status": "active"
+    },
+    {
+      "id": "lake-wave",
+      "label": "Blue lake wave avatar",
+      "glyph": "LW",
+      "background_color": "#075985",
+      "foreground_color": "#FFFFFF",
+      "status": "active"
+    },
+    {
+      "id": "mountain-pass",
+      "label": "Slate mountain pass avatar",
+      "glyph": "MP",
+      "background_color": "#4B5563",
+      "foreground_color": "#FFFFFF",
+      "status": "active"
+    },
+    {
+      "id": "classic-rig",
+      "label": "Brown classic rig avatar",
+      "glyph": "CR",
+      "background_color": "#5B3A29",
+      "foreground_color": "#FFFFFF",
+      "status": "retired"
+    }
+  ]
+}

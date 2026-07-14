@@ -39,11 +39,14 @@ async def _profile_lifecycle() -> None:
                 db,
                 account_id=first_id,
                 candidate="Road-Runner",
+                avatar_id="road-runner",
                 expected_version=0,
                 cooldown_seconds=0,
             )
             assert created.version == 1
             assert created.identity.callsign == "Road-Runner"
+            assert created.identity.avatar_id == "road-runner"
+            assert created.setup_completed is True
 
             updated = await update_profile(
                 db,
@@ -53,6 +56,7 @@ async def _profile_lifecycle() -> None:
                 cooldown_seconds=0,
             )
             assert updated.version == 2
+            assert updated.identity.avatar_id == "road-runner"
 
             with pytest.raises(ProfileMutationError) as stale:
                 await update_profile(
@@ -77,6 +81,7 @@ async def _profile_lifecycle() -> None:
             first_read = await read_profile(db, account_id=first_id)
             second_read = await read_profile(db, account_id=second_id)
             assert first_read.identity.callsign == "Night-Owl"
+            assert first_read.identity.avatar_id == "road-runner"
             assert second_read.version == 0
 
             await db.execute(delete(Account).where(Account.id.in_([first_id, second_id])))

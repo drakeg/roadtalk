@@ -27,7 +27,7 @@ def test_profile_routes_are_owner_scoped_versioned_and_authenticated() -> None:
     public_fields = schema["components"]["schemas"]["PublicIdentity"]["properties"]
     assert set(public_fields) == {"callsign", "avatar_id"}
     update_fields = schema["components"]["schemas"]["ProfileUpdateRequest"]["properties"]
-    assert set(update_fields) == {"version", "callsign"}
+    assert set(update_fields) == {"version", "callsign", "avatar_id"}
 
 
 def test_profile_routes_require_bearer_token_without_database_access() -> None:
@@ -36,7 +36,7 @@ def test_profile_routes_require_bearer_token_without_database_access() -> None:
         read_response = client.get("/api/v1/me/profile")
         update_response = client.patch(
             "/api/v1/me/profile",
-            json={"version": 0, "callsign": "Road-Runner"},
+            json={"version": 0, "callsign": "Road-Runner", "avatar_id": "road-runner"},
         )
 
     assert read_response.status_code == 401

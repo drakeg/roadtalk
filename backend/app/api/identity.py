@@ -4,8 +4,10 @@ from typing import Annotated, cast
 from fastapi import APIRouter, HTTPException, Query, Request, status
 
 from app.api.auth import CurrentSession, DatabaseSession
+from app.identity.avatars import avatar_catalog
 from app.identity.callsigns import CallsignAvailabilityLimiter, CallsignRateLimitError
 from app.identity.schemas import (
+    AvatarCatalogResponse,
     CallsignAvailabilityResponse,
     ProfileResponse,
     ProfileUpdateRequest,
@@ -18,6 +20,11 @@ from app.identity.service import (
 )
 
 router = APIRouter(tags=["identity"])
+
+
+@router.get("/api/v1/avatars", response_model=AvatarCatalogResponse)
+async def get_avatar_catalog() -> AvatarCatalogResponse:
+    return avatar_catalog()
 
 
 @router.get(
@@ -71,6 +78,7 @@ async def patch_profile(
             db,
             account_id=current.account.id,
             candidate=payload.callsign,
+            avatar_id=payload.avatar_id,
             expected_version=payload.version,
             cooldown_seconds=request.app.state.settings.callsign_change_cooldown_seconds,
         )
