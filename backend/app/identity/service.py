@@ -6,8 +6,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import Profile
-from app.identity.avatars import AvatarSelectionError, validate_avatar_selection
-from app.identity.callsigns import CallsignPolicyError, validate_callsign
+from app.identity.avatars import (
+    AvatarDefinition,
+    AvatarSelectionError,
+    validate_avatar_selection,
+)
+from app.identity.callsigns import Callsign, CallsignPolicyError, validate_callsign
 from app.identity.schemas import (
     CallsignAvailabilityResponse,
     ProfileResponse,
@@ -55,14 +59,14 @@ async def update_profile(
     avatar_id: str | None = None,
     now: datetime | None = None,
 ) -> ProfileResponse:
-    callsign = None
+    callsign: Callsign | None = None
     if candidate is not None:
         try:
             callsign = validate_callsign(candidate)
         except CallsignPolicyError as exc:
             raise ProfileMutationError(exc.code, exc.detail) from exc
 
-    avatar = None
+    avatar: AvatarDefinition | None = None
     if avatar_id is not None:
         try:
             avatar = validate_avatar_selection(avatar_id)
