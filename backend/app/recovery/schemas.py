@@ -11,7 +11,7 @@ class RecoveryKeyResponse(BaseModel):
 
 
 class RecoverySessionRequest(BaseModel):
-    recovery_key: SecretStr
+    recovery_key: SecretStr = Field(min_length=1, max_length=512)
     installation_id: str = Field(min_length=16, max_length=255)
     platform: Literal["android", "ios"]
 
