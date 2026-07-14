@@ -1,6 +1,6 @@
 import asyncio
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy import delete, select, update
 from sqlalchemy.exc import IntegrityError
@@ -176,9 +176,7 @@ async def recover_account(
             settings.refresh_token_pepper.get_secret_value(),
         ),
         expires_at=changed_at
-        + __import__("datetime").timedelta(
-            seconds=settings.refresh_token_ttl_seconds
-        ),
+        + timedelta(seconds=settings.refresh_token_ttl_seconds),
     )
     db.add(session)
 
