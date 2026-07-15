@@ -8,7 +8,9 @@ from app.db import Account, Base, Device, Session
 def test_active_sprint_tables_are_registered() -> None:
     assert set(Base.metadata.tables) == {
         "account",
+        "current_location",
         "device",
+        "location_consent_event",
         "profile",
         "recovery_credential",
         "session",
