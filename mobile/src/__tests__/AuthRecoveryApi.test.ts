@@ -15,7 +15,7 @@ function response(
 
 describe("anonymous recovery transport", () => {
   it("sends recovery material only in a JSON request body", async () => {
-    const fetcher = jest.fn(async () =>
+    const fetcher = jest.fn(async (_url: string, _init?: RequestInit) =>
       response({
         access_token: "access",
         refresh_token: "refresh",
@@ -47,7 +47,7 @@ describe("anonymous recovery transport", () => {
   });
 
   it("reads nested stable errors and Retry-After without key content", async () => {
-    const fetcher = jest.fn(async () =>
+    const fetcher = jest.fn(async (_url: string, _init?: RequestInit) =>
       response(
         {
           detail: {
