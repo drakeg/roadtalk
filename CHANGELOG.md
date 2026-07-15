@@ -2,6 +2,18 @@
 
 All notable RoadTalk changes are recorded here. The repository history and sprint review records remain the detailed source of truth.
 
+## Unreleased — Sprint 3: Location planning
+
+### Planning
+
+- Proposed foreground-only location consent, one-row PostGIS persistence, validated
+  GPS/heading/speed samples, and privacy-preserving coarse nearby awareness.
+- Explicit exclusions for background tracking, maps/geocoding, history, WebSockets,
+  PTT/channels, external SDKs, managed services, and AWS resources.
+- Proposed S03-R01–R12, S03-T01–T12, S03-D01–D09, readiness gates, risks, privacy
+  controls, and zero-incremental-AWS-cost posture.
+- Planning status only; Sprint 3 coding remains blocked on product-owner approval.
+
 ## Unreleased — Sprint 2: Identity
 
 ### Planning
