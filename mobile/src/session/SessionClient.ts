@@ -3,7 +3,12 @@ import { Platform } from "react-native";
 
 import { AuthApi } from "./api";
 import type { SessionStorage } from "./storage";
-import type { SessionSnapshot, StoredSession, TokenPair } from "./types";
+import type {
+  RecoveryResult,
+  SessionSnapshot,
+  StoredSession,
+  TokenPair,
+} from "./types";
 
 type Listener = (snapshot: SessionSnapshot) => void;
 type Fetch = typeof fetch;
@@ -67,6 +72,32 @@ export class SessionClient {
     };
     await this.storage.writeSession(this.session);
     this.publishAuthenticated();
+  }
+
+  async recover(recoveryKey: string): Promise<RecoveryResult> {
+    let installationId = await this.storage.readInstallationId();
+    if (installationId === null) {
+      installationId = this.createInstallationId();
+      await this.storage.writeInstallationId(installationId);
+    }
+    const recovered = await this.api.recover(
+      recoveryKey,
+      installationId,
+      this.platform,
+    );
+    this.accessToken = recovered.access_token;
+    this.session = {
+      accountId: recovered.account_id,
+      deviceId: recovered.device_id,
+      sessionId: recovered.session_id,
+      refreshToken: recovered.refresh_token,
+    };
+    await this.storage.writeSession(this.session);
+    this.publishAuthenticated();
+    return {
+      recoveryKey: recovered.recovery_key,
+      recoveryKeyVersion: recovered.recovery_key_version,
+    };
   }
 
   async refresh(): Promise<string> {
