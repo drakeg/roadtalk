@@ -32,6 +32,12 @@ describe("foundation screen", () => {
     );
     expect(navigate).toHaveBeenCalledWith("Identity");
     fireEvent.press(
+      view.getByRole("button", {
+        name: "Create a recovery key or recover an account",
+      }),
+    );
+    expect(navigate).toHaveBeenCalledWith("Recovery");
+    fireEvent.press(
       view.getByRole("button", { name: "Open app diagnostics" }),
     );
     expect(navigate).toHaveBeenCalledWith("Diagnostics");

@@ -11,6 +11,16 @@ export type AnonymousSessionResponse = TokenPair & {
   session_id: string;
 };
 
+export type RecoverySessionResponse = AnonymousSessionResponse & {
+  recovery_key: string;
+  recovery_key_version: "rtk1";
+};
+
+export type RecoveryResult = {
+  recoveryKey: string;
+  recoveryKeyVersion: "rtk1";
+};
+
 export type StoredSession = {
   accountId: string;
   deviceId: string;

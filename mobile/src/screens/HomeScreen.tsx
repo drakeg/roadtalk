@@ -46,6 +46,19 @@ export function HomeScreen({ navigation }: Props) {
           <Text style={styles.buttonText}>Identity settings</Text>
         </Pressable>
       ) : null}
+      {authenticated ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Create a recovery key or recover an account"
+          onPress={() => navigation.navigate("Recovery")}
+          style={({ pressed }) => [
+            styles.button,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          <Text style={styles.buttonText}>Account recovery</Text>
+        </Pressable>
+      ) : null}
       <Pressable
         accessibilityRole="button"
         onPress={() => void (authenticated ? logout() : reconnect())}

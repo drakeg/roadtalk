@@ -1,6 +1,6 @@
 # Mobile
 
-Sprint 2 owner: S02-D05 and S02-D06.
+Sprint 2 owner: S02-D05, S02-D06, and S02-D08.
 
 This directory contains the Expo/React Native/TypeScript development-build application.
 
@@ -23,6 +23,9 @@ Sprint 1 and S02-D05 provide:
 - accessible callsign setup and settings editing with availability checks
 - bundled-avatar selection, optimistic conflict handling, and offline retry
 - no downloaded or user-uploaded avatar media
+- explicit recovery-key creation/rotation with one-time display
+- account transfer on a newly registered device with replacement-session handling
+- recovery keys transient by default and SecureStore-only after explicit opt-in
 
 ## Avatar catalog
 
@@ -50,6 +53,25 @@ feature. The same screen handles first-time setup and later edits:
 The client holds access tokens only inside the existing session client. Identity requests
 reuse its bearer transport and perform at most one refresh-and-retry after a 401.
 No callsign, account identifier, token, or request body is logged or stored by this flow.
+
+## Anonymous recovery
+
+Authenticated users can open **Account recovery** to create or rotate an optional
+high-entropy key. The key is displayed only in the immediate success state. Closing
+that state removes it from application memory; it cannot be retrieved from the server.
+The screen does not copy the key, place it in a URL, log it, analyze it, or write it to
+ordinary storage.
+
+Platform SecureStore persistence is off by default and occurs only when the user turns
+on **Save in secure storage** before creating or recovering. That copy is
+device-only and is not a substitute for keeping a private external copy for a new
+device. Creating or successfully using a key invalidates its predecessor.
+
+A newly registered device may submit a key through the JSON request body. Success
+replaces the temporary session, stores only the replacement refresh credential through
+the existing session storage boundary, revokes older sessions server-side, and displays
+the rotated key once. Invalid, unknown, and replayed keys share one user-facing failure
+message; rate limits expose no configured threshold.
 
 ## Setup
 
