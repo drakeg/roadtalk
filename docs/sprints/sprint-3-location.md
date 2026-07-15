@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed — product-owner approval is required before implementation.
+Approved — product owner approved on 2026-07-14.
 
 ## Objective
 
@@ -253,8 +253,8 @@ explicit. Every code branch starts from the latest merged deliverable.
 ## Entry criteria
 
 - Sprint 2 issue #60 and tracker #61 are closed as completed.
-- This proposal and readiness record are reviewed and explicitly approved.
-- Planning issue #71 closes only after approval is recorded.
+- This specification and readiness record are reviewed and explicitly approved.
+- Planning issue #71 is closed after approval is recorded.
 - D01 creates the tracker and implementation issues from the exact approved wording.
 - Repository/documentation status makes Sprint 3 the sole active implementation
   sprint after approval.
@@ -322,6 +322,6 @@ justifies another service, it requires a separate architecture and cost decision
 
 ## Approval boundary
 
-Committing this proposal to `main` records planning work only. It does not approve the
-Sprint 3 baseline or authorize coding. Product-owner approval must be recorded
-explicitly after review; D01 tracker/issues are created only from the approved text.
+Product-owner approval on 2026-07-14 locks this baseline and authorizes Sprint 3
+implementation through tracker #81. Changes to requirements, acceptance tests,
+deliverables, cost, permissions, privacy, or scope require documented change control.
