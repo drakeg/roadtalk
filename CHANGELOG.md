@@ -43,6 +43,11 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
   key, revokes old sessions, prevents replay, and establishes a replacement session.
 - Constant-shape recovery failures and bounded peer/device/selector/account mutation
   limits using the existing single-worker API and PostgreSQL database.
+- Accessible mobile recovery-key creation and rotation with explicit one-time display.
+- Newly registered-device recovery that replaces the temporary session, surfaces the
+  rotated key once, and preserves constant-shape failure messaging.
+- Recovery keys transient by default, with device-only SecureStore persistence only
+  after explicit user opt-in and no clipboard, URL, analytics, or ordinary storage.
 
 ## Unreleased — Sprint 1: Project Foundation
 
