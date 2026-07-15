@@ -199,6 +199,21 @@ A sample is unusable when:
 
 Thresholds live in versioned policy configuration and are referenced from media grants.
 
+### Sprint 3 persistence implementation
+
+S03-D02 implements the approved minimum persistence boundary:
+
+- `location_consent_event` is append-only and records only account/device ownership,
+  policy/disclosure versions, platform, grant/revoke decision, and decision time.
+- `current_location` has account ID as its primary key, guaranteeing at most one
+  current sample per account. Source-device deletion and account deletion cascade.
+- The point is `geography(Point,4326)` with an explicit GiST index. Expiry, source-
+  device, and effective-state indexes support later owner and nearby operations.
+- Accuracy, heading, speed, sequence, quality, consent version, expiry, and version
+  constraints fail closed at the database boundary.
+- No history, presence, cache, event stream, location read API, or cloud resource is
+  introduced by the persistence deliverable.
+
 ## Retention baseline
 
 | Data | Initial rule |
