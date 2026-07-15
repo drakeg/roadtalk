@@ -7,19 +7,19 @@ RoadTalk is a location-aware, voice-first communication platform inspired by cla
 Sprint 0 — Planning & Architecture and Sprint 1 — Project Foundation are complete.
 Sprint 1 is conditionally accepted with named exceptions that must close before the
 first field test. Sprint 2 — Identity is complete and approved. Sprint 3 — Location is
-in planning; implementation is not authorized until its specification and readiness
-record receive explicit product-owner approval.
+approved and is the sole active implementation sprint.
 
-Current planning must follow the [proposed Sprint 3 Location specification](docs/sprints/sprint-3-location.md)
-and [readiness record](docs/sprints/sprint-3-readiness.md). Committing planning to
-`main` does not authorize location coding, dependencies, permissions, schema, or APIs.
+Current work must follow the [Sprint 3 Location specification](docs/sprints/sprint-3-location.md),
+[readiness record](docs/sprints/sprint-3-readiness.md), and
+[tracker](https://github.com/drakeg/roadtalk/issues/81). Only the approved foreground-
+location scope is authorized.
 
 ## Repository layout
 
-| Path | Purpose | Proposed Sprint 3 scope |
+| Path | Purpose | Sprint 3 scope |
 |---|---|---|
-| `mobile/` | React Native, Expo development-build, and TypeScript mobile application | Foreground permission, short-lived sampling, heading/speed status, and coarse nearby awareness after approval |
-| `backend/` | FastAPI modular-monolith API, migrations, and backend tests | Consent, one current PostGIS row, validation, withdrawal, and coarse nearby summary after approval |
+| `mobile/` | React Native, Expo development-build, and TypeScript mobile application | Foreground permission, short-lived sampling, heading/speed status, and coarse nearby awareness |
+| `backend/` | FastAPI modular-monolith API, migrations, and backend tests | Consent, one current PostGIS row, validation, withdrawal, and coarse nearby summary |
 | `infrastructure/` | Terraform bootstrap, environment roots, and reusable modules | No Sprint 3 expansion; remains disabled by default |
 | `scripts/` | Cross-project developer and operational helper scripts | Added only with a traced requirement |
 | `docs/` | Architecture, sprint records, ADRs, security, privacy, design, and runbooks | Specification, evidence, operations, and review |
@@ -34,9 +34,8 @@ and [readiness record](docs/sprints/sprint-3-readiness.md). Committing planning 
 5. Implement only the linked requirement/deliverable.
 6. Record tests, privacy impact, cost impact, and evidence in the pull request.
 
-Sprint 3 planning must not be treated as implementation authorization. The proposal
-keeps expected incremental AWS cost at $0 and excludes background location, maps,
-history, audio, channels, notifications, and other later-sprint behavior.
+Sprint 3 keeps expected incremental AWS cost at $0 and excludes background location,
+maps, history, audio, channels, notifications, and other later-sprint behavior.
 
 ## Source of truth
 
