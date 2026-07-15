@@ -53,6 +53,10 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Exact Sprint 2 OpenAPI/scope, non-enumeration, and bounded rate-limit gates.
 - Identity and anonymous-recovery operator runbook covering lost keys, compromise,
   pepper rotation, privacy-safe evidence, and the single-worker limiter boundary.
+- Sprint 2 requirement, acceptance-test, and deliverable traceability with a complete
+  green CI baseline and privacy-safe synthetic identity lifecycle evidence.
+- Sprint 2 cost/privacy review, known limitations, retrospective, and merge-bound
+  product-owner approval decision.
 
 ## Unreleased — Sprint 1: Project Foundation
 

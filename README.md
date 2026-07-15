@@ -6,12 +6,13 @@ RoadTalk is a location-aware, voice-first communication platform inspired by cla
 
 Sprint 0 — Planning & Architecture and Sprint 1 — Project Foundation are complete.
 Sprint 1 is conditionally accepted with named exceptions that must close before the
-first field test. Sprint 2 — Identity is the sole active implementation sprint after
-its specification pull request is merged.
+first field test. Sprint 2 — Identity is implementation-complete and becomes approved
+when its evidence and review pull request is merged.
 
-Current work must follow the [Sprint 2 Identity specification](docs/sprints/sprint-2-identity.md)
-and [Sprint 2 readiness record](docs/sprints/sprint-2-readiness.md). The tracker and
-deliverable issues are created from the approved wording after merge.
+Current work must follow the [Sprint 2 Identity specification](docs/sprints/sprint-2-identity.md),
+[traceability record](docs/sprints/sprint-2-traceability.md), and
+[review](docs/sprints/sprint-2-review.md). Sprint 3 planning begins only after the
+Sprint 2 review is approved; coding requires its own approved specification.
 
 ## Repository layout
 
