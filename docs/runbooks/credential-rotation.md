@@ -11,6 +11,7 @@ backup before changing database credentials.
 |---|---|---|
 | Token signing key | Existing access tokens fail after API restart; refresh may issue new access tokens | Schedule a session interruption, update parameter, redeploy, register/refresh/session test; restore prior parameter version and redeploy if needed |
 | Refresh-token pepper | All stored refresh hashes become unusable | Treat as global logout, update parameter, redeploy, verify old refresh fails and new registration works; rollback only during the controlled window |
+| Recovery-key pepper | All stored recovery hashes become unverifiable; raw keys cannot be rehashed | Treat as global recovery-key invalidation, update parameter, redeploy, verify old recovery fails and newly issued keys work; never represent rollback as safe after compromise |
 | PostgreSQL password / `DATABASE_URL` | API and maintenance access can fail | Change database role password and both parameters as one maintenance operation; readiness and migration check must pass; revert both sides together |
 | AWS human/automation credential | May block Terraform or deployment | Prefer temporary role credentials; validate identity and least privilege before retiring the old credential |
 
@@ -18,6 +19,13 @@ backup before changing database credentials.
 IDs. Therefore a signing-key rotation deliberately invalidates access tokens for at
 most their configured TTL (15 minutes by default). Changing the refresh pepper is a
 deliberate global logout. Communicate both impacts before proceeding.
+
+`ROADTALK_RECOVERY_KEY_PEPPER` also supports one active value. Because RoadTalk does
+not store raw recovery keys, existing hashes cannot be migrated to a new pepper.
+Planned rotation therefore requires a product-owner decision to invalidate every
+existing recovery key and direct authenticated users to create a replacement. Restoring
+the previous pepper would re-enable old keys and invalidate keys created during the new
+window; do not use that rollback after suspected disclosure.
 
 ## Rotation procedure
 
