@@ -1,6 +1,6 @@
 # Operational runbooks
 
-These runbooks are the operator entry point for Sprint 1. Follow them exactly, use
+These runbooks are the operator entry point for Sprint 1 and Sprint 2. Follow them exactly, use
 only synthetic data, and record evidence without secrets, tokens, database dumps,
 or personal data.
 
@@ -8,6 +8,7 @@ or personal data.
 |---|---|---|
 | Clean machine setup | [Clean setup](clean-setup.md) | Tool versions and successful health/test results |
 | Authentication lifecycle | [Authentication operations](authentication-operations.md) | Redacted status codes and correlation IDs |
+| Identity and anonymous recovery | [Identity and recovery operations](identity-recovery-operations.md) | Stable problem codes, route templates, synthetic lifecycle result |
 | CI failure triage | [CI quality and security](ci-quality-security.md) | Workflow URL, failed gate, corrective commit |
 | Field-test deploy/rollback | [Field-test deployment](field-test-deployment.md) | Commit, image digest, SSM command IDs, health results |
 | Backup/restore | [Database backup and restore](database-backup-restore.md) | Object key/version, checksums, row-count comparison |
@@ -24,6 +25,8 @@ or personal data.
 - Roll back application code without downgrading the database automatically.
 - Keep field-test infrastructure disabled except during an approved test window;
   no runbook authorizes RDS, NAT Gateway, load balancer, Fargate, or managed Redis.
+- Never request a callsign or recovery key as diagnostic evidence. There is no
+  support or administrator bypass for a lost anonymous recovery key.
 
 ## Rehearsal record
 
