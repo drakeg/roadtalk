@@ -12,7 +12,8 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
   PTT/channels, external SDKs, managed services, and AWS resources.
 - Proposed S03-R01–R12, S03-T01–T12, S03-D01–D09, readiness gates, risks, privacy
   controls, and zero-incremental-AWS-cost posture.
-- Planning status only; Sprint 3 coding remains blocked on product-owner approval.
+- Product-owner approval, READY determination, tracker #81, and scoped implementation
+  issues #72–#80; S03-D02 is the first code deliverable.
 
 ## Unreleased — Sprint 2: Identity
 
