@@ -9,6 +9,7 @@
 ## Assets
 
 - account/session/device credentials
+- anonymous recovery keys and their server-side hashes
 - callsigns and public profiles
 - exact and derived location
 - channel and block/mute state
@@ -48,6 +49,7 @@ Device, public network, control API, media provider, database/cache, cloud opera
 | T20 | Backup/data-remanence failure | Retention/lifecycle, encrypted backups, deletion process | Restore/deletion audits | Backups delay full deletion within disclosed window. |
 | T21 | Administrator abuse | Separate admin auth, least privilege, audit, no routine exact-location access | Immutable/security logs and periodic review | Authorized insiders retain bounded power. |
 | T22 | Unsafe use while driving | Voice-first UI, restricted interaction, no safety guarantees | Product telemetry/reports without surveillance | Users may interact contrary to warnings/law. |
+| T23 | Recovery-key theft, enumeration, or replay | 256-bit secret, slow salted/peppered hash, constant-shape errors, multidimensional limits, one-time display, explicit SecureStore opt-in, rotation and session revocation | Stable problem codes and privacy-safe route-template logs; contain by rotating key, revoking device/session, or rotating pepper after impact review | A stolen valid key can take over an anonymous account before the owner rotates it. A lost key cannot be bypassed safely. |
 
 ## Mandatory security controls before field test
 
@@ -61,6 +63,7 @@ Device, public network, control API, media provider, database/cache, cloud opera
 - privacy-filtered structured logging
 - encrypted storage/backups
 - tested account/device/session revocation
+- tested recovery rotation, replay rejection, and non-enumerating failures
 - tested backup restoration
 - incident runbook and operational contact
 - OWASP MASVS baseline checklist for storage, crypto, auth, network, platform, code, resilience, and privacy
