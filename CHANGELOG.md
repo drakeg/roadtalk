@@ -15,6 +15,16 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Product-owner approval, READY determination, tracker #81, and scoped implementation
   issues #72–#80; S03-D02 is the first code deliverable.
 
+### Added
+
+- Append-only foreground-location consent events with versioned policy/disclosure,
+  account/device ownership, platform, decision, and timestamp metadata.
+- One current PostGIS `geography(Point,4326)` row per account with source-device,
+  accuracy, optional heading/speed, sequence, expiry, consent, quality, and version
+  constraints plus explicit GiST/effective-state indexes.
+- Backward-compatible location migration and model/live-PostGIS invariant tests with
+  no location history, API, mobile permission, AWS resource, or managed service.
+
 ## Unreleased — Sprint 2: Identity
 
 ### Planning
