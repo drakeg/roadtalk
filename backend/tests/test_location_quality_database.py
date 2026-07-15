@@ -145,8 +145,29 @@ async def _quality_lifecycle() -> None:
                 )
             assert implausible.value.code == "LOCATION_MOVEMENT_IMPLAUSIBLE"
 
-            assert await delete_expired_locations(db, now=replacement.expires_at) == 1
-            assert await delete_expired_locations(db, now=replacement.expires_at) == 0
+            assert await delete_current_location(db, account_id=account.id) is True
+            assert await delete_current_location(db, account_id=account.id) is False
+
+            resumed_time = replacement_time + timedelta(seconds=2)
+            resumed = await record_current_location(
+                db,
+                account_id=account.id,
+                device_id=second_device.id,
+                sample=LocationSample(
+                    latitude=40.0001,
+                    longitude=-75.0,
+                    observed_at=resumed_time,
+                    horizontal_accuracy_m=10,
+                    heading_deg=None,
+                    speed_mps=None,
+                    client_sequence=2,
+                    consent_policy_version=policy.version,
+                ),
+                policy=policy,
+                now=resumed_time,
+            )
+            assert await delete_expired_locations(db, now=resumed.expires_at) == 1
+            assert await delete_expired_locations(db, now=resumed.expires_at) == 0
 
             db.add(
                 LocationConsentEvent(
@@ -179,7 +200,6 @@ async def _quality_lifecycle() -> None:
                     now=now + timedelta(seconds=4),
                 )
             assert withdrawn.value.code == "LOCATION_CONSENT_REQUIRED"
-            assert await delete_current_location(db, account_id=account.id) is True
             assert await delete_current_location(db, account_id=account.id) is False
     finally:
         await engine.dispose()
