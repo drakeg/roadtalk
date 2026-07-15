@@ -13,8 +13,8 @@ from app.health import ReadinessRegistry
 from app.identity.callsigns import CallsignAvailabilityLimiter
 from app.logging import configure_logging
 from app.middleware import RequestContextMiddleware
-from app.recovery.limiter import RecoveryLimiter
 from app.problems import install_problem_handlers
+from app.recovery.limiter import RecoveryLimiter
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
