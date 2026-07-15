@@ -22,7 +22,13 @@ S01-D03 and S01-D04 provide:
 - short-lived device-bound access tokens
 - hashed rotating refresh credentials, logout, device revocation, and replay-family revocation
 
-Profile persistence supports an incomplete identity without inventing a callsign or avatar. S02-D04 adds owner-scoped profile reads and conditional callsign updates using the shared policy. Avatar mutation remains gated on the bundled catalog in S02-D05; location, proximity, channels, media, and account recovery remain unimplemented.
+Profile persistence supports an incomplete identity without inventing a callsign or avatar. S02-D04 adds owner-scoped profile reads and conditional callsign updates using the shared policy. Avatar mutation is validated against the bundled catalog, and optional anonymous recovery remains PII-free.
+
+S03-D02 adds persistence only for append-only foreground-location consent decisions
+and one expiring PostGIS geography point per account. The current row is owned by the
+account and source device, contains quality/sequence/expiry metadata, and cascades on
+account or source-device deletion. No location API, mobile permission, background
+collection, history table, cache, map, or nearby response is implemented in D02.
 
 ## Local setup
 
