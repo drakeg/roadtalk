@@ -40,5 +40,8 @@ local session and fail closed. A `409` registration conflict requires investigat
 do not delete accounts to make the symptom disappear.
 
 Credential compromise or planned key changes follow
-[Credential rotation](credential-rotation.md). There is no account recovery or user
-identity proof in Sprint 1; do not claim either operationally.
+[Credential rotation](credential-rotation.md). Sprint 1 itself has no account
+recovery or real-world identity proof. Sprint 2 adds only the optional anonymous,
+key-based flow documented in
+[Identity and recovery operations](identity-recovery-operations.md); it does not add
+contact verification or an operator bypass.
