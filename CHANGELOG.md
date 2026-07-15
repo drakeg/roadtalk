@@ -32,6 +32,8 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Bounded process-local mutation and nearby-read controls across peer, account, and
   device dimensions for the approved single-worker design, with no cache, new AWS
   resource, or incremental AWS cost.
+- Expo SDK 57 patch dependencies refreshed to the compatibility set required by Expo
+  Doctor, preserving the existing mobile feature scope while restoring the CI gate.
 
 ## Unreleased — Sprint 2: Identity
 
