@@ -7,11 +7,12 @@
 - [Original RoadTalk Development Plan](reference/RoadTalk_Development_Plan.docx)
 - [Agile Workflow](AGILE_WORKFLOW.md)
 
-## Sprint 3 — Location (planning proposal; implementation not authorized)
+## Sprint 3 — Location (approved; active implementation sprint)
 
-- [Proposed Sprint 3: Location](sprints/sprint-3-location.md)
-- [Sprint 3 readiness](sprints/sprint-3-readiness.md) — NOT READY pending approval
+- [Sprint 3: Location](sprints/sprint-3-location.md) — APPROVED
+- [Sprint 3 readiness](sprints/sprint-3-readiness.md) — READY
 - Planning issue [#71](https://github.com/drakeg/roadtalk/issues/71)
+- Implementation tracker [#81](https://github.com/drakeg/roadtalk/issues/81)
 
 ## Sprint 2 — Identity (complete)
 
