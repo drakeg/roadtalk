@@ -37,6 +37,12 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Bundled-avatar selection, optimistic conflict reload, explicit offline retry, and
   retained retired-avatar rendering.
 - Session-bound identity transport with one refresh retry and no new credential storage.
+- Optional 256-bit anonymous recovery keys with salted, versioned scrypt hashing and
+  a separately configured application pepper.
+- One-time recovery-key creation/rotation and atomic account transfer that rotates the
+  key, revokes old sessions, prevents replay, and establishes a replacement session.
+- Constant-shape recovery failures and bounded peer/device/selector/account mutation
+  limits using the existing single-worker API and PostgreSQL database.
 
 ## Unreleased — Sprint 1: Project Foundation
 
