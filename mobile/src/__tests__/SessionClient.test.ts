@@ -15,6 +15,7 @@ function stored(): StoredSession {
 function api() {
   return {
     register: jest.fn(),
+    recover: jest.fn(),
     refresh: jest.fn(),
     logout: jest.fn(),
     revokeDevice: jest.fn(),
@@ -91,6 +92,57 @@ describe("secure session client", () => {
     expect(client.getAccessToken()).toBe("new-access");
     expect(secure.writeSession).toHaveBeenCalledWith(
       expect.objectContaining({ refreshToken: "new-refresh" }),
+    );
+  });
+
+
+  it("replaces the temporary session without persisting recovery material", async () => {
+    const remote = api();
+    const secure = storage();
+    remote.register.mockResolvedValue(created);
+    remote.recover.mockResolvedValue({
+      access_token: "recovered-access",
+      refresh_token: "recovered-refresh",
+      token_type: "bearer",
+      expires_in: 900,
+      account_id: "recovered-account",
+      device_id: "device-id",
+      session_id: "recovered-session",
+      recovery_key: "rtk1.rotated.secret",
+      recovery_key_version: "rtk1",
+    });
+    const client = new SessionClient(
+      remote as unknown as AuthApi,
+      secure as SessionStorage,
+      "ios",
+    );
+    await client.bootstrap();
+
+    await expect(client.recover("rtk1.original.secret")).resolves.toEqual({
+      recoveryKey: "rtk1.rotated.secret",
+      recoveryKeyVersion: "rtk1",
+    });
+
+    expect(remote.recover).toHaveBeenCalledWith(
+      "rtk1.original.secret",
+      "installation-id",
+      "ios",
+    );
+    expect(client.getAccessToken()).toBe("recovered-access");
+    expect(client.getSnapshot()).toEqual({
+      status: "authenticated",
+      accountId: "recovered-account",
+      deviceId: "device-id",
+      sessionId: "recovered-session",
+    });
+    expect(secure.writeSession).toHaveBeenLastCalledWith({
+      accountId: "recovered-account",
+      deviceId: "device-id",
+      sessionId: "recovered-session",
+      refreshToken: "recovered-refresh",
+    });
+    expect(JSON.stringify(secure.writeSession.mock.calls)).not.toContain(
+      "rtk1.",
     );
   });
 
