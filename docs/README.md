@@ -53,6 +53,7 @@
 - [Runbook index](runbooks/README.md)
 - [Clean setup](runbooks/clean-setup.md)
 - [Authentication operations](runbooks/authentication-operations.md)
+- [Identity and recovery operations](runbooks/identity-recovery-operations.md)
 - [CI quality and security](runbooks/ci-quality-security.md)
 - [Field-test deployment and rollback](runbooks/field-test-deployment.md)
 - [Database backup and restore](runbooks/database-backup-restore.md)

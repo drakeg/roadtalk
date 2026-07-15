@@ -48,6 +48,11 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
   rotated key once, and preserves constant-shape failure messaging.
 - Recovery keys transient by default, with device-only SecureStore persistence only
   after explicit user opt-in and no clipboard, URL, analytics, or ordinary storage.
+- Closed-field structured logging with route templates, result classes, stable problem
+  codes, and regression tests that reject synthetic callsign/recovery-key leakage.
+- Exact Sprint 2 OpenAPI/scope, non-enumeration, and bounded rate-limit gates.
+- Identity and anonymous-recovery operator runbook covering lost keys, compromise,
+  pepper rotation, privacy-safe evidence, and the single-worker limiter boundary.
 
 ## Unreleased — Sprint 1: Project Foundation
 

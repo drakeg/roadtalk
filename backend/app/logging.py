@@ -7,21 +7,34 @@ from app.context import request_id_context
 
 
 class JsonFormatter(logging.Formatter):
-    _reserved = set(logging.makeLogRecord({}).__dict__) | {"message", "asctime"}
+    _allowed_events = {
+        "request.complete",
+        "request.problem",
+        "request.unhandled",
+    }
+    _allowed_fields = {
+        "duration_ms",
+        "method",
+        "problem_code",
+        "result_class",
+        "route",
+        "status_code",
+    }
 
     def format(self, record: logging.LogRecord) -> str:
+        event = record.getMessage()
         payload: dict[str, Any] = {
             "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
-            "event": record.getMessage(),
+            "event": event if event in self._allowed_events else "log.event.rejected",
         }
         request_id = request_id_context.get()
         if request_id:
             payload["request_id"] = request_id
 
         for key, value in record.__dict__.items():
-            if key not in self._reserved and key not in {"args", "msg", "exc_info", "exc_text"}:
+            if key in self._allowed_fields:
                 payload[key] = value
 
         if record.exc_info:
