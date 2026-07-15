@@ -6,7 +6,13 @@ from app.db import Account, Base, Device, Session
 
 
 def test_active_sprint_tables_are_registered() -> None:
-    assert set(Base.metadata.tables) == {"account", "device", "profile", "session"}
+    assert set(Base.metadata.tables) == {
+        "account",
+        "device",
+        "profile",
+        "recovery_credential",
+        "session",
+    }
 
 
 def test_account_constraints_protect_enumerated_values() -> None:
