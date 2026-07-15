@@ -14,6 +14,9 @@
 - make collection visible, understandable, revocable, and deletable
 - never use location for advertising
 - never sell personal or sensitive data
+- treat callsigns as public pseudonyms and keep account/security fields private
+- keep recovery material out of logs, analytics, URLs, support workflows, and
+  ordinary device storage
 - do not record audio in Sprints 1–5
 - do not expose exact coordinates to other users
 - treat SDK/provider behavior as part of RoadTalk's responsibility
@@ -23,7 +26,8 @@
 | Category | Purpose | Precision/content | Storage | Access | Initial retention |
 |---|---|---|---|---|---|
 | Account/device/session | Security and continuity | Opaque IDs, credential hashes, platform/version | PostgreSQL/secure device storage | User and authorized service | Active life; limited security record after revocation |
-| Public profile | Callsign/avatar | User-selected | PostgreSQL/object storage | Other eligible users | Until changed/deleted |
+| Public profile | Display callsign and bundled-avatar identifier | User-selected | PostgreSQL; avatar assets bundled with app/API image | Other eligible users | Until changed/deleted |
+| Recovery credential | Random selector plus salted, peppered scrypt hash | No contact PII; plaintext returned once | PostgreSQL hash; optional explicit device-only SecureStore copy | Account owner and recovery service | Until rotated or account deleted |
 | Current location | Proximity authorization | Exact sample server-side; no client disclosure | One current PostGIS row | Proximity service only | Replaced/expired quickly |
 | Location history | None for MVP | Not collected | None | None | None |
 | Presence/channel | Delivery eligibility | State and expiry | Redis/PostgreSQL context | Authorized service | TTL; remnants within 24h |
@@ -69,6 +73,9 @@ Denial must leave the app stable and explain which capability is unavailable. It
 
 ## User controls
 
+- create or rotate an optional anonymous recovery key
+- choose whether the newly displayed key is written to device-only SecureStore
+- edit callsign and select only an approved bundled avatar
 - pause/leave radio
 - foreground-only versus separately approved background mode
 - current channel
@@ -81,7 +88,7 @@ Denial must leave the app stable and explain which capability is unavailable. It
 ## Deletion
 
 1. authenticate or verify the deletion request
-2. revoke sessions, devices, push tokens, presence, and media grants
+2. revoke sessions, devices, recovery credentials, push tokens, presence, and media grants
 3. remove current location immediately
 4. prevent account reuse during processing
 5. delete/anonymize profile, account, metadata, and object storage according to policy
@@ -99,6 +106,23 @@ Before adding an SDK:
 - document deletion and incident paths
 - pin/version-review the dependency
 - reject SDKs that require unrelated sensitive data
+
+## Sprint 2 identity and recovery rules
+
+- The only public identity fields are display callsign and bundled-avatar identifier.
+  Account, device, session, recovery, setup, and moderation fields remain private.
+- Callsign availability returns only available/unavailable with a stable reason and
+  never identifies the owner.
+- Raw recovery keys exist only in the creation/recovery request and immediate success
+  response. The server stores no plaintext copy and cannot retrieve one for support.
+- Invalid, unknown, and replayed recovery keys share one response. Successful recovery
+  rotates the key and revokes prior sessions.
+- Mobile recovery state is transient by default. SecureStore is off by default,
+  requires explicit user choice, and uses a device-only accessibility class.
+- A lost recovery key has no administrative bypass. The existing authenticated device
+  remains authoritative; without it or the key, the anonymous identity is unrecoverable.
+- Sprint 2 adds no location, audio, contacts, uploaded media, analytics, email, SMS,
+  hosted identity provider, or cloud storage service.
 
 ## Store-policy baseline
 
