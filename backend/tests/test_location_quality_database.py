@@ -3,7 +3,7 @@ import os
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.config import Settings
@@ -145,14 +145,8 @@ async def _quality_lifecycle() -> None:
                 )
             assert implausible.value.code == "LOCATION_MOVEMENT_IMPLAUSIBLE"
 
-            await db.execute(
-                update(CurrentLocation)
-                .where(CurrentLocation.account_id == account.id)
-                .values(expires_at=now)
-            )
-            await db.commit()
-            assert await delete_expired_locations(db, now=now) == 1
-            assert await delete_expired_locations(db, now=now) == 0
+            assert await delete_expired_locations(db, now=replacement.expires_at) == 1
+            assert await delete_expired_locations(db, now=replacement.expires_at) == 0
 
             db.add(
                 LocationConsentEvent(
