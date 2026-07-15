@@ -7,13 +7,15 @@
 - [Original RoadTalk Development Plan](reference/RoadTalk_Development_Plan.docx)
 - [Agile Workflow](AGILE_WORKFLOW.md)
 
-## Sprint 2 — Identity (approved upon specification merge)
+## Sprint 2 — Identity (review ready; approved upon review merge)
 
 - [Sprint 2: Identity](sprints/sprint-2-identity.md)
 - [Sprint 2 readiness](sprints/sprint-2-readiness.md)
+- [Sprint 2 traceability and evidence](sprints/sprint-2-traceability.md)
+- [Sprint 2 review record](sprints/sprint-2-review.md)
+- [Sprint 2 synthetic identity evidence](evidence/sprint-2/README.md)
 - Planning issue [#49](https://github.com/drakeg/roadtalk/issues/49)
-- Implementation tracker and deliverable issues are created only after specification
-  approval.
+- Implementation tracker [#61](https://github.com/drakeg/roadtalk/issues/61)
 
 ## Sprint 1 — Complete (conditional acceptance)
 
