@@ -6,36 +6,37 @@ RoadTalk is a location-aware, voice-first communication platform inspired by cla
 
 Sprint 0 — Planning & Architecture and Sprint 1 — Project Foundation are complete.
 Sprint 1 is conditionally accepted with named exceptions that must close before the
-first field test. Sprint 2 — Identity is implementation-complete and becomes approved
-when its evidence and review pull request is merged.
+first field test. Sprint 2 — Identity is complete and approved. Sprint 3 — Location is
+in planning; implementation is not authorized until its specification and readiness
+record receive explicit product-owner approval.
 
-Current work must follow the [Sprint 2 Identity specification](docs/sprints/sprint-2-identity.md),
-[traceability record](docs/sprints/sprint-2-traceability.md), and
-[review](docs/sprints/sprint-2-review.md). Sprint 3 planning begins only after the
-Sprint 2 review is approved; coding requires its own approved specification.
+Current planning must follow the [proposed Sprint 3 Location specification](docs/sprints/sprint-3-location.md)
+and [readiness record](docs/sprints/sprint-3-readiness.md). Committing planning to
+`main` does not authorize location coding, dependencies, permissions, schema, or APIs.
 
 ## Repository layout
 
-| Path | Purpose | Sprint 2 scope |
+| Path | Purpose | Proposed Sprint 3 scope |
 |---|---|---|
-| `mobile/` | React Native, Expo development-build, and TypeScript mobile application | Identity setup, avatar selection, and optional recovery experience |
-| `backend/` | FastAPI modular-monolith API, migrations, and backend tests | Profile, callsign, catalog, and recovery services |
-| `infrastructure/` | Terraform bootstrap, environment roots, and reusable modules | No Sprint 2 expansion; remains disabled by default |
+| `mobile/` | React Native, Expo development-build, and TypeScript mobile application | Foreground permission, short-lived sampling, heading/speed status, and coarse nearby awareness after approval |
+| `backend/` | FastAPI modular-monolith API, migrations, and backend tests | Consent, one current PostGIS row, validation, withdrawal, and coarse nearby summary after approval |
+| `infrastructure/` | Terraform bootstrap, environment roots, and reusable modules | No Sprint 3 expansion; remains disabled by default |
 | `scripts/` | Cross-project developer and operational helper scripts | Added only with a traced requirement |
 | `docs/` | Architecture, sprint records, ADRs, security, privacy, design, and runbooks | Specification, evidence, operations, and review |
-| `.github/` | Pull-request, issue, CI, quality, and security workflows | Existing gates plus traced identity checks |
+| `.github/` | Pull-request, issue, CI, quality, and security workflows | Existing gates plus proposed location privacy/scope checks after approval |
 
 ## Start here
 
 1. Read [DEVELOPMENT.md](DEVELOPMENT.md).
 2. Read [repository guidance](AGENTS.md) and [contribution rules](CONTRIBUTING.md).
-3. Confirm the issue belongs to the approved Sprint 2 tracker.
+3. Confirm the issue belongs to the approved active-sprint tracker.
 4. Create a focused branch from `main`.
 5. Implement only the linked requirement/deliverable.
 6. Record tests, privacy impact, cost impact, and evidence in the pull request.
 
-Sprint 2 must not enable AWS resources or add location, audio, channel, notification,
-moderation, or later-sprint behavior.
+Sprint 3 planning must not be treated as implementation authorization. The proposal
+keeps expected incremental AWS cost at $0 and excludes background location, maps,
+history, audio, channels, notifications, and other later-sprint behavior.
 
 ## Source of truth
 
