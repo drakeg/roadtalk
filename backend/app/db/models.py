@@ -1,7 +1,21 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Index, Integer, String, Text
+from geoalchemy2 import Geography
+from geoalchemy2.elements import WKBElement
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -38,6 +52,15 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         single_parent=True,
         uselist=False,
     )
+    location_consent_events: Mapped[list["LocationConsentEvent"]] = relationship(
+        back_populates="account", cascade="all, delete-orphan"
+    )
+    current_location: Mapped["CurrentLocation | None"] = relationship(
+        back_populates="account",
+        cascade="all, delete-orphan",
+        single_parent=True,
+        uselist=False,
+    )
 
 
 class Device(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -56,6 +79,12 @@ class Device(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     account: Mapped[Account] = relationship(back_populates="devices")
     sessions: Mapped[list["Session"]] = relationship(
         back_populates="device", cascade="all, delete-orphan"
+    )
+    location_consent_events: Mapped[list["LocationConsentEvent"]] = relationship(
+        back_populates="device", passive_deletes=True
+    )
+    current_locations: Mapped[list["CurrentLocation"]] = relationship(
+        back_populates="source_device", passive_deletes=True
     )
 
 
@@ -122,3 +151,69 @@ class RecoveryCredential(TimestampMixin, Base):
     rotated_at: Mapped[datetime]
 
     account: Mapped[Account] = relationship(back_populates="recovery_credential")
+
+
+class LocationConsentEvent(UUIDPrimaryKeyMixin, Base):
+    __tablename__ = "location_consent_event"
+    __table_args__ = (
+        CheckConstraint("decision IN ('granted', 'revoked')", name="decision_allowed"),
+        CheckConstraint("platform IN ('android', 'ios')", name="platform_allowed"),
+        CheckConstraint("length(policy_version) > 0", name="policy_version_present"),
+        CheckConstraint("length(disclosure_version) > 0", name="disclosure_version_present"),
+        Index("ix_location_consent_event_account_decided", "account_id", "decided_at"),
+        Index("ix_location_consent_event_device_id", "device_id"),
+    )
+
+    account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("account.id", ondelete="CASCADE"))
+    device_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
+    policy_version: Mapped[str] = mapped_column(String(32))
+    disclosure_version: Mapped[str] = mapped_column(String(32))
+    platform: Mapped[str] = mapped_column(String(16))
+    decision: Mapped[str] = mapped_column(String(16))
+    decided_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    account: Mapped[Account] = relationship(back_populates="location_consent_events")
+    device: Mapped[Device] = relationship(back_populates="location_consent_events")
+
+
+class CurrentLocation(TimestampMixin, Base):
+    __tablename__ = "current_location"
+    __table_args__ = (
+        CheckConstraint("horizontal_accuracy_m >= 0", name="accuracy_nonnegative"),
+        CheckConstraint(
+            "heading_deg IS NULL OR (heading_deg >= 0 AND heading_deg < 360)",
+            name="heading_range",
+        ),
+        CheckConstraint("speed_mps IS NULL OR speed_mps >= 0", name="speed_nonnegative"),
+        CheckConstraint("client_sequence >= 1", name="client_sequence_positive"),
+        CheckConstraint("quality_state IN ('usable', 'degraded')", name="quality_state_allowed"),
+        CheckConstraint("length(consent_policy_version) > 0", name="consent_policy_present"),
+        CheckConstraint("expires_at > received_at", name="expiry_after_receipt"),
+        CheckConstraint("version >= 1", name="version_positive"),
+        Index("ix_current_location_position", "position", postgresql_using="gist"),
+        Index("ix_current_location_source_device_id", "source_device_id"),
+        Index("ix_current_location_expires_at", "expires_at"),
+        Index("ix_current_location_effective", "quality_state", "expires_at"),
+    )
+
+    account_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE"), primary_key=True
+    )
+    source_device_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
+    position: Mapped[WKBElement] = mapped_column(
+        Geography(geometry_type="POINT", srid=4326, spatial_index=False)
+    )
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    horizontal_accuracy_m: Mapped[float] = mapped_column(Float)
+    heading_deg: Mapped[float | None] = mapped_column(Float)
+    speed_mps: Mapped[float | None] = mapped_column(Float)
+    client_sequence: Mapped[int] = mapped_column(BigInteger)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    consent_policy_version: Mapped[str] = mapped_column(String(32))
+    quality_state: Mapped[str] = mapped_column(String(16))
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+
+    account: Mapped[Account] = relationship(back_populates="current_location")
+    source_device: Mapped[Device] = relationship(back_populates="current_locations")
