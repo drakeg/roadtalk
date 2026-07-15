@@ -13,6 +13,20 @@ from app.context import bind_request_id, reset_request_id
 logger = logging.getLogger("roadtalk.request")
 
 
+def route_template(request: Request) -> str:
+    route = request.scope.get("route")
+    template = getattr(route, "path_format", None) or getattr(route, "path", None)
+    return template if isinstance(template, str) else "unmatched"
+
+
+def result_class(status_code: int) -> str:
+    if status_code < 400:
+        return "success"
+    if status_code < 500:
+        return "client_error"
+    return "server_error"
+
+
 class RequestContextMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: ASGIApp, settings: Settings) -> None:
         super().__init__(app)
@@ -41,8 +55,9 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                 "request.complete",
                 extra={
                     "method": request.method,
-                    "path": request.url.path,
+                    "route": route_template(request),
                     "status_code": response.status_code,
+                    "result_class": result_class(response.status_code),
                     "duration_ms": duration_ms,
                 },
             )
