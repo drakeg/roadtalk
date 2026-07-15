@@ -1,17 +1,17 @@
 # Sprint 3 readiness
 
 - Sprint: 3 — Location
-- Status: NOT READY — specification approval pending
+- Status: READY — specification approved
 - Planning issue: #71
 - Readiness date: 2026-07-14
 - Proposed baseline: Sprint 2 approval merge `106c3670413d697689934b00afe6f5d3c1cc8c9d`
 
 ## Decision
 
-Sprint 3 has no unresolved architecture or cost dependency for local/GitHub CI
-implementation, but it is not authorized to begin until the product owner approves
-the proposed Location specification. Planning on `main` does not itself authorize
-code, dependency, permission, schema, or API changes.
+Sprint 3 is authorized for local/GitHub CI implementation after product-owner
+approval on 2026-07-14. The approved scope remains foreground-only and creates no AWS
+resource. Code, dependency, permission, schema, and API changes must trace to tracker
+#81 and the locked Location specification.
 
 ## Definition of Ready
 
@@ -32,8 +32,8 @@ code, dependency, permission, schema, or API changes.
 - [x] Sprint 1 and Sprint 2 regressions remain acceptance gates.
 - [x] No new AWS resource, managed service, or paid third-party API is authorized.
 - [x] Planning approval and implementation authorization are separated.
-- [ ] Product owner approves the proposed Sprint 3 baseline.
-- [ ] D01 tracker and implementation issues are created from the approved wording.
+- [x] Product owner approves the proposed Sprint 3 baseline.
+- [x] D01 tracker and implementation issues are created from the approved wording.
 
 ## Cost gate
 
@@ -80,19 +80,20 @@ passed until its prerequisite exception is closed and evidence is recorded.
 
 ## Preconditions before the first code change
 
-1. Product owner explicitly approves `sprint-3-location.md` and this readiness record.
-2. Close planning issue #71 as completed.
-3. Create one Sprint 3 tracker and S03-D01 through S03-D09 issues from the exact
+1. [x] Product owner explicitly approved `sprint-3-location.md` and this readiness
+   record.
+2. [x] Planning issue #71 is ready to close as completed.
+3. [x] Tracker #81 and S03-D01 through S03-D09 issues #72–#80 were created from the
    approved wording.
-4. Update repository and documentation status to make Sprint 3 the sole active
+4. [x] Repository and documentation status make Sprint 3 the sole active
    implementation sprint.
-5. Record the approval commit as the implementation baseline.
-6. Start S03-D01 from that baseline using the feature-branch/PR workflow.
-7. Keep Terraform disabled and Sprint 1 exceptions open.
+5. [x] The final approval update on `main` is the implementation baseline.
+6. [x] S03-D01 planning/setup is complete; code begins with S03-D02 using the feature-
+   branch/PR workflow.
+7. [x] Terraform remains disabled and Sprint 1 exceptions remain open.
 
 ## Readiness conclusion
 
-**NOT READY — approval pending.** The proposal is technically and financially bounded
-for local/CI delivery, with expected incremental AWS cost of $0. Approval is the only
-remaining entry gate; until then, no location dependency, permission, database, API,
-or mobile implementation change is authorized.
+**READY.** The product owner approved the technically and financially bounded local/CI
+scope on 2026-07-14. Expected incremental AWS cost remains $0. Implementation proceeds
+through tracker #81, one reviewed deliverable at a time, starting with S03-D02.
