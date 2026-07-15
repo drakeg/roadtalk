@@ -93,10 +93,12 @@ describe("mobile recovery experience", () => {
     mockedUseRecoveryApi.mockReturnValue(remote as unknown as RecoveryApi);
     const view = await renderScreen(secure);
 
-    fireEvent(
-      view.getByLabelText("Save recovery key in secure storage"),
-      "valueChange",
-      true,
+    await flushInteraction(() =>
+      fireEvent(
+        view.getByLabelText("Save recovery key in secure storage"),
+        "valueChange",
+        true,
+      ),
     );
     await flushInteraction(() =>
       fireEvent.press(
@@ -117,9 +119,11 @@ describe("mobile recovery experience", () => {
     mockedUseRecoveryApi.mockReturnValue(remote as unknown as RecoveryApi);
     const view = await renderScreen();
 
-    fireEvent.changeText(
-      view.getByLabelText("Recovery key"),
-      "rtk1.original.secret",
+    await flushInteraction(() =>
+      fireEvent.changeText(
+        view.getByLabelText("Recovery key"),
+        "rtk1.original.secret",
+      ),
     );
     await flushInteraction(() =>
       fireEvent.press(view.getByRole("button", { name: "Recover account" })),
@@ -152,7 +156,9 @@ describe("mobile recovery experience", () => {
       mockedUseRecoveryApi.mockReturnValue(remote as unknown as RecoveryApi);
       const view = await renderScreen();
 
-      fireEvent.changeText(view.getByLabelText("Recovery key"), "candidate");
+      await flushInteraction(() =>
+        fireEvent.changeText(view.getByLabelText("Recovery key"), "candidate"),
+      );
       await flushInteraction(() =>
         fireEvent.press(view.getByRole("button", { name: "Recover account" })),
       );
