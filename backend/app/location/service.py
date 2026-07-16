@@ -53,7 +53,11 @@ async def _require_current_consent(
         await db.scalars(
             select(LocationConsentEvent)
             .where(LocationConsentEvent.account_id == account_id)
-            .order_by(LocationConsentEvent.decided_at.desc(), LocationConsentEvent.id.desc())
+            .order_by(
+                LocationConsentEvent.decided_at.desc(),
+                LocationConsentEvent.created_at.desc(),
+                LocationConsentEvent.id.desc(),
+            )
             .limit(1)
         )
     ).first()

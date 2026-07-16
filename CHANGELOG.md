@@ -34,6 +34,11 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
   resource, or incremental AWS cost.
 - Expo SDK 57 patch dependencies refreshed to the compatibility set required by Expo
   Doctor, preserving the existing mobile feature scope while restoring the CI gate.
+- Authenticated owner-scoped foreground-consent grant and withdrawal endpoints with
+  exact version checks, idempotent decisions, and atomic current-location deletion.
+- Authenticated current-location upsert and pause endpoints with forbidden extra
+  fields, session-derived ownership, metadata-only acknowledgements, stable private
+  errors, and bounded peer/account/device mutation limits.
 
 ## Unreleased — Sprint 2: Identity
 

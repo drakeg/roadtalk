@@ -19,7 +19,7 @@ def settings(*, recovery_attempt_limit: int = 10) -> Settings:
     )
 
 
-def test_openapi_exposes_only_approved_sprint_2_contracts() -> None:
+def test_openapi_exposes_only_approved_through_s03_d04_contracts() -> None:
     schema = create_app(settings()).openapi()
 
     assert set(schema["paths"]) == {
@@ -32,6 +32,8 @@ def test_openapi_exposes_only_approved_sprint_2_contracts() -> None:
         "/api/v1/callsigns/availability",
         "/api/v1/me/profile",
         "/api/v1/me/recovery-key",
+        "/api/v1/me/location",
+        "/api/v1/me/location-consent",
         "/api/v1/sessions/recover",
         "/api/v1/system/version",
     }
@@ -77,7 +79,7 @@ def test_openapi_exposes_only_approved_sprint_2_contracts() -> None:
     for forbidden in (
         "biography",
         "email",
-        "location",
+        "background_location",
         "microphone",
         "notification",
         "phone_number",
