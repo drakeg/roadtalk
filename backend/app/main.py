@@ -5,6 +5,7 @@ from fastapi import FastAPI
 
 from app.api.auth import router as auth_router
 from app.api.identity import router as identity_router
+from app.api.location import nearby_router
 from app.api.location import router as location_router
 from app.api.recovery import router as recovery_router
 from app.api.system import router as system_router
@@ -63,6 +64,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(identity_router)
     app.include_router(recovery_router)
     app.include_router(location_router)
+    app.include_router(nearby_router)
     return app
 
 

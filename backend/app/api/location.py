@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Request, status
 from app.api.auth import CurrentSession, DatabaseSession
 from app.location.consent import LocationConsentError, set_foreground_location_consent
 from app.location.limiter import LocationLimiter, LocationRateLimitError
+from app.location.nearby import NearbySummaryError, get_nearby_summary
 from app.location.quality import LocationPolicyError, LocationSample, policy_from_settings
 from app.location.schemas import (
     CurrentLocationPauseResponse,
@@ -13,10 +14,12 @@ from app.location.schemas import (
     CurrentLocationResponse,
     LocationConsentRequest,
     LocationConsentResponse,
+    NearbySummaryResponse,
 )
 from app.location.service import delete_current_location, record_current_location
 
 router = APIRouter(prefix="/api/v1/me", tags=["location"])
+nearby_router = APIRouter(prefix="/api/v1/nearby", tags=["location"])
 
 
 def _check_mutation_limit(
@@ -58,6 +61,27 @@ def _policy_error(exc: LocationPolicyError) -> HTTPException:
         status_code=status_code,
         detail={"code": exc.code, "detail": exc.detail},
     )
+
+
+def _check_nearby_limit(request: Request, current: CurrentSession) -> None:
+    limiter = cast(LocationLimiter, request.app.state.location_limiter)
+    peer = request.client.host if request.client is not None else "unknown"
+    try:
+        limiter.check_nearby_read(
+            peer=peer,
+            account_id=str(current.account.id),
+            device_id=str(current.device.id),
+            now=time.monotonic(),
+        )
+    except LocationRateLimitError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "code": "LOCATION_RATE_LIMITED",
+                "detail": "Location requests are temporarily limited.",
+            },
+            headers={"Retry-After": str(exc.retry_after)},
+        ) from exc
 
 
 async def _set_consent_decision(
@@ -140,3 +164,28 @@ async def pause_current_location(
     _check_mutation_limit(request, current)
     await delete_current_location(db, account_id=current.account.id)
     return CurrentLocationPauseResponse()
+
+
+@nearby_router.get("/summary", response_model=NearbySummaryResponse)
+async def read_nearby_summary(
+    request: Request,
+    db: DatabaseSession,
+    current: CurrentSession,
+) -> NearbySummaryResponse:
+    _check_nearby_limit(request, current)
+    settings = request.app.state.settings
+    try:
+        summary = await get_nearby_summary(
+            db,
+            account_id=current.account.id,
+            policy_version=settings.location_policy_version,
+            max_usable_accuracy_m=settings.location_max_usable_accuracy_m,
+            radius_m=settings.location_nearby_radius_m,
+            many_threshold=settings.location_nearby_many_threshold,
+        )
+    except NearbySummaryError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"code": exc.code, "detail": exc.detail},
+        ) from exc
+    return NearbySummaryResponse(**summary.__dict__)

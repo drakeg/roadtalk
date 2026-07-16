@@ -1,6 +1,6 @@
 # Backend
 
-Sprint 3 active owner: S03-D04 Private consent and current-location API.
+Sprint 3 active owner: S03-D05 Coarse nearby summary.
 
 The backend is a Python/FastAPI modular-monolith control API.
 
@@ -49,6 +49,13 @@ never requires accepting a newer version and atomically removes the current row.
 Location writes pass through the D03 policy and return metadata only. Pause is
 idempotent, and every mutation shares the bounded peer/account/device limiter.
 
+S03-D05 adds one caller-relative nearby summary. It requires the caller and every
+eligible candidate to have a fresh, usable current row under the active consent
+policy, excludes the caller, and evaluates the configured radius with the existing
+GiST-indexed PostGIS `ST_DWithin` predicate. The response contains only availability,
+a `none`/`few`/`many` bucket, freshness, and the caller's expiry boundary. Exact
+counts, thresholds, identities, coordinates, distances, and bearings remain private.
+
 ## Local setup
 
 From the repository root:
@@ -87,6 +94,7 @@ The API listens on `127.0.0.1:8000` by default.
 | `DELETE /api/v1/me/location-consent` | Withdraw consent and atomically remove current location. |
 | `PUT /api/v1/me/location` | Submit one validated current foreground sample; response omits coordinates. |
 | `DELETE /api/v1/me/location` | Idempotently pause/remove the authenticated account's current sample. |
+| `GET /api/v1/nearby/summary` | Return only caller-relative availability, coarse bucket, freshness, and caller expiry. |
 
 ## Checks
 
@@ -100,13 +108,14 @@ ROADTALK_RUN_DATABASE_TESTS=1 make backend-test  # migrated disposable database 
 
 ## Location control boundary
 
-S03-D04 adds only the four private mutation routes listed above. It does not add a
-coordinate read route, mobile permission request, collection lifecycle, maps, history,
-nearby identities, background jobs, analytics, or location logging. Account, device,
-and platform ownership come only from the verified bearer session; request bodies
-cannot select them. Consumer GPS remains non-authoritative and is not cryptographic
-proof of position; freshness, accuracy, sequence, and movement checks reduce obvious
-bad input but cannot eliminate spoofing.
+S03-D05 keeps all four private mutations and adds only the coarse authenticated nearby
+summary listed above. It does not add a coordinate read route, mobile permission
+request, collection lifecycle, maps, history, nearby identities, background jobs,
+analytics, or location logging. Account, device, and platform ownership come only
+from the verified bearer session; request bodies cannot select them. Consumer GPS
+remains non-authoritative and is not cryptographic proof of position; freshness,
+accuracy, sequence, and movement checks reduce obvious bad input but cannot eliminate
+spoofing.
 
 The implementation reuses the current API process and PostgreSQL/PostGIS database.
 It adds no Terraform or AWS resources and requires no RDS, managed Redis, NAT Gateway,

@@ -19,7 +19,7 @@ def settings(*, recovery_attempt_limit: int = 10) -> Settings:
     )
 
 
-def test_openapi_exposes_only_approved_through_s03_d04_contracts() -> None:
+def test_openapi_exposes_only_approved_through_s03_d05_contracts() -> None:
     schema = create_app(settings()).openapi()
 
     assert set(schema["paths"]) == {
@@ -34,6 +34,7 @@ def test_openapi_exposes_only_approved_through_s03_d04_contracts() -> None:
         "/api/v1/me/recovery-key",
         "/api/v1/me/location",
         "/api/v1/me/location-consent",
+        "/api/v1/nearby/summary",
         "/api/v1/sessions/recover",
         "/api/v1/system/version",
     }
