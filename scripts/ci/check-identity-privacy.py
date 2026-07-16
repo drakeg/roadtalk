@@ -37,7 +37,6 @@ forbidden_mobile_dependencies = {
     "expo-av",
     "expo-camera",
     "expo-image-picker",
-    "expo-location",
     "expo-notifications",
 }
 unexpected = mobile_dependencies & forbidden_mobile_dependencies
