@@ -25,6 +25,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         configureAndroidBackup: true,
       },
     ],
+    [
+      "expo-location",
+      {
+        locationWhenInUsePermission:
+          "RoadTalk uses your location only while the location screen is open to provide coarse nearby awareness. Your coordinates are never shown to other users or stored as history.",
+        isIosBackgroundLocationEnabled: false,
+        isAndroidBackgroundLocationEnabled: false,
+      },
+    ],
   ],
   extra: {
     apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1",

@@ -45,6 +45,15 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Boundary, fail-closed, rate-limit, OpenAPI, privacy, and live query-plan evidence
   for the nearby summary, with no identity, exact count, coordinate, distance,
   bearing, AWS resource, or paid service.
+- Accessible purpose-before-permission mobile onboarding for foreground location,
+  including precise, approximate/reduced, denied, blocked/settings, unavailable,
+  retry, pause, and continue-without-location states.
+- Foreground-only Expo location lifecycle control with conservative native sampling,
+  bounded JSON uploads, in-memory monotonic sequencing, and mandatory stops on pause,
+  background, screen exit, logout, and unmount.
+- Mobile configuration and scope tests that prohibit background location/tasks,
+  persistent coordinate storage, analytics, paid providers, and new AWS resources;
+  expected incremental AWS cost remains $0.
 
 ## Unreleased — Sprint 2: Identity
 

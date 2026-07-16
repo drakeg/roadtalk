@@ -36,6 +36,19 @@ export function HomeScreen({ navigation }: Props) {
       {authenticated ? (
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel="Review foreground location privacy"
+          onPress={() => navigation.navigate("LocationPermission")}
+          style={({ pressed }) => [
+            styles.button,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          <Text style={styles.buttonText}>Location privacy</Text>
+        </Pressable>
+      ) : null}
+      {authenticated ? (
+        <Pressable
+          accessibilityRole="button"
           accessibilityLabel="Set up or edit identity"
           onPress={() => navigation.navigate("Identity")}
           style={({ pressed }) => [

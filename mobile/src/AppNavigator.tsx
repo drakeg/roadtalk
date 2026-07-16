@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { DiagnosticsScreen } from "./screens/DiagnosticsScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { IdentityScreen } from "./screens/IdentityScreen";
+import { LocationPermissionScreen } from "./screens/LocationPermissionScreen";
 import { RecoveryScreen } from "./screens/RecoveryScreen";
 import { colors } from "./theme";
 
@@ -11,6 +12,7 @@ export type RootStackParamList = {
   Foundation: undefined;
   Diagnostics: undefined;
   Identity: undefined;
+  LocationPermission: undefined;
   Recovery: undefined;
 };
 
@@ -37,6 +39,11 @@ export function AppNavigator() {
           headerTitleStyle: { fontWeight: "600" },
         }}
       >
+        <Stack.Screen
+          component={LocationPermissionScreen}
+          name="LocationPermission"
+          options={{ title: "Location privacy" }}
+        />
         <Stack.Screen
           component={HomeScreen}
           name="Foundation"
