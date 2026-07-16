@@ -1,3 +1,8 @@
+from app.location.consent import (
+    LocationConsentError,
+    LocationConsentReceipt,
+    set_foreground_location_consent,
+)
 from app.location.limiter import LocationLimiter, LocationRateLimitError
 from app.location.quality import (
     ExistingLocation,
@@ -18,6 +23,8 @@ from app.location.service import (
 __all__ = [
     "ExistingLocation",
     "LocationDecision",
+    "LocationConsentError",
+    "LocationConsentReceipt",
     "LocationLimiter",
     "LocationPolicy",
     "LocationPolicyError",
@@ -29,4 +36,5 @@ __all__ = [
     "evaluate_location_sample",
     "policy_from_settings",
     "record_current_location",
+    "set_foreground_location_consent",
 ]

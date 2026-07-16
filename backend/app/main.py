@@ -5,12 +5,14 @@ from fastapi import FastAPI
 
 from app.api.auth import router as auth_router
 from app.api.identity import router as identity_router
+from app.api.location import router as location_router
 from app.api.recovery import router as recovery_router
 from app.api.system import router as system_router
 from app.config import Settings, get_settings
 from app.db.session import check_database, dispose_database
 from app.health import ReadinessRegistry
 from app.identity.callsigns import CallsignAvailabilityLimiter
+from app.location.limiter import LocationLimiter
 from app.logging import configure_logging
 from app.middleware import RequestContextMiddleware
 from app.problems import install_problem_handlers
@@ -46,6 +48,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         mutation_limit=resolved.recovery_mutation_limit,
         mutation_window_seconds=resolved.recovery_mutation_window_seconds,
     )
+    app.state.location_limiter = LocationLimiter(
+        mutation_limit=resolved.location_mutation_limit,
+        mutation_window_seconds=resolved.location_mutation_window_seconds,
+        nearby_read_limit=resolved.location_nearby_read_limit,
+        nearby_read_window_seconds=resolved.location_nearby_read_window_seconds,
+    )
     if resolved.database_check_enabled:
         app.state.readiness.register("database", check_database)
     app.add_middleware(RequestContextMiddleware, settings=resolved)
@@ -54,6 +62,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(auth_router)
     app.include_router(identity_router)
     app.include_router(recovery_router)
+    app.include_router(location_router)
     return app
 
 

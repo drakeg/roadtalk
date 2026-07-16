@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     recovery_mutation_limit: int = Field(default=5, ge=1, le=30)
     recovery_mutation_window_seconds: int = Field(default=3_600, ge=60, le=86_400)
     location_policy_version: str = Field(default="location-v1", min_length=1, max_length=32)
+    location_disclosure_version: str = Field(
+        default="location-disclosure-v1", min_length=1, max_length=32
+    )
     location_max_sample_age_seconds: int = Field(default=60, ge=1, le=900)
     location_max_future_seconds: int = Field(default=10, ge=0, le=120)
     location_max_usable_accuracy_m: float = Field(default=100, gt=0, le=10_000)
