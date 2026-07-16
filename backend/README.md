@@ -1,6 +1,6 @@
 # Backend
 
-Sprint 2 active owner: S02-D04 Profile and identity API.
+Sprint 3 active owner: S03-D03 Location quality, sequencing, expiry, and rate controls.
 
 The backend is a Python/FastAPI modular-monolith control API.
 
@@ -29,6 +29,19 @@ and one expiring PostGIS geography point per account. The current row is owned b
 account and source device, contains quality/sequence/expiry metadata, and cascades on
 account or source-device deletion. No location API, mobile permission, background
 collection, history table, cache, map, or nearby response is implemented in D02.
+
+S03-D03 adds a versioned server-side domain policy for coordinate shape, accuracy,
+observation time, optional heading/speed, device ownership, current consent,
+same-device sequencing, cross-device replacement, plausible movement, and bounded
+expiry. Accepted writes return metadata only; policy failures use stable messages that
+do not disclose submitted coordinates, movement, or internal thresholds. Explicit and
+expired-row deletion helpers are idempotent and require no background scheduler for
+correctness.
+
+Mutation and future nearby-read limiters cover peer, account, and device dimensions in
+the existing API process. They are deliberately process-local for the approved
+single-worker field-test architecture. A multi-worker deployment must introduce a
+separately approved shared design; it must not silently weaken these controls.
 
 ## Local setup
 
@@ -75,7 +88,19 @@ make backend-test
 ROADTALK_RUN_DATABASE_TESTS=1 make backend-test  # migrated disposable database only
 ```
 
-## Scope boundary
+## Location control boundary
+
+S03-D03 is domain/service infrastructure only. It does not add HTTP routes, mobile
+permission requests, collection, maps, history, nearby identities, background jobs,
+analytics, or location logging. Consumer GPS remains non-authoritative and is not
+cryptographic proof of position; freshness, accuracy, sequence, and movement checks
+reduce obvious bad input but cannot eliminate spoofing.
+
+The implementation reuses the current API process and PostgreSQL/PostGIS database.
+It adds no Terraform or AWS resources and requires no RDS, managed Redis, NAT Gateway,
+load balancer, container service, or scheduler. Expected incremental AWS cost is $0.
+
+## Identity scope boundary
 
 S02-D04 exposes only the authenticated account at `/api/v1/me/profile`; callers cannot
 select another account. Version `0` represents an uninitialized profile, and every

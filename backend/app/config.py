@@ -1,7 +1,7 @@
 from functools import lru_cache
-from typing import Literal
+from typing import Literal, Self
 
-from pydantic import AliasChoices, Field, SecretStr
+from pydantic import AliasChoices, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -41,6 +41,33 @@ class Settings(BaseSettings):
     recovery_attempt_window_seconds: int = Field(default=900, ge=60, le=86_400)
     recovery_mutation_limit: int = Field(default=5, ge=1, le=30)
     recovery_mutation_window_seconds: int = Field(default=3_600, ge=60, le=86_400)
+    location_policy_version: str = Field(default="location-v1", min_length=1, max_length=32)
+    location_max_sample_age_seconds: int = Field(default=60, ge=1, le=900)
+    location_max_future_seconds: int = Field(default=10, ge=0, le=120)
+    location_max_usable_accuracy_m: float = Field(default=100, gt=0, le=10_000)
+    location_max_retained_accuracy_m: float = Field(default=1_000, gt=0, le=50_000)
+    location_max_reported_speed_mps: float = Field(default=100, gt=0, le=1_000)
+    location_max_plausible_speed_mps: float = Field(default=100, gt=0, le=1_000)
+    location_plausibility_slack_m: float = Field(default=250, ge=0, le=10_000)
+    location_usable_ttl_seconds: int = Field(default=120, ge=10, le=3_600)
+    location_degraded_ttl_seconds: int = Field(default=60, ge=10, le=3_600)
+    location_cross_device_newer_seconds: int = Field(default=1, ge=0, le=60)
+    location_mutation_limit: int = Field(default=30, ge=1, le=600)
+    location_mutation_window_seconds: int = Field(default=60, ge=1, le=3_600)
+    location_nearby_read_limit: int = Field(default=60, ge=1, le=600)
+    location_nearby_read_window_seconds: int = Field(default=60, ge=1, le=3_600)
+
+    @model_validator(mode="after")
+    def validate_location_policy(self) -> Self:
+        if self.location_max_usable_accuracy_m > self.location_max_retained_accuracy_m:
+            raise ValueError(
+                "location_max_usable_accuracy_m must not exceed location_max_retained_accuracy_m"
+            )
+        if self.location_degraded_ttl_seconds > self.location_usable_ttl_seconds:
+            raise ValueError(
+                "location_degraded_ttl_seconds must not exceed location_usable_ttl_seconds"
+            )
+        return self
 
 
 @lru_cache

@@ -24,6 +24,16 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
   constraints plus explicit GiST/effective-state indexes.
 - Backward-compatible location migration and model/live-PostGIS invariant tests with
   no location history, API, mobile permission, AWS resource, or managed service.
+- Versioned foreground-location validation for coordinate, accuracy, observation
+  time, heading, speed, consent, device ownership, sequencing, cross-device races,
+  plausible movement, quality state, and bounded expiry.
+- Privacy-safe metadata-only write receipts, stable non-disclosing policy failures,
+  and idempotent explicit/expired current-location deletion helpers.
+- Bounded process-local mutation and nearby-read controls across peer, account, and
+  device dimensions for the approved single-worker design, with no cache, new AWS
+  resource, or incremental AWS cost.
+- Expo SDK 57 patch dependencies refreshed to the compatibility set required by Expo
+  Doctor, preserving the existing mobile feature scope while restoring the CI gate.
 
 ## Unreleased — Sprint 2: Identity
 
