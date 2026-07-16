@@ -1,6 +1,7 @@
 # Mobile
 
-Sprint 2 owner: S02-D05, S02-D06, and S02-D08.
+Current owner: S03-D06. The retained identity and recovery flows were delivered by
+S02-D05, S02-D06, and S02-D08.
 
 This directory contains the Expo/React Native/TypeScript development-build application.
 
@@ -26,6 +27,31 @@ Sprint 1 and S02-D05 provide:
 - explicit recovery-key creation/rotation with one-time display
 - account transfer on a newly registered device with replacement-session handling
 - recovery keys transient by default and SecureStore-only after explicit opt-in
+- purpose-before-permission foreground location onboarding
+- foreground-only location sampling with bounded private updates
+- lifecycle stops on pause, background, logout, screen exit, and unmount
+- precise and approximate/reduced-accuracy permission support
+
+## Foreground location lifecycle
+
+Authenticated users can open **Location privacy** and review RoadTalk's purpose and
+limits before the application asks the operating system for permission. The platform
+prompt is requested only after the explicit **Enable location** action. Denial,
+blocked/settings, unavailable-service, approximate/reduced-accuracy, retry, and pause
+states remain usable and accessible.
+
+The controller uses the pinned `expo-location` dependency only while the location
+screen, application, and authenticated session are all active. Samples are sent in
+JSON through the existing authenticated transport at a bounded cadence with an
+in-memory monotonic sequence. Pause and lifecycle exits stop the native subscription;
+when authentication is still available, they also ask the API to remove the current
+short-lived row. Coordinates and sequences are never written to device storage,
+placed in URLs, or logged.
+
+Expo configuration enables iOS when-in-use and Android coarse/fine permissions only.
+Background location flags remain false. There is no background task, foreground
+service, geofence, motion permission, map SDK, analytics SDK, paid location provider,
+or new AWS resource. S03-D06 therefore adds $0 expected AWS cost.
 
 ## Avatar catalog
 
@@ -112,7 +138,16 @@ Before a field test:
 2. confirm the RoadTalk foundation screen launches;
 3. confirm the diagnostics screen shows the intended API URL;
 4. verify text scaling, screen-reader labels, button target size, light/dark system behavior, and error fallback;
-5. confirm no location, microphone, notification, or tracking permission is requested.
+5. confirm no permission is requested before **Enable location** is selected;
+6. exercise precise and approximate/reduced permission, denial, blocked/settings,
+   disabled services, pause, background/foreground, screen exit, logout, and unmount;
+7. confirm only foreground/when-in-use location is requested and no microphone,
+   notification, motion, background-location, or tracking permission appears;
+8. observe that sampling stops on every lifecycle exit and assess battery behavior.
+
+These physical-device permission, battery, native-storage, and lifecycle checks remain
+pending until the inherited S01-E01 hardware evidence gate is closed. Automated tests
+use synthetic samples and do not claim real-device evidence.
 
 ## Credential-storage verification
 
@@ -130,5 +165,7 @@ development logs must never print request bodies, authorization headers, or stor
 
 ## Scope boundary
 
-The authenticated shell exposes no location, audio, PTT, proximity, or channel feature.
-Later domains remain unavailable until their approved sprints.
+S03-D06 exposes only the foreground-location purpose, permission, and lifecycle flow.
+The richer owner status, heading/speed display, and coarse nearby experience belong to
+S03-D07. Maps, routes, nearby identities, exact counts/distances/bearings, location
+history, audio, PTT, channels, and background collection remain unavailable.

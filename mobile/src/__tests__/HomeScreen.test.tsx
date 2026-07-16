@@ -27,17 +27,21 @@ describe("foundation screen", () => {
     );
 
     expect(view.getByRole("header", { name: "RoadTalk" })).toBeOnTheScreen();
-    fireEvent.press(
+    await fireEvent.press(
       view.getByRole("button", { name: "Set up or edit identity" }),
     );
     expect(navigate).toHaveBeenCalledWith("Identity");
-    fireEvent.press(
+    await fireEvent.press(
       view.getByRole("button", {
         name: "Create a recovery key or recover an account",
       }),
     );
     expect(navigate).toHaveBeenCalledWith("Recovery");
-    fireEvent.press(
+    await fireEvent.press(
+      view.getByRole("button", { name: "Review foreground location privacy" }),
+    );
+    expect(navigate).toHaveBeenCalledWith("LocationPermission");
+    await fireEvent.press(
       view.getByRole("button", { name: "Open app diagnostics" }),
     );
     expect(navigate).toHaveBeenCalledWith("Diagnostics");
