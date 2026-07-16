@@ -137,7 +137,18 @@ async def _nearby_lifecycle() -> None:
                 {"caller": caller, "now": now},
             )
             encoded_plan = " ".join(str(row[0]) for row in plan).lower()
-            assert "ix_current_location_position" in encoded_plan
+            assert "st_dwithin" in encoded_plan
+            assert "ix_current_location_effective" in encoded_plan
+
+            spatial_plan = await db.execute(
+                text(
+                    "EXPLAIN (COSTS OFF) SELECT account_id FROM current_location "
+                    "WHERE ST_DWithin(position, "
+                    "ST_GeogFromText('SRID=4326;POINT(0 0)'), 1000)"
+                )
+            )
+            encoded_spatial_plan = " ".join(str(row[0]) for row in spatial_plan).lower()
+            assert "ix_current_location_position" in encoded_spatial_plan
 
             for values in (
                 {"quality_state": "degraded"},
