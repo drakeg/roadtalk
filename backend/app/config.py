@@ -59,6 +59,8 @@ class Settings(BaseSettings):
     location_mutation_window_seconds: int = Field(default=60, ge=1, le=3_600)
     location_nearby_read_limit: int = Field(default=60, ge=1, le=600)
     location_nearby_read_window_seconds: int = Field(default=60, ge=1, le=3_600)
+    location_nearby_radius_m: float = Field(default=5_000, gt=0, le=100_000)
+    location_nearby_many_threshold: int = Field(default=5, ge=2, le=100)
 
     @model_validator(mode="after")
     def validate_location_policy(self) -> Self:

@@ -39,6 +39,12 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Authenticated current-location upsert and pause endpoints with forbidden extra
   fields, session-derived ownership, metadata-only acknowledgements, stable private
   errors, and bounded peer/account/device mutation limits.
+- Indexed caller-relative PostGIS nearby evaluation over fresh, usable, actively
+  consented current rows, returning only availability, a semantic bucket, freshness,
+  and the caller's expiry boundary.
+- Boundary, fail-closed, rate-limit, OpenAPI, privacy, and live query-plan evidence
+  for the nearby summary, with no identity, exact count, coordinate, distance,
+  bearing, AWS resource, or paid service.
 
 ## Unreleased — Sprint 2: Identity
 

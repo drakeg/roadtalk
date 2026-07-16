@@ -4,6 +4,7 @@ from app.location.consent import (
     set_foreground_location_consent,
 )
 from app.location.limiter import LocationLimiter, LocationRateLimitError
+from app.location.nearby import NearbySummary, NearbySummaryError, get_nearby_summary
 from app.location.quality import (
     ExistingLocation,
     LocationDecision,
@@ -29,11 +30,14 @@ __all__ = [
     "LocationPolicy",
     "LocationPolicyError",
     "LocationRateLimitError",
+    "NearbySummary",
+    "NearbySummaryError",
     "LocationReceipt",
     "LocationSample",
     "delete_current_location",
     "delete_expired_locations",
     "evaluate_location_sample",
+    "get_nearby_summary",
     "policy_from_settings",
     "record_current_location",
     "set_foreground_location_consent",

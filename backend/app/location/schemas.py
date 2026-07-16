@@ -41,3 +41,10 @@ class CurrentLocationResponse(BaseModel):
 
 class CurrentLocationPauseResponse(BaseModel):
     state: Literal["paused"] = "paused"
+
+
+class NearbySummaryResponse(BaseModel):
+    availability: Literal["available"] = "available"
+    bucket: Literal["none", "few", "many"]
+    freshness: Literal["fresh"] = "fresh"
+    expires_at: datetime

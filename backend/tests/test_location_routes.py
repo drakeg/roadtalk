@@ -16,18 +16,20 @@ from app.config import Settings
 from app.db.models import Account, Device, Session
 from app.db.session import get_session
 from app.location.consent import LocationConsentError, LocationConsentReceipt
+from app.location.nearby import NearbySummary, NearbySummaryError
 from app.location.quality import LocationPolicyError
 from app.location.service import LocationReceipt
 from app.main import create_app
 
 
-def settings(*, mutation_limit: int = 30) -> Settings:
+def settings(*, mutation_limit: int = 30, nearby_limit: int = 60) -> Settings:
     return Settings(
         environment="test",
         docs_enabled=True,
         log_level="CRITICAL",
         database_check_enabled=False,
         location_mutation_limit=mutation_limit,
+        location_nearby_read_limit=nearby_limit,
     )
 
 
@@ -49,8 +51,10 @@ def identity() -> AuthenticatedSession:
     return AuthenticatedSession(account=account, device=device, session=session)
 
 
-def authenticated_application(*, mutation_limit: int = 30) -> tuple[FastAPI, AsyncSession]:
-    application = create_app(settings(mutation_limit=mutation_limit))
+def authenticated_application(
+    *, mutation_limit: int = 30, nearby_limit: int = 60
+) -> tuple[FastAPI, AsyncSession]:
+    application = create_app(settings(mutation_limit=mutation_limit, nearby_limit=nearby_limit))
     current = identity()
     db = cast(AsyncSession, MagicMock())
 
@@ -90,6 +94,7 @@ def test_location_routes_are_authenticated_owner_scoped_and_exact() -> None:
 
     assert set(schema["paths"]["/api/v1/me/location-consent"]) == {"put", "delete"}
     assert set(schema["paths"]["/api/v1/me/location"]) == {"put", "delete"}
+    assert set(schema["paths"]["/api/v1/nearby/summary"]) == {"get"}
     for path in ("/api/v1/me/location-consent", "/api/v1/me/location"):
         for operation in schema["paths"][path].values():
             assert operation["security"] == [{"HTTPBearer": []}]
@@ -115,6 +120,12 @@ def test_location_routes_are_authenticated_owner_scoped_and_exact() -> None:
         "version",
     }
     assert set(components["CurrentLocationPauseResponse"]["properties"]) == {"state"}
+    assert set(components["NearbySummaryResponse"]["properties"]) == {
+        "availability",
+        "bucket",
+        "freshness",
+        "expires_at",
+    }
     assert "requestBody" not in schema["paths"]["/api/v1/me/location-consent"]["delete"]
 
 
@@ -126,6 +137,7 @@ def test_location_routes_require_bearer_authentication_without_database_access()
             client.delete("/api/v1/me/location-consent"),
             client.put("/api/v1/me/location", json=location_payload()),
             client.delete("/api/v1/me/location"),
+            client.get("/api/v1/nearby/summary"),
         ]
 
     assert {response.status_code for response in responses} == {401}
@@ -262,3 +274,64 @@ def test_stale_consent_grant_returns_conflict_but_withdrawal_needs_no_acceptance
     assert stale.json()["code"] == "LOCATION_POLICY_MISMATCH"
     assert withdrawn.status_code == 200
     assert withdrawn.json()["decision"] == "revoked"
+
+
+def test_nearby_summary_returns_only_coarse_caller_metadata(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    now = datetime(2026, 7, 15, 12, tzinfo=UTC)
+
+    async def summary(*args: object, **kwargs: object) -> NearbySummary:
+        return NearbySummary(
+            availability="available",
+            bucket="few",
+            freshness="fresh",
+            expires_at=now + timedelta(seconds=120),
+        )
+
+    monkeypatch.setattr(location_api, "get_nearby_summary", summary)
+    application, _ = authenticated_application()
+
+    with TestClient(application) as client:
+        response = client.get("/api/v1/nearby/summary")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "availability": "available",
+        "bucket": "few",
+        "freshness": "fresh",
+        "expires_at": "2026-07-15T12:02:00Z",
+    }
+    encoded = response.text.lower()
+    for forbidden in (
+        "account",
+        "callsign",
+        "coordinate",
+        "count",
+        "distance",
+        "bearing",
+        "latitude",
+        "longitude",
+    ):
+        assert forbidden not in encoded
+
+
+def test_nearby_summary_fails_closed_and_is_rate_limited(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def unavailable(*args: object, **kwargs: object) -> NearbySummary:
+        raise NearbySummaryError
+
+    monkeypatch.setattr(location_api, "get_nearby_summary", unavailable)
+    application, _ = authenticated_application(nearby_limit=1)
+
+    with TestClient(application) as client:
+        unavailable_response = client.get("/api/v1/nearby/summary")
+        limited = client.get("/api/v1/nearby/summary")
+
+    assert unavailable_response.status_code == 409
+    assert unavailable_response.json()["code"] == "LOCATION_UNAVAILABLE"
+    assert unavailable_response.json()["detail"] == "A fresh usable location is required."
+    assert limited.status_code == 429
+    assert limited.json()["code"] == "LOCATION_RATE_LIMITED"
+    assert int(limited.headers["Retry-After"]) >= 1
