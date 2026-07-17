@@ -46,6 +46,12 @@ def test_json_formatter_rejects_unapproved_events_and_sensitive_extras() -> None
     )
     record.recovery_key = "rtk1.synthetic-secret"
     record.callsign = "Synthetic-Callsign"
+    record.latitude = 40.123456
+    record.longitude = -75.654321
+    record.horizontal_accuracy_m = 7.25
+    record.heading_deg = 91.5
+    record.speed_mps = 12.75
+    record.source_device_id = "synthetic-source-device"
     record.route = "/api/v1/sessions/recover"
 
     payload = json.loads(JsonFormatter().format(record))
@@ -56,6 +62,16 @@ def test_json_formatter_rejects_unapproved_events_and_sensitive_extras() -> None
     assert "callsign" not in payload
     assert "rtk1.synthetic-secret" not in json.dumps(payload)
     assert "Synthetic-Callsign" not in json.dumps(payload)
+    encoded = json.dumps(payload)
+    for private_value in (
+        "40.123456",
+        "-75.654321",
+        "7.25",
+        "91.5",
+        "12.75",
+        "synthetic-source-device",
+    ):
+        assert private_value not in encoded
 
 
 def test_request_logs_use_route_templates_not_concrete_identifiers(
