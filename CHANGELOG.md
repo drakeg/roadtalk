@@ -2,7 +2,7 @@
 
 All notable RoadTalk changes are recorded here. The repository history and sprint review records remain the detailed source of truth.
 
-## Unreleased — Sprint 3: Location planning
+## Unreleased — Sprint 3: Location
 
 ### Planning
 
@@ -61,6 +61,21 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Bounded foreground nearby polling with fail-closed unavailable/retry/expiry states
   and deterministic cancellation on pause, background, screen exit, logout, and
   unmount; no new dependency, paid provider, or AWS resource.
+- Dedicated location privacy/scope CI gate rejecting background tasks/permissions,
+  coordinate persistence/logging, maps/geocoding, analytics, history, unapproved
+  providers, managed services, and later-sprint drift.
+- Foreground-location operator runbook plus expanded privacy, threat, leakage,
+  OpenAPI, deletion/expiry, and prior-sprint regression coverage.
+- Sprint 3 requirement/test/deliverable traceability, synthetic lifecycle evidence,
+  cost/privacy audit, known limitations, retrospective, and merge-bound review.
+
+### Cost controls
+
+- Sprint 3 creates no AWS resource and adds $0 incremental monthly cost.
+- Terraform remains disabled; the existing enabled field-test design is projected at
+  $20–$23/month without the temporary compute promotion.
+- A $30 monthly planning budget is recommended before activation because the current
+  $20 notification threshold is too close to the recurring floor.
 
 ## Unreleased — Sprint 2: Identity
 
