@@ -7,7 +7,15 @@
 - [Original RoadTalk Development Plan](reference/RoadTalk_Development_Plan.docx)
 - [Agile Workflow](AGILE_WORKFLOW.md)
 
-## Sprint 3 — Location (implementation complete; review pending merge)
+## Sprint 4 — Push-to-Talk (planning; approval required)
+
+- [Sprint 4: Push-to-Talk](sprints/sprint-4-push-to-talk.md) — PROPOSED
+- [Sprint 4 readiness](sprints/sprint-4-readiness.md) — NOT READY
+- Planning/approval issue [#90](https://github.com/drakeg/roadtalk/issues/90)
+- Default planning and proposed local/CI implementation cost: $0 AWS + $0 LiveKit
+- No code, provider activation, AWS activation, or paid plan is authorized yet
+
+## Sprint 3 — Location (complete)
 
 - [Sprint 3: Location](sprints/sprint-3-location.md) — APPROVED
 - [Sprint 3 readiness](sprints/sprint-3-readiness.md) — READY
@@ -15,7 +23,7 @@
 - [Sprint 3 review record](sprints/sprint-3-review.md)
 - [Sprint 3 synthetic foreground-location evidence](evidence/sprint-3/README.md)
 - Planning issue [#71](https://github.com/drakeg/roadtalk/issues/71)
-- Implementation tracker [#81](https://github.com/drakeg/roadtalk/issues/81)
+- Completed implementation tracker [#81](https://github.com/drakeg/roadtalk/issues/81)
 
 ## Sprint 2 — Identity (complete)
 
