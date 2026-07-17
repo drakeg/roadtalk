@@ -68,6 +68,26 @@ Device, public network, control API, media provider, database/cache, cloud opera
 - incident runbook and operational contact
 - OWASP MASVS baseline checklist for storage, crypto, auth, network, platform, code, resilience, and privacy
 
+## Sprint 3 location control verification
+
+- Typed, extra-forbidden request schemas and owner-derived authentication prevent
+  account/device selector over-posting.
+- Freshness, accuracy, sequence, consent, source ownership, plausible movement,
+  expiry, and multidimensional rate limits fail closed with stable problem codes.
+- PostGIS evaluates only fresh usable rows and reduces the result to a semantic bucket
+  before serialization; the caller and all candidate fields are excluded.
+- Mobile CI rejects background permissions/tasks, persistent coordinate storage,
+  maps/geocoding, analytics, and unapproved providers. Lifecycle tests stop collection
+  on pause, background, screen exit, logout, native failure, and unmount.
+- The structured logger accepts only closed event and field allowlists. Synthetic
+  leakage tests cover coordinates, movement, callsigns, source identifiers, errors,
+  OpenAPI, and CI output.
+- Expiry is an eligibility boundary independent of cleanup. Pause, withdrawal,
+  device/account deletion, and expired-row cleanup are idempotent or cascading.
+- Residual risks remain GPS spoofing, inference from repeated semantic queries, and
+  compromised devices. RoadTalk does not claim anti-spoof, navigation, emergency,
+  or driving-safety guarantees.
+
 ## Incident priorities
 
 - **P0:** confirmed live audio interception, broad credential compromise, or active exact-location disclosure
