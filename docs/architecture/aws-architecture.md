@@ -40,10 +40,12 @@ flowchart TD
 - one public IPv4 address; an Elastic IP is optional, not assumed
 - security group allowing HTTPS and required administration path; no public database/cache ports
 - Systems Manager preferred for administration
-- ARM EC2 starting target: `t4g.medium`, subject to load validation
+- ARM EC2 starting target: `t4g.small`, subject to load validation and resize only
+  after measured evidence
 - encrypted gp3 EBS, starting at 40 GB
 - Caddy for TLS termination and control routing
-- API, PostgreSQL/PostGIS, Redis, backup, and monitoring containers
+- API, PostgreSQL/PostGIS, backup, and monitoring containers; Redis remains absent
+  until implemented presence/fanout behavior proves it necessary
 - S3 bucket with encryption, versioning, lifecycle, and blocked public access
 - CloudWatch log groups, metrics, alarms, and short retention
 - SSM Parameter Store or Secrets Manager for runtime secrets
