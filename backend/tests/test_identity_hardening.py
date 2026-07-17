@@ -19,7 +19,7 @@ def settings(*, recovery_attempt_limit: int = 10) -> Settings:
     )
 
 
-def test_openapi_exposes_only_approved_through_s03_d05_contracts() -> None:
+def test_openapi_exposes_only_approved_through_s03_d08_contracts() -> None:
     schema = create_app(settings()).openapi()
 
     assert set(schema["paths"]) == {
