@@ -2,7 +2,8 @@
 
 - Status: Planning estimate
 - Region: `us-east-1`
-- Pricing checked: 2026-07-12
+- AWS pricing checked: 2026-07-12
+- LiveKit pricing checked: 2026-07-16
 - Issue: #10
 - Requirements: S00-R06
 - Acceptance: S00-T04
@@ -14,7 +15,9 @@ Prices change. Recalculate in AWS Pricing Calculator immediately before deployme
 - 730 hours/month
 - ARM Linux where supported
 - low-volume invite-only field testing
-- LiveKit Cloud Build/free tier where eligible; media overages remain usage-dependent
+- LiveKit Cloud Build where eligible; it has hard monthly caps and no paid overage
+- field-test Terraform currently defaults to one `t4g.small`, not `t4g.medium`
+- eligible t4g.small usage may use the AWS Graviton free trial through 2026-12-31
 - one public IPv4 in field test
 - 40 GB gp3 field-test storage
 - modest logs and backups
@@ -26,16 +29,50 @@ Prices change. Recalculate in AWS Pricing Calculator immediately before deployme
 
 | Item | Planning estimate/month | Basis |
 |---|---:|---|
-| EC2 `t4g.medium` | $24.53 | $0.0336/hour planning rate × 730; confirm in calculator. |
+| EC2 `t4g.small` | $12.26 normally; $0 during an applicable promotion | $0.0168/hour planning rate × 730. AWS currently advertises up to 750 hours/month free through 2026-12-31 for eligible use; confirm account eligibility. |
 | 40 GB gp3 EBS | $3.20 | $0.08/GB-month. |
 | Public IPv4 | $3.65 | $0.005/hour × 730. |
-| S3 backups | $1–$3 | Low-volume estimate including requests. |
-| CloudWatch | $2–$8 | Depends on log volume, retention, custom metrics. |
-| Data transfer | $0–$10+ | Usage-dependent; media is handled by LiveKit Cloud. |
-| LiveKit Cloud | $0+ | Plan and usage dependent; verify current quotas/rates. |
-| **Expected fixed/low-use range** | **$34–$49 plus transfer/media** | Before tax/support. |
+| S3 backups | $0–$1 | Low-volume estimate including requests and short retention. |
+| CloudWatch/SNS/Budget | $1–$3 | Three-day logs, two alarms, one route, and one budget; no paid dashboards/custom metrics. |
+| Control-plane data transfer | $0–$1 | Low-volume estimate; media is handled by LiveKit Cloud. |
+| LiveKit Cloud Build | $0 | Separate hard usage caps apply; see the media scenarios below. |
+| **Expected without compute promotion** | **$20–$23 plus unusual transfer** | Before tax/support and assuming the small instance passes load evidence. |
+| **Expected with applicable compute promotion** | **$8–$11 plus unusual transfer** | Promotion ends 2026-12-31 and requires account/workload eligibility. |
 
-A smaller instance may be tested, but `t4g.medium` is the minimum planning target for co-located API, PostgreSQL, and Redis. The instance must be resized if memory, CPU credits, disk latency, or network performance fails NFR testing.
+The low-cost default is `t4g.small`. It must be resized only after measured memory,
+CPU-credit, disk-latency, or network evidence shows it cannot meet the controlled
+field-test targets. A resize creates an explicit new monthly-cost decision.
+
+## Sprint 4 LiveKit Cloud scenarios
+
+Pricing checked on 2026-07-16. LiveKit measures participant connection time in
+one-minute increments and downstream transfer in 0.01 GB increments. Connection time,
+not speaking time, is the primary minute driver for a receive-ready PTT client.
+
+| Plan/scenario | Included use | Planning cost/month |
+|---|---|---:|
+| Cloud disabled; local/CI fakes only | No provider project or calls | **$0** |
+| Build | 5,000 WebRTC participant-minutes, 50 GB downstream transfer, 100 concurrent connections; hard caps | **$0** |
+| Ship | 150,000 WebRTC participant-minutes and 250 GB downstream transfer | **$50 minimum** |
+| Ship overage | Usage above included Ship amounts | $0.0005/participant-minute and $0.12/GB |
+
+Build has no paid overage: new requests fail after an included allowance is exhausted.
+RoadTalk's proposed controlled-test stops are lower—3,000 participant-minutes and
+10 GB/month—so a usage-reporting delay or test overrun retains headroom.
+
+Combined planning scenarios:
+
+- code/CI only: **$0/month**;
+- LiveKit Build with AWS disabled: **$0/month**;
+- enabled AWS field test plus Build: **$20–$23/month**, or **$8–$11/month** during an
+  applicable compute promotion;
+- enabled AWS field test plus Ship: **$70–$73+/month**, or **$58–$61+/month** during
+  an applicable compute promotion.
+
+Use a **$35/month** pre-activation budget while Build is sufficient and an
+**$85/month** budget before approving Ship. No automatic plan upgrade or payment-
+method attachment is allowed. Recording, egress, transcription, telephony, agents,
+enhanced paid audio processing, and self-hosting remain excluded.
 
 ## Managed production baseline estimate
 
@@ -98,5 +135,6 @@ Self-host LiveKit only when a documented three-month total-cost comparison inclu
 - [AWS EBS pricing](https://aws.amazon.com/ebs/pricing/)
 - [AWS VPC and public IPv4 pricing](https://aws.amazon.com/vpc/pricing/)
 - [AWS RDS PostgreSQL pricing](https://aws.amazon.com/rds/postgresql/pricing/)
-- [LiveKit pricing](https://livekit.io/pricing)
+- [AWS Graviton free trial](https://aws.amazon.com/ec2/instance-types/c6g/)
+- [LiveKit pricing](https://livekit.com/pricing)
 - [LiveKit Cloud billing](https://docs.livekit.io/deploy/admin/billing/)
