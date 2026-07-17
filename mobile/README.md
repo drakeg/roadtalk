@@ -1,6 +1,6 @@
 # Mobile
 
-Current owner: S03-D07. The retained identity and recovery flows were delivered by
+Current owner: S03-D09 review. The retained identity and recovery flows were delivered by
 S02-D05, S02-D06, and S02-D08.
 
 This directory contains the Expo/React Native/TypeScript development-build application.
@@ -189,8 +189,8 @@ development logs must never print request bodies, authorization headers, or stor
 
 ## Scope boundary
 
-S03-D07 exposes only foreground permission/lifecycle, owner-local sensor quality, and
+Sprint 3 exposes only foreground permission/lifecycle, owner-local sensor quality, and
 the server's semantic nearby bucket. Maps, routes, nearby identities, exact counts,
 distances or bearings to another user, location history, audio, PTT, channels, and
-background collection remain unavailable. Privacy/security hardening and final
-operator evidence belong to S03-D08 and S03-D09.
+background collection remain unavailable. Privacy/security hardening, operator
+guidance, synthetic evidence, and review are recorded in S03-D08 and S03-D09.
