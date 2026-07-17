@@ -143,6 +143,8 @@ jobs:
           npm audit --omit=dev --audit-level=high
       - name: Check Sprint 2 privacy and scope
         run: python scripts/ci/check-identity-privacy.py
+      - name: Check Sprint 3 location privacy and scope
+        run: python scripts/ci/check-location-privacy.py
       - name: Validate and lint Terraform
         id: terraform
         run: |

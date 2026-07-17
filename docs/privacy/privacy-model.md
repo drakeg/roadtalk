@@ -124,6 +124,29 @@ Before adding an SDK:
 - Sprint 2 adds no location, audio, contacts, uploaded media, analytics, email, SMS,
   hosted identity provider, or cloud storage service.
 
+## Sprint 3 foreground location rules
+
+- Sprint 3 implements foreground/when-in-use location only. Background permission,
+  background tasks, foreground services, geofencing, motion/activity access, maps,
+  geocoding, and analytics remain absent.
+- RoadTalk records versioned in-app consent separately from OS permission. Permission
+  denial leaves authentication and identity management usable; withdrawal deletes
+  the current row atomically.
+- The server stores one expiring PostGIS row per account. Accepted updates replace it;
+  there is no trip, breadcrumb, history, cache, event stream, or evidence copy.
+- Coordinates, accuracy, heading, speed, source device, and derived movement are
+  private inputs. Public responses, logs, errors, URLs, crash fields, analytics, and
+  retained evidence exclude them.
+- Nearby discovery requires a fresh usable caller and reduces candidates to
+  `none`/`few`/`many` before serialization. It never returns another account,
+  callsign, avatar, coordinate, exact count, distance, or bearing.
+- Expiry makes a row ineligible immediately; physical cleanup is idempotent and needs
+  no worker or scheduler. Pause, consent withdrawal, source-device deletion, and
+  account deletion remove the current row.
+- Consumer GPS can be spoofed. Freshness, accuracy, sequence, plausible movement,
+  multi-device replacement, and rate controls reduce abuse but are not an identity
+  or safety guarantee.
+
 ## Store-policy baseline
 
 Google Play requires transparency for user data and treats background location as sensitive: it must be central to the app, strongly justified, explicitly consented, and minimized. Android foreground-service declarations and demonstrations are required where applicable. Apple permission strings and privacy disclosures must accurately describe collection and use.
