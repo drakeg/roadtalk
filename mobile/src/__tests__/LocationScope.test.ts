@@ -39,6 +39,8 @@ describe("foreground-only location scope", () => {
       /requestBackgroundPermissions|startLocationUpdates|TaskManager|Geofenc/i,
     );
     expect(locationSource).not.toMatch(/console\.|AsyncStorage|analytics/i);
-    expect(packageJson).not.toMatch(/async-storage|task-manager|analytics/i);
+    expect(packageJson).not.toMatch(
+      /async-storage|task-manager|analytics|react-native-maps|mapbox|geocod/i,
+    );
   });
 });
