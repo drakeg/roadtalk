@@ -4,26 +4,26 @@ RoadTalk is a location-aware, voice-first communication platform inspired by cla
 
 ## Project status
 
-Sprint 0 — Planning & Architecture and Sprint 1 — Project Foundation are complete.
-Sprint 1 is conditionally accepted with named exceptions that must close before the
-first field test. Sprint 2 — Identity is complete and approved. Sprint 3 — Location
-implementation is complete and its final review is awaiting approval by merge.
+Sprint 0 — Planning & Architecture, Sprint 1 — Project Foundation, Sprint 2 —
+Identity, and Sprint 3 — Location are complete. Sprint 1 is conditionally accepted
+with named exceptions that must close before the first field test.
 
-The Sprint 3 decision is recorded in its [traceability](docs/sprints/sprint-3-traceability.md),
-[synthetic evidence](docs/evidence/sprint-3/README.md), and
-[review](docs/sprints/sprint-3-review.md). Sprint 4 planning begins only after the
-review merge; coding requires a separately approved specification and readiness record.
+Sprint 4 — Push-to-Talk is in planning only. Its proposed
+[specification](docs/sprints/sprint-4-push-to-talk.md) and
+[readiness gate](docs/sprints/sprint-4-readiness.md) await product-owner approval in
+[issue #90](https://github.com/drakeg/roadtalk/issues/90). No Sprint 4 code, cloud
+provider, AWS activation, or paid plan is authorized yet.
 
 ## Repository layout
 
-| Path | Purpose | Sprint 3 scope |
+| Path | Purpose | Current boundary |
 |---|---|---|
-| `mobile/` | React Native, Expo development-build, and TypeScript mobile application | Foreground permission, short-lived sampling, heading/speed status, and coarse nearby awareness |
-| `backend/` | FastAPI modular-monolith API, migrations, and backend tests | Consent, one current PostGIS row, validation, withdrawal, and coarse nearby summary |
-| `infrastructure/` | Terraform bootstrap, environment roots, and reusable modules | No Sprint 3 expansion; remains disabled by default |
+| `mobile/` | React Native, Expo development-build, and TypeScript mobile application | Sprint 3 location is complete; proposed Sprint 4 adds receive-ready audio and hold-to-talk only after approval |
+| `backend/` | FastAPI modular-monolith API, migrations, and backend tests | Sprint 3 location is complete; proposed Sprint 4 adds metadata-only grants and a disabled provider boundary |
+| `infrastructure/` | Terraform bootstrap, environment roots, and reusable modules | Remains disabled by default; Sprint 4 proposes no new AWS resource |
 | `scripts/` | Cross-project developer and operational helper scripts | Added only with a traced requirement |
-| `docs/` | Architecture, sprint records, ADRs, security, privacy, design, and runbooks | Specification, evidence, operations, and review |
-| `.github/` | Pull-request, issue, CI, quality, and security workflows | Existing gates plus proposed location privacy/scope checks after approval |
+| `docs/` | Architecture, sprint records, ADRs, security, privacy, design, and runbooks | Sprint 4 planning and approval are the current documentation activity |
+| `.github/` | Pull-request, issue, CI, quality, and security workflows | Existing gates remain; Sprint 4 changes require approved traced work |
 
 ## Start here
 
@@ -34,9 +34,12 @@ review merge; coding requires a separately approved specification and readiness 
 5. Implement only the linked requirement/deliverable.
 6. Record tests, privacy impact, cost impact, and evidence in the pull request.
 
-Sprint 3 adds $0 incremental AWS cost. Terraform remains disabled; activating the
-existing field-test design is projected at $20–$23/month without the temporary compute
-promotion, and requires a separate approval and completed Sprint 1 exceptions.
+Sprint 4 planning and proposed local/CI implementation add $0 AWS and $0 LiveKit
+cost. LiveKit Build is currently $0/month with hard usage caps; combining it with the
+existing enabled AWS field-test design is projected at $20–$23/month without the
+temporary compute promotion. LiveKit Ship would raise the combined floor to
+$70–$73/month. Every cloud activation or paid-plan change requires separate approval,
+a current price check, and completed applicable Sprint 1 exceptions.
 
 ## Source of truth
 
