@@ -6,13 +6,13 @@ RoadTalk is a location-aware, voice-first communication platform inspired by cla
 
 Sprint 0 — Planning & Architecture and Sprint 1 — Project Foundation are complete.
 Sprint 1 is conditionally accepted with named exceptions that must close before the
-first field test. Sprint 2 — Identity is complete and approved. Sprint 3 — Location is
-approved and is the sole active implementation sprint.
+first field test. Sprint 2 — Identity is complete and approved. Sprint 3 — Location
+implementation is complete and its final review is awaiting approval by merge.
 
-Current work must follow the [Sprint 3 Location specification](docs/sprints/sprint-3-location.md),
-[readiness record](docs/sprints/sprint-3-readiness.md), and
-[tracker](https://github.com/drakeg/roadtalk/issues/81). Only the approved foreground-
-location scope is authorized.
+The Sprint 3 decision is recorded in its [traceability](docs/sprints/sprint-3-traceability.md),
+[synthetic evidence](docs/evidence/sprint-3/README.md), and
+[review](docs/sprints/sprint-3-review.md). Sprint 4 planning begins only after the
+review merge; coding requires a separately approved specification and readiness record.
 
 ## Repository layout
 
@@ -34,8 +34,9 @@ location scope is authorized.
 5. Implement only the linked requirement/deliverable.
 6. Record tests, privacy impact, cost impact, and evidence in the pull request.
 
-Sprint 3 keeps expected incremental AWS cost at $0 and excludes background location,
-maps, history, audio, channels, notifications, and other later-sprint behavior.
+Sprint 3 adds $0 incremental AWS cost. Terraform remains disabled; activating the
+existing field-test design is projected at $20–$23/month without the temporary compute
+promotion, and requires a separate approval and completed Sprint 1 exceptions.
 
 ## Source of truth
 
