@@ -98,7 +98,19 @@ describe("foreground location purpose screen", () => {
     const active = lifecycle({
       status: "active",
       precision: "approximate",
-      upload: "waiting",
+      upload: "current",
+      local: {
+        status: "current",
+        horizontalAccuracyM: 24.6,
+        headingDeg: 91,
+        speedMps: 4,
+        observedAtMs: Date.parse("2026-07-16T12:00:00Z"),
+      },
+      nearby: {
+        status: "current",
+        bucket: "few",
+        expiresAtMs: Date.parse("2026-07-16T12:02:00Z"),
+      },
     });
     const activeView = await render(
       <LocationPermissionScreen
@@ -108,12 +120,21 @@ describe("foreground location purpose screen", () => {
       />,
     );
     expect(activeView.getByText(/approximate permission is active/i)).toBeOnTheScreen();
+    expect(activeView.getByText("About ±25 m")).toBeOnTheScreen();
+    expect(activeView.getByText("91° E")).toBeOnTheScreen();
+    expect(activeView.getByText("9 mph")).toBeOnTheScreen();
+    expect(activeView.getByText(/some nearby roadtalk activity/i)).toBeOnTheScreen();
+    expect(activeView.getByText(/never shows who, how many exactly/i)).toBeOnTheScreen();
     await fireEvent.press(
       activeView.getByRole("button", {
         name: "Pause and remove current location",
       }),
     );
     expect(active.pause).toHaveBeenCalledTimes(1);
+    await fireEvent.press(
+      activeView.getByRole("button", { name: "Open device location settings" }),
+    );
+    expect(openSettings).toHaveBeenCalledTimes(2);
   });
 
   it.each([
@@ -152,6 +173,42 @@ describe("foreground location purpose screen", () => {
         view.queryByRole("button", { name: "Retry foreground location" }),
       ).not.toBeOnTheScreen();
     }
+    await view.unmount();
+  });
+
+  it.each([
+    ["none" as const, /no nearby roadtalk activity/i],
+    ["few" as const, /some nearby roadtalk activity/i],
+    ["many" as const, /more nearby roadtalk activity/i],
+  ])("renders only the semantic %s nearby bucket", async (bucket, message) => {
+    const view = await render(
+      <LocationPermissionScreen
+        lifecycle={lifecycle({
+          status: "active",
+          precision: "precise",
+          upload: "current",
+          local: {
+            status: "stale",
+            horizontalAccuracyM: 50,
+            headingDeg: null,
+            speedMps: null,
+            observedAtMs: Date.parse("2026-07-16T12:00:00Z"),
+          },
+          nearby: {
+            status: "current",
+            bucket,
+            expiresAtMs: Date.parse("2026-07-16T12:02:00Z"),
+          },
+        })}
+        navigation={navigation() as never}
+        route={{ key: bucket, name: "LocationPermission" }}
+      />,
+    );
+
+    expect(view.getByText(message)).toBeOnTheScreen();
+    expect(view.getByText("Stale")).toBeOnTheScreen();
+    expect(view.getAllByText("Unavailable")).toHaveLength(2);
+    expect(view.queryByText(/callsign|avatar|bearing/i)).not.toBeOnTheScreen();
     await view.unmount();
   });
 });

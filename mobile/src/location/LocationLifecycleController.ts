@@ -8,13 +8,30 @@ import type {
   LocationPrecision,
   LocationSubscription,
   LocationTransport,
+  LocalLocationState,
+  NearbyState,
   PublishedLocationSample,
 } from "./types";
 
 type Clock = { now(): number };
 type Listener = () => void;
+type TimerHandle = ReturnType<typeof setTimeout>;
+type Scheduler = {
+  setTimeout(callback: () => void, delayMs: number): TimerHandle;
+  clearTimeout(handle: TimerHandle): void;
+};
 
 const systemClock: Clock = { now: () => Date.now() };
+const systemScheduler: Scheduler = {
+  setTimeout: (callback, delayMs) => {
+    const handle = setTimeout(callback, delayMs);
+    if (typeof handle === "object" && "unref" in handle) {
+      handle.unref();
+    }
+    return handle;
+  },
+  clearTimeout: (handle) => clearTimeout(handle),
+};
 
 export class LocationLifecycleController implements LocationLifecycleControl {
   private snapshot: LocationLifecycleSnapshot = { status: "purpose" };
@@ -27,9 +44,15 @@ export class LocationLifecycleController implements LocationLifecycleControl {
   private disposed = false;
   private starting = false;
   private uploadInFlight = false;
+  private nearbyRequestGeneration: number | null = null;
   private precision: LocationPrecision = "precise";
+  private upload: "waiting" | "current" | "retrying" = "waiting";
+  private local: LocalLocationState = { status: "waiting" };
+  private nearby: NearbyState = { status: "waiting" };
   private sequence = 0;
   private lastUploadAtMs: number | null = null;
+  private nearbyTimer: TimerHandle | null = null;
+  private localStaleTimer: TimerHandle | null = null;
   private generation = 0;
 
   constructor(
@@ -37,6 +60,9 @@ export class LocationLifecycleController implements LocationLifecycleControl {
     private readonly transport: LocationTransport,
     private readonly clock: Clock = systemClock,
     private readonly minimumUploadIntervalMs = 10_000,
+    private readonly nearbyPollIntervalMs = 30_000,
+    private readonly localFreshnessMs = 30_000,
+    private readonly scheduler: Scheduler = systemScheduler,
   ) {}
 
   subscribe(listener: Listener): () => void {
@@ -69,11 +95,8 @@ export class LocationLifecycleController implements LocationLifecycleControl {
       await this.transport.grantConsent();
       await this.safeRemotePause();
       this.enabled = true;
-      this.publish({
-        status: "active",
-        precision: this.precision,
-        upload: "waiting",
-      });
+      this.resetExperience();
+      this.publishActive();
       await this.reconcile();
     } catch {
       this.enabled = false;
@@ -84,6 +107,7 @@ export class LocationLifecycleController implements LocationLifecycleControl {
   async pause(): Promise<void> {
     this.enabled = false;
     this.stopSubscription();
+    this.resetExperience();
     await this.safeRemotePause();
     if (!this.disposed) {
       this.publish({ status: "paused" });
@@ -112,6 +136,7 @@ export class LocationLifecycleController implements LocationLifecycleControl {
     this.disposed = true;
     this.enabled = false;
     this.stopSubscription();
+    this.resetExperience();
     await this.safeRemotePause();
     this.listeners.clear();
   }
@@ -138,7 +163,11 @@ export class LocationLifecycleController implements LocationLifecycleControl {
       const hadSubscription = this.subscription !== null;
       this.stopSubscription();
       if (hadSubscription) {
+        this.resetExperience();
         await this.safeRemotePause();
+        if (!this.disposed && this.enabled) {
+          this.publishActive();
+        }
       }
       return;
     }
@@ -170,11 +199,12 @@ export class LocationLifecycleController implements LocationLifecycleControl {
   }
 
   private stopSubscription(): void {
+    this.generation += 1;
     if (this.subscription !== null) {
-      this.generation += 1;
       this.subscription.remove();
     }
     this.subscription = null;
+    this.clearTimers();
   }
 
   private async safeRemotePause(): Promise<void> {
@@ -197,6 +227,7 @@ export class LocationLifecycleController implements LocationLifecycleControl {
   private async failAndStop(): Promise<void> {
     this.enabled = false;
     this.stopSubscription();
+    this.resetExperience();
     await this.safeRemotePause();
     if (!this.disposed) {
       this.publish({ status: "error" });
@@ -208,6 +239,16 @@ export class LocationLifecycleController implements LocationLifecycleControl {
       return;
     }
     const now = this.clock.now();
+    this.local = {
+      status:
+        now - fix.observedAtMs >= this.localFreshnessMs ? "stale" : "current",
+      horizontalAccuracyM: fix.horizontalAccuracyM,
+      headingDeg: this.optionalHeading(fix.headingDeg),
+      speedMps: this.optionalNonnegative(fix.speedMps),
+      observedAtMs: fix.observedAtMs,
+    };
+    this.scheduleLocalStale();
+    this.publishActive();
     if (
       this.uploadInFlight ||
       (this.lastUploadAtMs !== null &&
@@ -237,17 +278,14 @@ export class LocationLifecycleController implements LocationLifecycleControl {
       }
       this.sequence = nextSequence;
       this.lastUploadAtMs = now;
-      this.publish({
-        status: "active",
-        precision: this.precision,
-        upload: "current",
-      });
+      this.upload = "current";
+      this.publishActive();
+      if (this.nearby.status === "waiting") {
+        void this.refreshNearby();
+      }
     } catch {
-      this.publish({
-        status: "active",
-        precision: this.precision,
-        upload: "retrying",
-      });
+      this.upload = "retrying";
+      this.publishActive();
     } finally {
       this.uploadInFlight = false;
     }
@@ -276,6 +314,142 @@ export class LocationLifecycleController implements LocationLifecycleControl {
     return value !== null && Number.isFinite(value) && value >= 0 && value < 360
       ? value
       : null;
+  }
+
+  private async refreshNearby(): Promise<void> {
+    if (!this.canPollNearby() || this.nearbyRequestGeneration !== null) {
+      return;
+    }
+    const generation = this.generation;
+    this.nearbyRequestGeneration = generation;
+    try {
+      const summary = await this.transport.nearby();
+      if (generation !== this.generation || !this.canPollNearby()) {
+        return;
+      }
+      if (summary === null) {
+        this.nearby = { status: "unavailable" };
+      } else if (summary.expiresAtMs <= this.clock.now()) {
+        this.nearby = { status: "stale", expiresAtMs: summary.expiresAtMs };
+      } else {
+        this.nearby = {
+          status: "current",
+          bucket: summary.bucket,
+          expiresAtMs: summary.expiresAtMs,
+        };
+      }
+      this.publishActive();
+    } catch {
+      if (generation !== this.generation || !this.canPollNearby()) {
+        return;
+      }
+      if (
+        this.nearby.status === "current" &&
+        this.nearby.expiresAtMs <= this.clock.now()
+      ) {
+        this.nearby = {
+          status: "stale",
+          expiresAtMs: this.nearby.expiresAtMs,
+        };
+      } else if (this.nearby.status !== "current") {
+        this.nearby = { status: "retrying" };
+      }
+      this.publishActive();
+    } finally {
+      if (this.nearbyRequestGeneration === generation) {
+        this.nearbyRequestGeneration = null;
+      }
+      if (generation === this.generation && this.canPollNearby()) {
+        this.scheduleNearbyPoll();
+      }
+    }
+  }
+
+  private canPollNearby(): boolean {
+    return this.canRunExperience() && this.upload === "current";
+  }
+
+  private canRunExperience(): boolean {
+    return (
+      this.enabled &&
+      this.subscription !== null &&
+      this.appActive &&
+      this.screenActive &&
+      this.authenticated &&
+      !this.disposed
+    );
+  }
+
+  private scheduleNearbyPoll(): void {
+    if (this.nearbyTimer !== null) {
+      this.scheduler.clearTimeout(this.nearbyTimer);
+    }
+    let delayMs = this.nearbyPollIntervalMs;
+    if (this.nearby.status === "current") {
+      delayMs = Math.min(
+        delayMs,
+        Math.max(0, this.nearby.expiresAtMs - this.clock.now()),
+      );
+    }
+    this.nearbyTimer = this.scheduler.setTimeout(() => {
+      this.nearbyTimer = null;
+      void this.refreshNearby();
+    }, delayMs);
+  }
+
+  private scheduleLocalStale(): void {
+    if (this.localStaleTimer !== null) {
+      this.scheduler.clearTimeout(this.localStaleTimer);
+      this.localStaleTimer = null;
+    }
+    if (this.local.status !== "current") {
+      return;
+    }
+    const delayMs = Math.max(
+      0,
+      Math.min(
+        this.localFreshnessMs,
+        this.local.observedAtMs + this.localFreshnessMs - this.clock.now(),
+      ),
+    );
+    this.localStaleTimer = this.scheduler.setTimeout(() => {
+      this.localStaleTimer = null;
+      if (this.local.status === "current" && this.canRunExperience()) {
+        this.local = { ...this.local, status: "stale" };
+        this.publishActive();
+      }
+    }, delayMs);
+  }
+
+  private clearTimers(): void {
+    if (this.nearbyTimer !== null) {
+      this.scheduler.clearTimeout(this.nearbyTimer);
+      this.nearbyTimer = null;
+    }
+    if (this.localStaleTimer !== null) {
+      this.scheduler.clearTimeout(this.localStaleTimer);
+      this.localStaleTimer = null;
+    }
+  }
+
+  private resetExperience(): void {
+    this.upload = "waiting";
+    this.local = { status: "waiting" };
+    this.nearby = { status: "waiting" };
+    this.nearbyRequestGeneration = null;
+    this.clearTimers();
+  }
+
+  private publishActive(): void {
+    if (!this.disposed && this.enabled) {
+      this.publish({
+        status: "active",
+        precision: this.precision,
+        upload: this.upload,
+        local: this.local,
+        nearby: this.nearby,
+      });
+    }
   }
 
   private publish(snapshot: LocationLifecycleSnapshot): void {

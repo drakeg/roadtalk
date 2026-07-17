@@ -1,13 +1,13 @@
 # Mobile
 
-Current owner: S03-D06. The retained identity and recovery flows were delivered by
+Current owner: S03-D07. The retained identity and recovery flows were delivered by
 S02-D05, S02-D06, and S02-D08.
 
 This directory contains the Expo/React Native/TypeScript development-build application.
 
 ## Current foundation
 
-Sprint 1 and S02-D05 provide:
+The current application provides:
 
 - Expo SDK 57 with React Native 0.86 and the New Architecture
 - iOS and Android development-client configuration
@@ -31,6 +31,9 @@ Sprint 1 and S02-D05 provide:
 - foreground-only location sampling with bounded private updates
 - lifecycle stops on pause, background, logout, screen exit, and unmount
 - precise and approximate/reduced-accuracy permission support
+- owner-only, non-authoritative accuracy, heading, speed, and freshness display
+- semantic `none`, `few`, or `many` nearby awareness with no identity or exact value
+- bounded nearby polling that stops with the foreground location lifecycle
 
 ## Foreground location lifecycle
 
@@ -51,7 +54,25 @@ placed in URLs, or logged.
 Expo configuration enables iOS when-in-use and Android coarse/fine permissions only.
 Background location flags remain false. There is no background task, foreground
 service, geofence, motion permission, map SDK, analytics SDK, paid location provider,
-or new AWS resource. S03-D06 therefore adds $0 expected AWS cost.
+or new AWS resource. The Sprint 3 mobile experience therefore adds $0 expected AWS
+cost.
+
+## Location and nearby experience
+
+After a private sample is accepted, the screen may show the owner the device's local
+accuracy, heading, and speed. These values are explicitly informational rather than
+authoritative. Missing sensor values say **Unavailable**, old device samples say
+**Stale**, and no movement value is inferred when the platform does not provide one.
+
+The client reads `/nearby/summary` only after a successful private location update and
+at a bounded 30-second cadence while the location screen remains foreground-active.
+The response is reduced to **No**, **Some**, or **More** nearby RoadTalk activity from
+the server's `none`, `few`, or `many` bucket. The UI never receives or displays a
+candidate identity, exact count, coordinate, distance, or bearing. Missing caller
+location, transient failure, and expired status remain distinct and retry safely.
+
+Nearby timers and local freshness timers stop on pause, background, screen exit,
+logout, and unmount. All state is process-memory-only and is cleared on lifecycle exit.
 
 ## Avatar catalog
 
@@ -144,6 +165,9 @@ Before a field test:
 7. confirm only foreground/when-in-use location is requested and no microphone,
    notification, motion, background-location, or tracking permission appears;
 8. observe that sampling stops on every lifecycle exit and assess battery behavior.
+9. verify available/unavailable heading and speed, accuracy, current/stale state, and
+   each semantic nearby bucket without any identity, exact count, distance, or bearing;
+10. confirm nearby polling stops on pause, background, screen exit, logout, and unmount.
 
 These physical-device permission, battery, native-storage, and lifecycle checks remain
 pending until the inherited S01-E01 hardware evidence gate is closed. Automated tests
@@ -165,7 +189,8 @@ development logs must never print request bodies, authorization headers, or stor
 
 ## Scope boundary
 
-S03-D06 exposes only the foreground-location purpose, permission, and lifecycle flow.
-The richer owner status, heading/speed display, and coarse nearby experience belong to
-S03-D07. Maps, routes, nearby identities, exact counts/distances/bearings, location
-history, audio, PTT, channels, and background collection remain unavailable.
+S03-D07 exposes only foreground permission/lifecycle, owner-local sensor quality, and
+the server's semantic nearby bucket. Maps, routes, nearby identities, exact counts,
+distances or bearings to another user, location history, audio, PTT, channels, and
+background collection remain unavailable. Privacy/security hardening and final
+operator evidence belong to S03-D08 and S03-D09.

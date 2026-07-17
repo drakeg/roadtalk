@@ -26,6 +26,30 @@ export type PublishedLocationSample = {
   consent_policy_version: string;
 };
 
+export type NearbyBucket = "none" | "few" | "many";
+
+export type NearbySummary = {
+  availability: "available";
+  bucket: NearbyBucket;
+  freshness: "fresh";
+  expiresAtMs: number;
+};
+
+export type LocalLocationState =
+  | { status: "waiting" }
+  | {
+      status: "current" | "stale";
+      horizontalAccuracyM: number;
+      headingDeg: number | null;
+      speedMps: number | null;
+      observedAtMs: number;
+    };
+
+export type NearbyState =
+  | { status: "waiting" | "unavailable" | "retrying" }
+  | { status: "current"; bucket: NearbyBucket; expiresAtMs: number }
+  | { status: "stale"; expiresAtMs: number };
+
 export type LocationLifecycleSnapshot =
   | { status: "purpose" }
   | { status: "checking" }
@@ -37,6 +61,8 @@ export type LocationLifecycleSnapshot =
       status: "active";
       precision: LocationPrecision;
       upload: "waiting" | "current" | "retrying";
+      local: LocalLocationState;
+      nearby: NearbyState;
     }
   | { status: "error" };
 
@@ -58,6 +84,7 @@ export interface LocationTransport {
   grantConsent(): Promise<void>;
   publish(sample: PublishedLocationSample): Promise<void>;
   pause(): Promise<void>;
+  nearby(): Promise<NearbySummary | null>;
 }
 
 export interface LocationLifecycleControl {

@@ -75,4 +75,75 @@ describe("private location transport", () => {
       "The location service is temporarily unavailable.",
     );
   });
+
+  it("parses only the semantic nearby contract", async () => {
+    const session = {
+      authenticatedFetch: jest.fn(async () =>
+        new Response(
+          JSON.stringify({
+            availability: "available",
+            bucket: "few",
+            freshness: "fresh",
+            expires_at: "2026-07-16T12:02:00Z",
+          }),
+          { status: 200 },
+        ),
+      ),
+    };
+    const api = new LocationApi(
+      "https://roadtalk.test/api/v1",
+      session as unknown as SessionClient,
+    );
+
+    await expect(api.nearby()).resolves.toEqual({
+      availability: "available",
+      bucket: "few",
+      freshness: "fresh",
+      expiresAtMs: Date.parse("2026-07-16T12:02:00Z"),
+    });
+    expect(session.authenticatedFetch).toHaveBeenCalledWith(
+      "https://roadtalk.test/api/v1/nearby/summary",
+      { method: "GET" },
+    );
+  });
+
+  it("fails closed for missing or malformed nearby state", async () => {
+    const session = {
+      authenticatedFetch: jest
+        .fn()
+        .mockResolvedValueOnce(new Response(null, { status: 409 }))
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              availability: "available",
+              bucket: 27,
+              freshness: "fresh",
+              expires_at: "not-a-time",
+            }),
+            { status: 200 },
+          ),
+        )
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ detail: "private server value" }), {
+            status: 429,
+          }),
+        )
+        .mockResolvedValueOnce(new Response("{", { status: 200 })),
+    };
+    const api = new LocationApi(
+      "https://roadtalk.test/api/v1",
+      session as unknown as SessionClient,
+    );
+
+    await expect(api.nearby()).resolves.toBeNull();
+    await expect(api.nearby()).rejects.toThrow(
+      "Nearby status is temporarily unavailable.",
+    );
+    await expect(api.nearby()).rejects.toThrow(
+      "Nearby status is temporarily unavailable.",
+    );
+    await expect(api.nearby()).rejects.toThrow(
+      "Nearby status is temporarily unavailable.",
+    );
+  });
 });

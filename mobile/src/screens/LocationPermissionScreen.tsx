@@ -15,7 +15,11 @@ import { environment } from "../config";
 import { LocationApi } from "../location/api";
 import { expoLocationGateway } from "../location/gateway";
 import { LocationLifecycleController } from "../location/LocationLifecycleController";
-import type { LocationLifecycleControl } from "../location/types";
+import type {
+  LocalLocationState,
+  LocationLifecycleControl,
+  NearbyState,
+} from "../location/types";
 import { useSession, useSessionClient } from "../session/SessionContext";
 import { colors, spacing } from "../theme";
 
@@ -115,6 +119,26 @@ export function LocationPermissionScreen({ lifecycle, navigation }: Props) {
         <Text style={styles.statusBody}>{statusBody(snapshot)}</Text>
       </View>
 
+      {snapshot.status === "active" ? (
+        <>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Your device reading</Text>
+            <Text style={styles.caption}>
+              Informational only. Device sensors can be unavailable, delayed, or
+              inaccurate.
+            </Text>
+            <LocationReading local={snapshot.local} />
+          </View>
+          <View accessibilityLiveRegion="polite" style={styles.card}>
+            <Text style={styles.cardTitle}>Coarse nearby awareness</Text>
+            <Text style={styles.body}>{nearbyText(snapshot.nearby)}</Text>
+            <Text style={styles.caption}>
+              This never shows who, how many exactly, where, or how far away.
+            </Text>
+          </View>
+        </>
+      ) : null}
+
       {snapshot.status === "purpose" ||
       snapshot.status === "paused" ||
       snapshot.status === "denied" ||
@@ -154,17 +178,30 @@ export function LocationPermissionScreen({ lifecycle, navigation }: Props) {
       ) : null}
 
       {snapshot.status === "active" ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Pause and remove current location"
-          onPress={pause}
-          style={({ pressed }) => [
-            styles.secondaryButton,
-            pressed && styles.buttonPressed,
-          ]}
-        >
-          <Text style={styles.secondaryButtonText}>Pause location</Text>
-        </Pressable>
+        <>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Pause and remove current location"
+            onPress={pause}
+            style={({ pressed }) => [
+              styles.secondaryButton,
+              pressed && styles.buttonPressed,
+            ]}
+          >
+            <Text style={styles.secondaryButtonText}>Pause location</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open device location settings"
+            onPress={() => void Linking.openSettings()}
+            style={({ pressed }) => [
+              styles.textButton,
+              pressed && styles.buttonPressed,
+            ]}
+          >
+            <Text style={styles.textButtonText}>Device location settings</Text>
+          </Pressable>
+        </>
       ) : null}
 
       <Pressable
@@ -180,6 +217,72 @@ export function LocationPermissionScreen({ lifecycle, navigation }: Props) {
       </Pressable>
     </ScrollView>
   );
+}
+
+function LocationReading({ local }: { local: LocalLocationState }) {
+  if (local.status === "waiting") {
+    return <Text style={styles.body}>Waiting for a device sample…</Text>;
+  }
+  return (
+    <View style={styles.metrics}>
+      <Metric
+        label="Freshness"
+        value={local.status === "current" ? "Current" : "Stale"}
+      />
+      <Metric
+        label="Accuracy"
+        value={`About ±${Math.round(local.horizontalAccuracyM)} m`}
+      />
+      <Metric label="Heading" value={headingText(local.headingDeg)} />
+      <Metric label="Speed" value={speedText(local.speedMps)} />
+    </View>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.metricRow}>
+      <Text style={styles.metricLabel}>{label}</Text>
+      <Text style={styles.metricValue}>{value}</Text>
+    </View>
+  );
+}
+
+function headingText(heading: number | null): string {
+  if (heading === null) {
+    return "Unavailable";
+  }
+  const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+  const direction = directions[Math.round(heading / 45) % directions.length];
+  return `${Math.round(heading)}° ${direction}`;
+}
+
+function speedText(speedMps: number | null): string {
+  return speedMps === null
+    ? "Unavailable"
+    : `${Math.round(speedMps * 2.236_936)} mph`;
+}
+
+function nearbyText(nearby: NearbyState): string {
+  switch (nearby.status) {
+    case "current":
+      switch (nearby.bucket) {
+        case "none":
+          return "No nearby RoadTalk activity is indicated.";
+        case "few":
+          return "Some nearby RoadTalk activity is indicated.";
+        case "many":
+          return "More nearby RoadTalk activity is indicated.";
+      }
+    case "unavailable":
+      return "A fresh usable location is needed for nearby awareness.";
+    case "retrying":
+      return "Nearby status is temporarily unavailable and will retry.";
+    case "stale":
+      return "The previous nearby status has expired and is no longer current.";
+    default:
+      return "Waiting for a private location update before checking nearby status.";
+  }
 }
 
 function statusTitle(status: ReturnType<LocationLifecycleControl["getSnapshot"]>["status"]): string {
@@ -244,6 +347,16 @@ const styles = StyleSheet.create({
     padding: spacing.large,
   },
   cardTitle: { color: colors.text, fontSize: 19, fontWeight: "700" },
+  caption: { color: colors.muted, fontSize: 14, lineHeight: 20 },
+  metrics: { gap: spacing.small },
+  metricRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    minHeight: 32,
+  },
+  metricLabel: { color: colors.muted, fontSize: 16 },
+  metricValue: { color: colors.text, fontSize: 16, fontWeight: "600" },
   statusCard: {
     backgroundColor: colors.surface,
     borderColor: colors.border,

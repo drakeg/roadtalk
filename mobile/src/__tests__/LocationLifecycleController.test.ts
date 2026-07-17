@@ -57,11 +57,13 @@ function transport(): LocationTransport & {
   grantConsent: jest.Mock;
   publish: jest.Mock;
   pause: jest.Mock;
+  nearby: jest.Mock;
 } {
   return {
     grantConsent: jest.fn(async () => undefined),
     publish: jest.fn(async (_sample: PublishedLocationSample) => undefined),
     pause: jest.fn(async () => undefined),
+    nearby: jest.fn(async () => null),
   };
 }
 
@@ -77,9 +79,49 @@ function fix(overrides: Partial<LocationFix> = {}): LocationFix {
   };
 }
 
+class FakeScheduler {
+  private nextId = 1;
+  private readonly timers = new Map<
+    ReturnType<typeof setTimeout>,
+    { at: number; callback: () => void }
+  >();
+
+  constructor(private readonly clock: { value: number }) {}
+
+  setTimeout(
+    callback: () => void,
+    delayMs: number,
+  ): ReturnType<typeof setTimeout> {
+    const handle = this.nextId as unknown as ReturnType<typeof setTimeout>;
+    this.nextId += 1;
+    this.timers.set(handle, { at: this.clock.value + delayMs, callback });
+    return handle;
+  }
+
+  clearTimeout(handle: ReturnType<typeof setTimeout>): void {
+    this.timers.delete(handle);
+  }
+
+  advanceBy(delayMs: number): void {
+    this.clock.value += delayMs;
+    const due = [...this.timers.entries()]
+      .filter(([, timer]) => timer.at <= this.clock.value)
+      .sort((left, right) => left[1].at - right[1].at);
+    due.forEach(([handle, timer]) => {
+      this.timers.delete(handle);
+      timer.callback();
+    });
+  }
+
+  pending(): number {
+    return this.timers.size;
+  }
+}
+
 async function flush(): Promise<void> {
-  await Promise.resolve();
-  await Promise.resolve();
+  for (let turn = 0; turn < 5; turn += 1) {
+    await Promise.resolve();
+  }
 }
 
 async function ready(controller: LocationLifecycleController): Promise<void> {
@@ -109,6 +151,8 @@ describe("foreground location lifecycle", () => {
       status: "active",
       precision: "precise",
       upload: "waiting",
+      local: { status: "waiting" },
+      nearby: { status: "waiting" },
     });
   });
 
@@ -207,6 +251,14 @@ describe("foreground location lifecycle", () => {
       status: "active",
       precision: "approximate",
       upload: "current",
+      local: {
+        status: "current",
+        horizontalAccuracyM: 25,
+        headingDeg: 90,
+        speedMps: 4,
+        observedAtMs: Date.parse("2026-07-16T12:00:00Z"),
+      },
+      nearby: { status: "unavailable" },
     });
   });
 
@@ -302,7 +354,8 @@ describe("foreground location lifecycle", () => {
     remote.publish
       .mockRejectedValueOnce(new Error("offline"))
       .mockResolvedValueOnce(undefined);
-    const controller = new LocationLifecycleController(gateway, remote);
+    const clock = { now: () => fix().observedAtMs };
+    const controller = new LocationLifecycleController(gateway, remote, clock);
     await ready(controller);
     await controller.enable();
 
@@ -312,6 +365,14 @@ describe("foreground location lifecycle", () => {
       status: "active",
       precision: "precise",
       upload: "retrying",
+      local: {
+        status: "current",
+        horizontalAccuracyM: 25,
+        headingDeg: 90,
+        speedMps: 4,
+        observedAtMs: Date.parse("2026-07-16T12:00:00Z"),
+      },
+      nearby: { status: "waiting" },
     });
     expect(remote.publish).toHaveBeenCalledTimes(1);
 
@@ -325,6 +386,14 @@ describe("foreground location lifecycle", () => {
       status: "active",
       precision: "precise",
       upload: "current",
+      local: {
+        status: "current",
+        horizontalAccuracyM: 25,
+        headingDeg: 90,
+        speedMps: 4,
+        observedAtMs: Date.parse("2026-07-16T12:00:01Z"),
+      },
+      nearby: { status: "unavailable" },
     });
   });
 
@@ -345,5 +414,177 @@ describe("foreground location lifecycle", () => {
 
     expect(gateway.removals[0]).toHaveBeenCalledTimes(1);
     expect(controller.getSnapshot()).toEqual({ status: "error" });
+  });
+
+  it("shows owner-only quality and polls semantic nearby state on a bounded timer", async () => {
+    const gateway = new FakeGateway();
+    gateway.currentPermission = {
+      status: "granted",
+      canAskAgain: true,
+      precision: "precise",
+    };
+    const remote = transport();
+    const clock = { value: fix().observedAtMs, now: () => clock.value };
+    const scheduler = new FakeScheduler(clock);
+    remote.nearby.mockResolvedValue({
+      availability: "available",
+      bucket: "few",
+      freshness: "fresh",
+      expiresAtMs: clock.value + 120_000,
+    });
+    const controller = new LocationLifecycleController(
+      gateway,
+      remote,
+      clock,
+      10_000,
+      30_000,
+      30_000,
+      scheduler,
+    );
+    await ready(controller);
+    await controller.enable();
+
+    gateway.emit(fix());
+    await flush();
+
+    expect(remote.nearby).toHaveBeenCalledTimes(1);
+    expect(controller.getSnapshot()).toEqual({
+      status: "active",
+      precision: "precise",
+      upload: "current",
+      local: {
+        status: "current",
+        horizontalAccuracyM: 25,
+        headingDeg: 90,
+        speedMps: 4,
+        observedAtMs: fix().observedAtMs,
+      },
+      nearby: {
+        status: "current",
+        bucket: "few",
+        expiresAtMs: clock.value + 120_000,
+      },
+    });
+
+    scheduler.advanceBy(30_000);
+    await flush();
+    expect(remote.nearby).toHaveBeenCalledTimes(2);
+    expect(controller.getSnapshot()).toEqual(
+      expect.objectContaining({
+        local: expect.objectContaining({ status: "stale" }),
+        nearby: expect.objectContaining({ status: "current", bucket: "few" }),
+      }),
+    );
+
+    await controller.setAppActive(false);
+    expect(scheduler.pending()).toBe(0);
+    scheduler.advanceBy(120_000);
+    await flush();
+    expect(remote.nearby).toHaveBeenCalledTimes(2);
+  });
+
+  it("marks an expired nearby result stale when a refresh fails", async () => {
+    const gateway = new FakeGateway();
+    gateway.currentPermission = {
+      status: "granted",
+      canAskAgain: true,
+      precision: "precise",
+    };
+    const remote = transport();
+    const clock = { value: fix().observedAtMs, now: () => clock.value };
+    const scheduler = new FakeScheduler(clock);
+    remote.nearby
+      .mockResolvedValueOnce({
+        availability: "available",
+        bucket: "many",
+        freshness: "fresh",
+        expiresAtMs: clock.value + 5_000,
+      })
+      .mockRejectedValueOnce(new Error("offline"));
+    const controller = new LocationLifecycleController(
+      gateway,
+      remote,
+      clock,
+      10_000,
+      30_000,
+      30_000,
+      scheduler,
+    );
+    await ready(controller);
+    await controller.enable();
+
+    gateway.emit(fix());
+    await flush();
+    expect(controller.getSnapshot()).toEqual(
+      expect.objectContaining({
+        nearby: expect.objectContaining({ status: "current", bucket: "many" }),
+      }),
+    );
+
+    scheduler.advanceBy(5_000);
+    await flush();
+    expect(controller.getSnapshot()).toEqual(
+      expect.objectContaining({
+        nearby: { status: "stale", expiresAtMs: clock.value },
+      }),
+    );
+    await controller.pause();
+    expect(scheduler.pending()).toBe(0);
+  });
+
+  it("cancels nearby polling on screen exit, logout, and unmount", async () => {
+    const gateway = new FakeGateway();
+    gateway.currentPermission = {
+      status: "granted",
+      canAskAgain: true,
+      precision: "precise",
+    };
+    const remote = transport();
+    const clock = { value: fix().observedAtMs, now: () => clock.value };
+    const scheduler = new FakeScheduler(clock);
+    remote.nearby.mockImplementation(async () => ({
+      availability: "available",
+      bucket: "none",
+      freshness: "fresh",
+      expiresAtMs: clock.value + 120_000,
+    }));
+    const controller = new LocationLifecycleController(
+      gateway,
+      remote,
+      clock,
+      10_000,
+      30_000,
+      30_000,
+      scheduler,
+    );
+    await ready(controller);
+    await controller.enable();
+
+    gateway.emit(fix({ observedAtMs: clock.value }));
+    await flush();
+    expect(remote.nearby).toHaveBeenCalledTimes(1);
+    expect(scheduler.pending()).toBeGreaterThan(0);
+
+    await controller.setScreenActive(false);
+    expect(scheduler.pending()).toBe(0);
+    scheduler.advanceBy(10_000);
+    await controller.setScreenActive(true);
+    gateway.emit(fix({ observedAtMs: clock.value }));
+    await flush();
+    expect(remote.nearby).toHaveBeenCalledTimes(2);
+
+    await controller.setAuthenticated(false);
+    expect(scheduler.pending()).toBe(0);
+    scheduler.advanceBy(10_000);
+    await controller.setAuthenticated(true);
+    gateway.emit(fix({ observedAtMs: clock.value }));
+    await flush();
+    expect(remote.nearby).toHaveBeenCalledTimes(3);
+
+    await controller.dispose();
+    expect(scheduler.pending()).toBe(0);
+    scheduler.advanceBy(120_000);
+    await flush();
+    expect(remote.nearby).toHaveBeenCalledTimes(3);
   });
 });

@@ -54,6 +54,13 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Mobile configuration and scope tests that prohibit background location/tasks,
   persistent coordinate storage, analytics, paid providers, and new AWS resources;
   expected incremental AWS cost remains $0.
+- Owner-only, non-authoritative local accuracy, heading, speed, and freshness status
+  with explicit unavailable and stale states.
+- Accessible coarse nearby awareness limited to semantic none/few/many buckets, with
+  no identity, exact count, coordinate, distance, or bearing disclosure.
+- Bounded foreground nearby polling with fail-closed unavailable/retry/expiry states
+  and deterministic cancellation on pause, background, screen exit, logout, and
+  unmount; no new dependency, paid provider, or AWS resource.
 
 ## Unreleased — Sprint 2: Identity
 
