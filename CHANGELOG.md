@@ -2,6 +2,38 @@
 
 All notable RoadTalk changes are recorded here. The repository history and sprint review records remain the detailed source of truth.
 
+## Proposed — Sprint 4: Push-to-Talk
+
+### Planning
+
+- Proposed an audio-only, hold-to-talk foundation using LiveKit Cloud behind a typed,
+  disabled-by-default provider boundary.
+- Separated a receive-only room join from server-authorized microphone-only
+  publication for an already-connected participant, preserving the low-latency target
+  without granting standing publish permission.
+- Limited the sprint to one opaque, server-assigned controlled test room; proximity
+  and user channels remain assigned to Sprints 5 and 6.
+- Proposed metadata-only grants, explicit expiry/release, one-publisher concurrency,
+  capture-off-first lifecycle handling, stable failure states, and no audio/token/
+  secret persistence or logging.
+- Proposed S04-R01–R12, S04-T01–T12, S04-D01–D09, readiness gates, evidence limits,
+  and planning approval issue #90.
+- No Sprint 4 code, cloud project, secret, AWS resource, or paid plan is authorized
+  until the product owner approves the specification and readiness record.
+
+### Cost controls
+
+- Planning and proposed local/GitHub CI implementation remain **$0 AWS + $0 LiveKit**.
+- LiveKit Build is currently $0/month with hard caps of 5,000 WebRTC participant-
+  minutes, 50 GB downstream transfer, and 100 concurrent connections.
+- Proposed controlled-test stops are 3,000 participant-minutes and 10 GB/month.
+- Existing AWS field test plus Build is projected at $20–$23/month without the
+  temporary compute promotion; adding LiveKit Ship raises the combined minimum to
+  $70–$73/month.
+- Provider activation, a payment method, Ship, recording, egress, transcription,
+  telephony, agents, enhanced paid processing, and self-hosting require separate
+  approval.
+
 ## Unreleased — Sprint 3: Location
 
 ### Planning
