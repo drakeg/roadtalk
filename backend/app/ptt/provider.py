@@ -52,9 +52,7 @@ class MediaProvider(Protocol):
         self, request: ReceiveCredentialRequest
     ) -> ReceiveCredential: ...
 
-    async def set_microphone_publish(
-        self, request: MicrophonePublishRequest
-    ) -> None: ...
+    async def set_microphone_publish(self, request: MicrophonePublishRequest) -> None: ...
 
     async def remove_participant(self, request: ParticipantRequest) -> None: ...
 
@@ -69,9 +67,7 @@ class DisabledMediaProvider:
         del request
         self._raise()
 
-    async def set_microphone_publish(
-        self, request: MicrophonePublishRequest
-    ) -> None:
+    async def set_microphone_publish(self, request: MicrophonePublishRequest) -> None:
         del request
         self._raise()
 
@@ -99,15 +95,11 @@ class FakeMediaProvider:
         self.receive_requests.append(request)
         return ReceiveCredential(
             server_url="wss://synthetic.invalid",
-            participant_token=SecretStr(
-                f"synthetic-provider-token::{request.participant_ref}"
-            ),
+            participant_token=SecretStr(f"synthetic-provider-token::{request.participant_ref}"),
             expires_at=self._now() + timedelta(seconds=request.ttl_seconds),
         )
 
-    async def set_microphone_publish(
-        self, request: MicrophonePublishRequest
-    ) -> None:
+    async def set_microphone_publish(self, request: MicrophonePublishRequest) -> None:
         self.publish_requests.append(request)
 
     async def remove_participant(self, request: ParticipantRequest) -> None:
@@ -117,6 +109,4 @@ class FakeMediaProvider:
 def media_provider_from_settings(settings: Settings) -> MediaProvider:
     if not settings.ptt_media_provider_enabled:
         return DisabledMediaProvider()
-    raise MediaProviderUnavailableError(
-        "live PTT media adapter is not implemented in S04-D02"
-    )
+    raise MediaProviderUnavailableError("live PTT media adapter is not implemented in S04-D02")
