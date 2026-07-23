@@ -8,11 +8,12 @@ Sprint 0 — Planning & Architecture, Sprint 1 — Project Foundation, Sprint 2 
 Identity, and Sprint 3 — Location are complete. Sprint 1 is conditionally accepted
 with named exceptions that must close before the first field test.
 
-Sprint 4 — Push-to-Talk is in planning only. Its proposed
-[specification](docs/sprints/sprint-4-push-to-talk.md) and
-[readiness gate](docs/sprints/sprint-4-readiness.md) await product-owner approval in
-[issue #90](https://github.com/drakeg/roadtalk/issues/90). No Sprint 4 code, cloud
-provider, AWS activation, or paid plan is authorized yet.
+Sprint 4 — Push-to-Talk is approved for local/GitHub CI implementation through
+[tracker #100](https://github.com/drakeg/roadtalk/issues/100). Its
+[specification](docs/sprints/sprint-4-push-to-talk.md),
+[readiness gate](docs/sprints/sprint-4-readiness.md), and zero-revenue cost policy were
+approved on 2026-07-23. Cloud provider activation, AWS activation, paid plans, and
+projected recurring spend above $10/month remain unauthorized.
 
 ## Repository layout
 
@@ -22,7 +23,7 @@ provider, AWS activation, or paid plan is authorized yet.
 | `backend/` | FastAPI modular-monolith API, migrations, and backend tests | Sprint 3 location is complete; proposed Sprint 4 adds metadata-only grants and a disabled provider boundary |
 | `infrastructure/` | Terraform bootstrap, environment roots, and reusable modules | Remains disabled by default; Sprint 4 proposes no new AWS resource |
 | `scripts/` | Cross-project developer and operational helper scripts | Added only with a traced requirement |
-| `docs/` | Architecture, sprint records, ADRs, security, privacy, design, and runbooks | Sprint 4 planning and approval are the current documentation activity |
+| `docs/` | Architecture, sprint records, ADRs, security, privacy, design, and runbooks | Sprint 4 is approved; documentation tracks implementation and evidence |
 | `.github/` | Pull-request, issue, CI, quality, and security workflows | Existing gates remain; Sprint 4 changes require approved traced work |
 
 ## Start here
