@@ -57,8 +57,9 @@ not speaking time, is the primary minute driver for a receive-ready PTT client.
 | Ship overage | Usage above included Ship amounts | $0.0005/participant-minute and $0.12/GB |
 
 Build has no paid overage: new requests fail after an included allowance is exhausted.
-RoadTalk's proposed controlled-test stops are lower—3,000 participant-minutes and
-10 GB/month—so a usage-reporting delay or test overrun retains headroom.
+RoadTalk's proposed controlled-test stops are lower—3,000 participant-minutes,
+10 GB/month, and 25 concurrent connections—so a usage-reporting delay or test overrun
+retains headroom. Crossing a stop pauses testing and never triggers an upgrade.
 
 Combined planning scenarios:
 
@@ -69,10 +70,28 @@ Combined planning scenarios:
 - enabled AWS field test plus Ship: **$70–$73+/month**, or **$58–$61+/month** during
   an applicable compute promotion.
 
-Use a **$35/month** pre-activation budget while Build is sufficient and an
-**$85/month** budget before approving Ship. No automatic plan upgrade or payment-
-method attachment is allowed. Recording, egress, transcription, telephony, agents,
-enhanced paid audio processing, and self-hosting remain excluded.
+The zero-revenue default is **$0/month**, with an initial hard operating ceiling of
+**$10/month**. Scheduled AWS testing is planned at about **$4–$6 in an active test
+month**; destroying the stack returns an inactive month to $0, while intentionally
+retaining disk/backups may cost about $3–$5.
+
+The earlier $35 and $85 amounts are no longer default budgets. They are scenario
+references only if a future written decision approves always-on Build or Ship. No
+automatic plan upgrade, scaling, or payment-method attachment is allowed. Recording,
+egress, transcription, telephony, agents, enhanced paid audio processing, and
+self-hosting remain excluded.
+
+## Zero-revenue operating policy
+
+- Development, CI, and inactive months target **$0**.
+- Prefer local services and deterministic provider fakes.
+- Use LiveKit Build only for separately approved physical-device tests.
+- Use scheduled AWS test windows; stop or destroy resources immediately afterward.
+- Do not preserve EBS, snapshots, backups, public IPv4, logs, or secrets merely for
+  convenience without accepting their continuing cost.
+- Any projected recurring spend above **$10/month** requires explicit approval.
+- No always-on public deployment until demand, funding, or a revenue path justifies it.
+- Cost estimates are refreshed before activation and reported after every test window.
 
 ## Managed production baseline estimate
 
