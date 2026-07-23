@@ -1,19 +1,17 @@
 # Sprint 4 readiness
 
 - Sprint: 4 — Push-to-Talk
-- Status: NOT READY — awaiting product-owner approval
+- Status: READY — specification and zero-revenue cost policy approved
 - Planning issue: #90
 - Planning date: 2026-07-16
+- Approval date: 2026-07-23
+- Implementation tracker: #100
 - Proposed baseline: Sprint 3 approval merge from PR #89
 
 ## Decision
 
-Sprint 4 is fully specified for a zero-spend local/GitHub CI implementation, but code
-is **not authorized** until the product owner approves
-`sprint-4-push-to-talk.md`, this readiness record, and the cost boundary in issue
-#90.
-
-After approval, implementation may use deterministic provider fakes and synthetic
+Sprint 4 is authorized for zero-spend local/GitHub CI implementation after product-
+owner approval on 2026-07-23. Implementation may use deterministic provider fakes and synthetic
 tokens/events. LiveKit Cloud and AWS remain disabled. Live-provider, physical-device,
 and field-test work requires separate activation authority and closure of applicable
 Sprint 1 exceptions.
@@ -42,11 +40,11 @@ Sprint 1 exceptions.
   combined AWS/media scenarios, and budgets are documented.
 - [x] Planning approval, code authorization, provider activation, AWS activation, and
   paid-plan approval are separate gates.
-- [ ] Product owner approves the proposed Sprint 4 specification/readiness/cost
-  baseline in issue #90.
-- [ ] S04-D01 tracker and scoped implementation issues are created from approved text.
-- [ ] Repository status is updated to make Sprint 4 the sole active implementation
-  sprint.
+- [x] Product owner approved the Sprint 4 specification/readiness/cost baseline in
+  issue #90 on 2026-07-23.
+- [x] Tracker #100 and scoped implementation issues #91–#99 were created from the
+  approved text.
+- [x] Repository status names Sprint 4 as the sole active implementation sprint.
 
 ## Architecture gate
 
@@ -204,23 +202,25 @@ and evidence is recorded.
 
 ## Preconditions before the first code change
 
-1. [ ] Product owner explicitly approves `sprint-4-push-to-talk.md`, this readiness
+1. [x] Product owner explicitly approved `sprint-4-push-to-talk.md`, this readiness
    record, and the cost boundary in issue #90.
-2. [ ] Planning issue #90 is updated/closed as completed.
-3. [ ] Tracker and S04-D01 through S04-D09 issues are created from the approved wording.
-4. [ ] Documentation status names Sprint 4 as the sole active implementation sprint.
-5. [ ] The final approval update on `main` is recorded as the implementation baseline.
-6. [ ] S04-D01 planning/setup is complete; code begins with S04-D02 using the normal
+2. [x] Planning issue #90 is updated/closed as completed.
+3. [x] Tracker #100 and S04-D01 through S04-D09 issues #91–#99 are created from the
+   approved wording.
+4. [x] Documentation status names Sprint 4 as the sole active implementation sprint.
+5. [x] The final approval update on `main` is recorded as the implementation baseline.
+6. [x] S04-D01 planning/setup is complete; code begins with S04-D02 using the normal
    branch/PR workflow.
 7. [x] Terraform, LiveKit provider calls, and live credentials remain disabled.
 8. [x] Sprint 1 exceptions remain visible as live/device/field-test blockers.
 
 ## Readiness conclusion
 
-**NOT READY.** The technical, privacy, security, evidence, and cost boundaries are
-complete, and the default implementation cost is $0. Product-owner approval in issue
-#90 is the remaining decision. Approval will authorize tracker creation and local/CI
-coding only; cloud activation and any paid plan remain separate decisions.
+**READY.** The product owner approved the technical, privacy, security, evidence, and
+zero-revenue cost baseline on 2026-07-23. Local/GitHub CI implementation proceeds
+through tracker #100 beginning with #92 (S04-D02). Current and incremental cost remain
+$0. Cloud activation, scheduled AWS testing, any paid plan, and projected recurring
+spend above $10/month remain separate decisions.
 
 ## Primary references
 
