@@ -24,15 +24,21 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 ### Cost controls
 
 - Planning and proposed local/GitHub CI implementation remain **$0 AWS + $0 LiveKit**.
+- Adopted a zero-revenue policy: $0/month is the default operating target and
+  $10/month is the initial hard ceiling requiring explicit approval to exceed.
 - LiveKit Build is currently $0/month with hard caps of 5,000 WebRTC participant-
   minutes, 50 GB downstream transfer, and 100 concurrent connections.
-- Proposed controlled-test stops are 3,000 participant-minutes and 10 GB/month.
-- Existing AWS field test plus Build is projected at $20–$23/month without the
-  temporary compute promotion; adding LiveKit Ship raises the combined minimum to
-  $70–$73/month.
-- Provider activation, a payment method, Ship, recording, egress, transcription,
-  telephony, agents, enhanced paid processing, and self-hosting require separate
-  approval.
+- Controlled-test stops are lower: 3,000 participant-minutes, 10 GB, and 25 concurrent
+  connections; crossing a stop pauses testing rather than upgrading.
+- Physical-device media testing keeps AWS off where practical. Scheduled AWS test
+  windows are planned around $4–$6 in an active month and are stopped or destroyed
+  afterward; a fully destroyed inactive month targets $0.
+- Always-on AWS, LiveKit Ship, spend above $10/month, automatic scaling/upgrades,
+  payment methods, RDS, managed Redis, NAT Gateway, ALB, Fargate, recording, egress,
+  transcription, telephony, agents, enhanced paid processing, and self-hosting all
+  require separate written approval.
+- The prior $35/$85 default-budget language is withdrawn; those amounts are scenario
+  references only if always-on Build or Ship is approved later.
 
 ## Unreleased — Sprint 3: Location
 
