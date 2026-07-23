@@ -35,11 +35,12 @@ provider, AWS activation, or paid plan is authorized yet.
 6. Record tests, privacy impact, cost impact, and evidence in the pull request.
 
 Sprint 4 planning and proposed local/CI implementation add $0 AWS and $0 LiveKit
-cost. LiveKit Build is currently $0/month with hard usage caps; combining it with the
-existing enabled AWS field-test design is projected at $20–$23/month without the
-temporary compute promotion. LiveKit Ship would raise the combined floor to
-$70–$73/month. Every cloud activation or paid-plan change requires separate approval,
-a current price check, and completed applicable Sprint 1 exceptions.
+cost. While RoadTalk earns $0, the operating target is $0 and the initial hard ceiling
+is $10/month. LiveKit Build is free within hard limits. AWS is used only in separately
+approved scheduled test windows, projected around $4–$6 in an active testing month,
+and stopped or destroyed afterward. Always-on infrastructure, paid LiveKit, or any
+projected recurring spend above $10/month requires a new written approval and
+completed applicable Sprint 1 exceptions.
 
 ## Source of truth
 
