@@ -269,19 +269,13 @@ class MediaGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         ),
     )
 
-    account_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("account.id", ondelete="CASCADE")
-    )
-    device_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("device.id", ondelete="CASCADE")
-    )
+    account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("account.id", ondelete="CASCADE"))
+    device_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
     parent_grant_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("media_grant.id", ondelete="CASCADE")
     )
     grant_kind: Mapped[str] = mapped_column(String(16))
-    provider: Mapped[str] = mapped_column(
-        String(16), default="livekit", server_default="livekit"
-    )
+    provider: Mapped[str] = mapped_column(String(16), default="livekit", server_default="livekit")
     provider_room_ref: Mapped[str] = mapped_column(String(128))
     provider_participant_ref: Mapped[str] = mapped_column(String(128))
     action_scope: Mapped[str] = mapped_column(String(32))
