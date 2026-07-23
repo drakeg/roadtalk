@@ -53,9 +53,7 @@ def test_media_grant_is_metadata_only_and_account_device_owned() -> None:
         "callsign",
     }
     assert all(
-        fragment not in column.name
-        for column in table.c
-        for fragment in forbidden_fragments
+        fragment not in column.name for column in table.c for fragment in forbidden_fragments
     )
 
 
