@@ -82,8 +82,7 @@ class Settings(BaseSettings):
             )
         if self.ptt_transmit_grant_ttl_seconds > self.ptt_receive_grant_ttl_seconds:
             raise ValueError(
-                "ptt_transmit_grant_ttl_seconds must not exceed "
-                "ptt_receive_grant_ttl_seconds"
+                "ptt_transmit_grant_ttl_seconds must not exceed ptt_receive_grant_ttl_seconds"
             )
 
         livekit_values = (
@@ -95,17 +94,13 @@ class Settings(BaseSettings):
             if self.ptt_media_provider != "disabled" or any(
                 value is not None for value in livekit_values
             ):
-                raise ValueError(
-                    "disabled PTT media must not configure a provider or credentials"
-                )
+                raise ValueError("disabled PTT media must not configure a provider or credentials")
             return self
 
         if self.ptt_media_provider != "livekit":
             raise ValueError("enabled PTT media requires the livekit provider")
         if any(value is None for value in livekit_values):
-            raise ValueError(
-                "enabled PTT media requires URL, API key, and API secret"
-            )
+            raise ValueError("enabled PTT media requires URL, API key, and API secret")
         if not self.ptt_livekit_url or not self.ptt_livekit_url.startswith("wss://"):
             raise ValueError("PTT LiveKit URL must use wss://")
         return self
