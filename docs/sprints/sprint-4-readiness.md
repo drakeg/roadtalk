@@ -141,7 +141,8 @@ blockers.
 
 ## Cost gate
 
-Pricing checked on 2026-07-16. Recheck immediately before activation.
+RoadTalk's zero-revenue policy makes **$0/month** the default target and **$10/month**
+the initial hard recurring-cost ceiling.
 
 ### Default implementation
 
@@ -152,52 +153,46 @@ Pricing checked on 2026-07-16. Recheck immediately before activation.
 - Incremental monthly cost: **$0**
 - CI provider calls: **zero**
 - Terraform default: disabled, zero resources
+- Payment method or automatic provider upgrade: **prohibited**
 
-### Optional controlled activation
+### Approved sequencing
 
-LiveKit Build is currently $0/month and includes hard caps of 5,000 WebRTC
-participant-minutes, 50 GB downstream transfer, and 100 concurrent connections. Build
-does not bill overages; new requests fail after an allowance is exhausted.
+1. Implement and accept Sprint 4 locally and in GitHub CI at $0.
+2. Use LiveKit Build only after separate physical-device activation approval; keep the
+   backend local where practical so this stage remains $0.
+3. When remote backend testing is necessary, use scheduled AWS test windows rather
+   than a continuously running environment.
+4. Stop or destroy the AWS test stack after the approved script. Retain storage only
+   through an explicit decision that accepts its monthly charge.
+5. Do not run an always-on public environment until measured demand, funding, or a
+   viable revenue path justifies it.
 
-RoadTalk's proposed lower operational stops are:
+### Planning scenarios
 
-- 3,000 participant-minutes per calendar month;
-- 10 GB downstream transfer per calendar month;
-- 25 concurrent connections for the approved field-test capacity target;
-- immediate pause on unexpected recording/egress/agent/telephony usage;
-- immediate credential revocation and pause after suspected secret exposure.
+| Scenario | Projected monthly cost | Gate |
+|---|---:|---|
+| Code/CI only | **$0** | Default |
+| LiveKit Build device test, AWS off | **$0** | Separate test approval |
+| Scheduled AWS testing | **about $4–$6 in an active test month** | Must remain below $10 ceiling |
+| Inactive month, stack destroyed | **$0** | Preferred |
+| Inactive month, storage retained | **about $3–$5** | Explicit retention decision |
+| Always-on AWS + Build | **$8–$11 during eligible promotion; $20–$23 afterward** | New approval; not Sprint 4 default |
+| Always-on AWS + Ship | **$58–$61+ during eligible promotion; $70–$73+ afterward** | Paid-plan decision; prohibited by default |
 
-A two-device lab used four hours per month consumes about 480 participant-minutes. A
-ten-device controlled test used five hours per month consumes 3,000 participant-
-minutes. Connection time, not speaking time, is the primary minute driver; clients
-must disconnect outside an explicit test.
+Scheduled estimates are planning ranges, not guarantees. Recalculate the exact
+Terraform plan, hours, storage, monitoring, backups, public IPv4, transfer, taxes, and
+current provider pricing before activation.
 
-### Paid-plan boundary
+LiveKit Build's published free limits are 5,000 participant-minutes, 50 GB downstream
+transfer, and 100 concurrent connections. RoadTalk's lower stops remain 3,000 minutes,
+10 GB, and 25 connections. Crossing a limit pauses testing; it never authorizes Ship.
 
-LiveKit Ship starts at $50/month and currently includes 150,000 WebRTC participant-
-minutes and 250 GB downstream transfer. Current overage rates are $0.0005 per minute
-and $0.12/GB. RoadTalk does not upgrade automatically or attach a payment method as
-part of implementation.
+RDS, managed Redis, NAT Gateway, ALB, Fargate, paid monitoring, recording, egress,
+transcription, agents, telephony, enhanced paid processing, self-hosting, automatic
+scaling, payment-method attachment, and automatic plan upgrades are prohibited.
 
-| Combined scenario | Projected monthly cost |
-|---|---:|
-| Code/CI only | **$0** |
-| LiveKit Build controlled test, AWS off | **$0** |
-| Existing AWS field test + Build | **$20–$23** |
-| Existing AWS field test + Build during applicable compute promotion | **$8–$11** |
-| Existing AWS field test + Ship | **$70–$73+** |
-| Existing AWS field test + Ship during applicable compute promotion | **$58–$61+** |
-
-Recommended budget before activation:
-
-- **$35/month** while the Build plan is sufficient, covering the existing AWS field-
-  test estimate with contingency;
-- **$85/month** before explicitly approving Ship;
-- re-estimate taxes, transfer, provider pricing, and AWS rates immediately before
-  either activation.
-
-Recording, egress, transcription, agents, telephony, enhanced paid noise processing,
-and LiveKit self-hosting are cost and scope violations.
+Any projected recurring spend above **$10/month** requires a dated cost estimate and
+explicit product-owner approval before implementation or activation.
 
 ## Sprint 1 exception boundary
 
