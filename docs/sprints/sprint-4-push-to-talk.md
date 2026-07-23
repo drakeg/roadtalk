@@ -241,33 +241,71 @@ and be locked before route implementation.
 
 ## Cost posture
 
-Pricing was checked on 2026-07-16 against the official LiveKit pricing, quota, and
-billing pages. Prices and allowances must be rechecked immediately before activation.
+RoadTalk adopts a **zero-revenue cost policy**: while the app earns $0, the default
+recurring operating target is as close to $0 as practical. Cost is an architecture
+and acceptance constraint, not an after-the-fact optimization.
 
-| Scenario | AWS/month | LiveKit/month | Combined/month | Authorization |
-|---|---:|---:|---:|---|
-| Planning, implementation, CI; cloud disabled | $0 | $0 | **$0** | Proposed |
-| Controlled media test on LiveKit Build; AWS disabled | $0 | $0 | **$0** | Separate activation approval required |
-| Existing AWS field test + Build | $20–$23 | $0 | **$20–$23** | Separate activation approval and Sprint 1 exceptions required |
-| Existing AWS field test + Build during applicable compute promotion | $8–$11 | $0 | **$8–$11** | Same gates |
-| Existing AWS field test + Ship | $20–$23 | $50 minimum | **$70–$73+** | Explicit paid-plan approval required |
-| Existing AWS field test + Ship during applicable compute promotion | $8–$11 | $50 minimum | **$58–$61+** | Same gate |
+### Hard implementation rules
 
-LiveKit Build is $0/month with hard caps of 5,000 WebRTC participant-minutes, 50 GB
-of downstream data transfer, and 100 concurrent connections. It has no paid overage;
-new requests fail once an allowance is exhausted. Controlled testing therefore stops
-at 3,000 participant-minutes or 10 GB per calendar month, whichever comes first,
-leaving substantial headroom.
+- Planning, local development, deterministic provider tests, and GitHub CI cost
+  **$0/month**.
+- Terraform remains disabled by default and plans zero resources.
+- Sprint 4 creates no AWS or LiveKit resource and stores no live provider credential.
+- No RDS, managed Redis, NAT Gateway, ALB, Fargate, paid observability, LiveKit Ship,
+  recording, egress, transcription, telephony, agents, or self-hosted media.
+- No service may upgrade, scale, attach a payment method, or enable a paid feature
+  automatically.
+- Any change expected to add recurring cost requires a dated estimate and explicit
+  product-owner approval before implementation or activation.
 
-LiveKit Ship starts at $50/month and currently includes 150,000 WebRTC
-participant-minutes and 250 GB downstream transfer; overages are $0.0005 per
-participant-minute and $0.12/GB. RoadTalk will not upgrade automatically. Approval
-requires measured usage, a new cost check, and a monthly budget of at least $85 when
-combined with the existing AWS field-test floor.
+### Activation stages
 
-No recording, egress, transcription, agent, telephony, enhanced-noise, or self-hosted
-feature is enabled. These would create additional meters or infrastructure and require
-a new privacy, security, architecture, and cost decision.
+| Stage | Operating posture | Projected monthly cost |
+|---|---|---:|
+| Code and synthetic CI | Local services and provider fakes only | **$0** |
+| Physical-device media test, backend local | LiveKit Build within free limits; no AWS | **$0** |
+| Scheduled AWS field-test windows | Create/start only for an approved test, then stop or destroy | **about $4–$6 in an active test month** |
+| No-test month, stack destroyed | No AWS or provider resources retained | **$0** |
+| No-test month, disk/backups retained | Compute/network off; storage retained intentionally | **about $3–$5** |
+| Always-on AWS + LiveKit Build | Deferred until justified by demand | **$8–$11 during eligible promotion; $20–$23 afterward** |
+| AWS + LiveKit Ship | Prohibited without a new paid-plan decision | **$70–$73+ floor** |
+
+The scheduled-test estimate assumes the existing low-cost field-test design is active
+only for a limited test window. Actual cost depends on hours, storage retention,
+monitoring, backup requests, and public IPv4 duration. The exact plan must be
+recalculated before every activation.
+
+### Free media limits and RoadTalk ceilings
+
+LiveKit Build is currently $0/month with hard caps of 5,000 WebRTC participant-minutes,
+50 GB downstream transfer, and 100 concurrent connections. It has no paid overage;
+requests fail after an allowance is exhausted.
+
+RoadTalk stops controlled testing at the lower of:
+
+- 3,000 participant-minutes/month;
+- 10 GB downstream transfer/month;
+- 25 concurrent participants;
+- the approved **$10/month initial operating ceiling**.
+
+Connection time, rather than speaking time, is the main participant-minute driver.
+Clients disconnect outside an explicit test. Crossing any ceiling pauses testing;
+it does not trigger an upgrade.
+
+### Budget decisions
+
+- Initial recurring-cost ceiling: **$10/month**.
+- Target for ordinary development and inactive months: **$0/month**.
+- An always-on field test, public beta, LiveKit Ship, or any projected spend above
+  $10/month requires a new written decision.
+- The prior $35 and $85 planning budgets are withdrawn as defaults. They remain only
+  upper scenario references if the product owner later approves always-on Build or
+  Ship operation.
+- No public always-on environment is justified until actual user demand, funding, or
+  a viable revenue path supports it.
+
+Pricing was last checked on 2026-07-16 and must be rechecked immediately before
+activation. No activation is authorized by this sprint approval.
 
 ## Security and privacy constraints
 
