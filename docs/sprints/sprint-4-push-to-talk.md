@@ -2,8 +2,9 @@
 
 ## Status
 
-Proposed — awaiting product-owner approval in issue #90. Planning only; no code or
-cloud activation is authorized.
+Approved — product owner approved the specification, readiness gate, and zero-
+revenue cost policy on 2026-07-23. Local/GitHub CI implementation is authorized
+through tracker #100; cloud activation remains unauthorized.
 
 ## Objective
 
@@ -344,8 +345,8 @@ activation. No activation is authorized by this sprint approval.
 
 ## Approval boundary
 
-Approval in issue #90 locks this baseline and authorizes only local/GitHub CI
-implementation through a newly created tracker. It does not create a LiveKit account
+Approval in issue #90 on 2026-07-23 locks this baseline and authorizes only local/
+GitHub CI implementation through tracker #100. It does not create a LiveKit account
 or project, store a live secret, activate AWS, deploy a field test, approve a paid
 plan, close Sprint 1 exceptions, or authorize Sprint 5 behavior.
 
