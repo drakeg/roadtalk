@@ -2,7 +2,7 @@
 
 All notable RoadTalk changes are recorded here. The repository history and sprint review records remain the detailed source of truth.
 
-## Proposed — Sprint 4: Push-to-Talk
+## Unreleased — Sprint 4: Push-to-Talk
 
 ### Planning
 
@@ -16,10 +16,12 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Proposed metadata-only grants, explicit expiry/release, one-publisher concurrency,
   capture-off-first lifecycle handling, stable failure states, and no audio/token/
   secret persistence or logging.
-- Proposed S04-R01–R12, S04-T01–T12, S04-D01–D09, readiness gates, evidence limits,
-  and planning approval issue #90.
-- No Sprint 4 code, cloud project, secret, AWS resource, or paid plan is authorized
-  until the product owner approves the specification and readiness record.
+- Approved S04-R01–R12, S04-T01–T12, S04-D01–D09, readiness gates, evidence limits,
+  and zero-revenue cost policy on 2026-07-23 through planning issue #90.
+- Created implementation issues #91–#99 and tracker #100; implementation begins with
+  S04-D02.
+- No cloud project, live secret, AWS resource, payment method, paid plan, or recurring
+  spend above $10/month is authorized.
 
 ### Cost controls
 
