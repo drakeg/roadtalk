@@ -61,6 +61,9 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         single_parent=True,
         uselist=False,
     )
+    media_grants: Mapped[list["MediaGrant"]] = relationship(
+        back_populates="account", cascade="all, delete-orphan"
+    )
 
 
 class Device(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -85,6 +88,9 @@ class Device(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     current_locations: Mapped[list["CurrentLocation"]] = relationship(
         back_populates="source_device", passive_deletes=True
+    )
+    media_grants: Mapped[list["MediaGrant"]] = relationship(
+        back_populates="device", passive_deletes=True
     )
 
 
@@ -217,3 +223,73 @@ class CurrentLocation(TimestampMixin, Base):
 
     account: Mapped[Account] = relationship(back_populates="current_location")
     source_device: Mapped[Device] = relationship(back_populates="current_locations")
+
+
+class MediaGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "media_grant"
+    __table_args__ = (
+        CheckConstraint(
+            "grant_kind IN ('receive', 'transmit')",
+            name="grant_kind_allowed",
+        ),
+        CheckConstraint("provider = 'livekit'", name="provider_allowed"),
+        CheckConstraint(
+            "(grant_kind = 'receive' AND action_scope = 'subscribe') OR "
+            "(grant_kind = 'transmit' AND action_scope = 'microphone_publish')",
+            name="kind_scope_consistent",
+        ),
+        CheckConstraint(
+            "(grant_kind = 'receive' AND parent_grant_id IS NULL) OR "
+            "(grant_kind = 'transmit' AND parent_grant_id IS NOT NULL)",
+            name="parent_consistent",
+        ),
+        CheckConstraint("length(provider_room_ref) > 0", name="room_ref_present"),
+        CheckConstraint(
+            "length(provider_participant_ref) > 0",
+            name="participant_ref_present",
+        ),
+        CheckConstraint("length(policy_version) > 0", name="policy_version_present"),
+        CheckConstraint("expires_at > issued_at", name="expiry_after_issue"),
+        CheckConstraint(
+            "revoked_at IS NULL OR revoked_at >= issued_at",
+            name="revocation_after_issue",
+        ),
+        Index(
+            "ix_media_grant_account_kind_expires",
+            "account_id",
+            "grant_kind",
+            "expires_at",
+        ),
+        Index("ix_media_grant_device_id", "device_id"),
+        Index("ix_media_grant_parent_grant_id", "parent_grant_id"),
+        Index(
+            "ix_media_grant_provider_participant",
+            "provider_room_ref",
+            "provider_participant_ref",
+        ),
+    )
+
+    account_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE")
+    )
+    device_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("device.id", ondelete="CASCADE")
+    )
+    parent_grant_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("media_grant.id", ondelete="CASCADE")
+    )
+    grant_kind: Mapped[str] = mapped_column(String(16))
+    provider: Mapped[str] = mapped_column(
+        String(16), default="livekit", server_default="livekit"
+    )
+    provider_room_ref: Mapped[str] = mapped_column(String(128))
+    provider_participant_ref: Mapped[str] = mapped_column(String(128))
+    action_scope: Mapped[str] = mapped_column(String(32))
+    policy_version: Mapped[str] = mapped_column(String(32))
+    issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    outcome_code: Mapped[str | None] = mapped_column(String(64))
+
+    account: Mapped[Account] = relationship(back_populates="media_grants")
+    device: Mapped[Device] = relationship(back_populates="media_grants")
