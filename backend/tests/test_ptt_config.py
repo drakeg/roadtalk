@@ -25,9 +25,7 @@ def test_ptt_provider_is_disabled_and_secret_free_by_default() -> None:
         ("ptt_livekit_api_secret", SecretStr("synthetic-secret")),
     ],
 )
-def test_disabled_ptt_rejects_stray_provider_configuration(
-    field: str, value: object
-) -> None:
+def test_disabled_ptt_rejects_stray_provider_configuration(field: str, value: object) -> None:
     with pytest.raises(ValidationError, match="must not configure"):
         Settings(environment="test", **{field: value})
 
