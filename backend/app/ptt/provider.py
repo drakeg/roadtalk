@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Protocol
+from typing import NoReturn, Protocol
 
 from pydantic import SecretStr
 
@@ -60,7 +60,7 @@ class MediaProvider(Protocol):
 
 
 class DisabledMediaProvider:
-    def _raise(self) -> None:
+    def _raise(self) -> NoReturn:
         raise MediaProviderDisabledError("PTT media provider is disabled")
 
     async def issue_receive_credential(
