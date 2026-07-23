@@ -214,6 +214,24 @@ S03-D02 implements the approved minimum persistence boundary:
 - No history, presence, cache, event stream, location read API, or cloud resource is
   introduced by the persistence deliverable.
 
+### Sprint 4 metadata-only grant implementation
+
+S04-D02 implements the approved persistence and provider boundary:
+
+- `media_grant` stores opaque account/device ownership, optional parent receive grant,
+  provider room/participant references, receive/transmit kind, action scope, policy
+  version, issue/expiry/revocation timestamps, and a stable technical outcome code.
+- Database constraints bind receive grants to `subscribe`, transmit grants to
+  `microphone_publish`, and transmit grants to a parent receive grant.
+- Account, device, and parent deletion cascade; expiry and ownership indexes support
+  later authorization without a cache or background worker.
+- No signed token, provider secret, audio, transcript, coordinates, callsign, listener
+  membership, recording, egress, or provider payload is persisted.
+- Media configuration defaults to disabled and rejects stray URL/key/secret values.
+  CI uses a deterministic no-network fake; a live adapter is intentionally absent.
+- This deliverable adds no LiveKit SDK, AWS resource, managed service, or recurring
+  cost.
+
 ## Retention baseline
 
 | Data | Initial rule |
