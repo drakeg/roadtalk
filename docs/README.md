@@ -7,13 +7,14 @@
 - [Original RoadTalk Development Plan](reference/RoadTalk_Development_Plan.docx)
 - [Agile Workflow](AGILE_WORKFLOW.md)
 
-## Sprint 4 — Push-to-Talk (planning; approval required)
+## Sprint 4 — Push-to-Talk (approved; implementation active)
 
-- [Sprint 4: Push-to-Talk](sprints/sprint-4-push-to-talk.md) — PROPOSED
-- [Sprint 4 readiness](sprints/sprint-4-readiness.md) — NOT READY
-- Planning/approval issue [#90](https://github.com/drakeg/roadtalk/issues/90)
-- Default planning and proposed local/CI implementation cost: $0 AWS + $0 LiveKit
-- No code, provider activation, AWS activation, or paid plan is authorized yet
+- [Sprint 4: Push-to-Talk](sprints/sprint-4-push-to-talk.md) — APPROVED
+- [Sprint 4 readiness](sprints/sprint-4-readiness.md) — READY
+- Completed planning/approval issue [#90](https://github.com/drakeg/roadtalk/issues/90)
+- Implementation tracker [#100](https://github.com/drakeg/roadtalk/issues/100)
+- Current and incremental local/CI implementation cost: $0 AWS + $0 LiveKit
+- Cloud activation, paid plans, and recurring spend above $10/month remain unauthorized
 
 ## Sprint 3 — Location (complete)
 
