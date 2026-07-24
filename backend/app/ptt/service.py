@@ -321,12 +321,14 @@ async def create_transmit_grant(
         ),
         outcome_code="issued",
     )
+    room_ref = receive.provider_room_ref
+    participant_ref = receive.provider_participant_ref
     db.add(grant)
     try:
         await provider.set_microphone_publish(
             MicrophonePublishRequest(
-                room_ref=receive.provider_room_ref,
-                participant_ref=receive.provider_participant_ref,
+                room_ref=room_ref,
+                participant_ref=participant_ref,
                 enabled=True,
             )
         )
@@ -336,8 +338,8 @@ async def create_transmit_grant(
         try:
             await provider.set_microphone_publish(
                 MicrophonePublishRequest(
-                    room_ref=receive.provider_room_ref,
-                    participant_ref=receive.provider_participant_ref,
+                    room_ref=room_ref,
+                    participant_ref=participant_ref,
                     enabled=False,
                 )
             )
