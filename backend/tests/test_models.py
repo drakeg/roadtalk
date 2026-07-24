@@ -11,6 +11,7 @@ def test_active_sprint_tables_are_registered() -> None:
         "current_location",
         "device",
         "location_consent_event",
+        "media_grant",
         "profile",
         "recovery_credential",
         "session",
