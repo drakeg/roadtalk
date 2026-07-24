@@ -30,6 +30,13 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
   revocation, stable outcomes, fail-closed constraints, and authorization indexes.
 - Disabled-by-default PTT media configuration that rejects stray provider credentials,
   plus a typed no-network provider protocol and deterministic CI fake.
+- Authenticated receive-only grant creation and release endpoints with server-derived
+  ownership and provider references, hashed idempotency keys, bounded process-local
+  rate controls, one-time synthetic participant tokens, and replay responses that
+  never reissue or persist a token.
+- Synthetic LiveKit claim tests that allow room join/subscribe while explicitly
+  denying media/data publication, room administration, recording, and egress-related
+  capabilities.
 - No LiveKit SDK, live provider call, token/secret/audio storage, AWS resource, managed
   service, payment method, or incremental recurring cost.
 
