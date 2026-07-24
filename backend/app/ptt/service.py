@@ -174,7 +174,13 @@ async def create_receive_grant(
         ) from exc
     await db.refresh(grant)
     return ReceiveGrantReceipt(
-        **_receipt(grant, replayed=False).__dict__,
+        grant_id=grant.id,
+        room_ref=grant.provider_room_ref,
+        participant_ref=grant.provider_participant_ref,
+        issued_at=grant.issued_at,
+        expires_at=grant.expires_at,
+        policy_version=grant.policy_version,
+        replayed=False,
         server_url=credential.server_url,
         participant_token=credential.participant_token.get_secret_value(),
     )
