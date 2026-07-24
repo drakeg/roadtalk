@@ -167,6 +167,9 @@ async def _receive_grant_lifecycle() -> None:
                 True,
                 False,
             ]
+            await db.refresh(account)
+            await db.refresh(device)
+            await db.refresh(other_device)
             assert (
                 await db.scalar(
                     select(func.count())
