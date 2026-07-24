@@ -11,6 +11,7 @@ from app.auth.schemas import AnonymousSessionRequest, AnonymousSessionResponse, 
 from app.auth.security import hash_refresh_token, issue_access_token, new_refresh_token
 from app.config import Settings
 from app.db.models import Account, Device, Session
+from app.ptt.service import revoke_device_transmit_grants
 
 
 class AuthenticationError(ValueError):
@@ -168,6 +169,13 @@ async def revoke_session(db: AsyncSession, session: Session, reason: str) -> Non
     if session.revoked_at is None:
         session.revoked_at = utcnow()
         session.revoke_reason = reason
+        await revoke_device_transmit_grants(
+            db,
+            account_id=session.account_id,
+            device_id=session.device_id,
+            reason="session_revoked",
+            now=session.revoked_at,
+        )
         await db.commit()
 
 
@@ -186,6 +194,12 @@ async def revoke_device_sessions(
             Session.revoked_at.is_(None),
         )
         .values(revoked_at=utcnow(), revoke_reason="device_revoked")
+    )
+    await revoke_device_transmit_grants(
+        db,
+        account_id=account_id,
+        device_id=device_id,
+        reason="device_revoked",
     )
     await db.commit()
     return cast(int, cast(Any, result).rowcount or 0)

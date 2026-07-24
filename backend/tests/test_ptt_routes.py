@@ -16,7 +16,12 @@ from app.config import Settings
 from app.db.models import Account, Device, Session
 from app.db.session import get_session
 from app.main import create_app
-from app.ptt.service import GrantError, GrantReleaseReceipt, ReceiveGrantReceipt
+from app.ptt.service import (
+    GrantError,
+    GrantReleaseReceipt,
+    ReceiveGrantReceipt,
+    TransmitGrantReceipt,
+)
 
 IDEMPOTENCY_KEY = "synthetic-key-0001"
 
@@ -65,13 +70,15 @@ def authenticated_application(*, receive_limit: int = 10) -> FastAPI:
     return application
 
 
-def test_ptt_openapi_is_receive_only_authenticated_and_exact() -> None:
+def test_ptt_openapi_is_authenticated_and_server_controlled() -> None:
     schema = create_app(settings()).openapi()
     create = schema["paths"]["/api/v1/ptt/grants"]["post"]
     release = schema["paths"]["/api/v1/ptt/grants/{grant_id}"]["delete"]
+    transmit = schema["paths"]["/api/v1/ptt/grants/{receive_grant_id}/transmit"]["post"]
 
     assert create["security"] == [{"HTTPBearer": []}]
     assert release["security"] == [{"HTTPBearer": []}]
+    assert transmit["security"] == [{"HTTPBearer": []}]
     assert create["tags"] == ["push-to-talk"]
     assert release["tags"] == ["push-to-talk"]
     properties = schema["components"]["schemas"]["ReceiveGrantRequest"]["properties"]
@@ -91,6 +98,20 @@ def test_ptt_openapi_is_receive_only_authenticated_and_exact() -> None:
         "replayed",
         "server_url",
         "participant_token",
+    }
+    transmit_properties = schema["components"]["schemas"]["TransmitGrantRequest"]["properties"]
+    assert transmit_properties == {}
+    transmit_response = schema["components"]["schemas"]["TransmitGrantResponse"]["properties"]
+    assert set(transmit_response) == {
+        "grant_id",
+        "receive_grant_id",
+        "mode",
+        "allowed_actions",
+        "allowed_track_sources",
+        "issued_at",
+        "expires_at",
+        "policy_version",
+        "replayed",
     }
 
 
@@ -147,7 +168,7 @@ def test_receive_creation_returns_token_once_and_release_is_idempotent(
         )
 
     monkeypatch.setattr(ptt_api, "create_receive_grant", create)
-    monkeypatch.setattr(ptt_api, "release_receive_grant", release)
+    monkeypatch.setattr(ptt_api, "release_owned_grant", release)
     application = authenticated_application()
     headers = {"Idempotency-Key": IDEMPOTENCY_KEY}
 
@@ -165,6 +186,47 @@ def test_receive_creation_returns_token_once_and_release_is_idempotent(
     combined = replay.text + released.text
     assert "synthetic-one-time-token" not in combined
     assert "ptt-route-synthetic" not in combined
+
+
+def test_transmit_is_microphone_only_and_returns_no_provider_credential(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    now = datetime(2026, 7, 24, 1, tzinfo=UTC)
+    receive_grant_id = uuid.uuid4()
+    calls = 0
+
+    async def create(*args: object, **kwargs: object) -> TransmitGrantReceipt:
+        nonlocal calls
+        calls += 1
+        return TransmitGrantReceipt(
+            grant_id=uuid.uuid4(),
+            receive_grant_id=receive_grant_id,
+            issued_at=now,
+            expires_at=now + timedelta(seconds=30),
+            policy_version="ptt-v1",
+            replayed=calls > 1,
+        )
+
+    monkeypatch.setattr(ptt_api, "create_transmit_grant", create)
+    application = authenticated_application()
+    path = f"/api/v1/ptt/grants/{receive_grant_id}/transmit"
+    headers = {"Idempotency-Key": IDEMPOTENCY_KEY}
+    with TestClient(application) as client:
+        initial = client.post(path, json={}, headers=headers)
+        replay = client.post(path, json={}, headers=headers)
+        overposted = client.post(
+            path,
+            json={"can_publish_data": True, "track_source": "camera"},
+            headers={"Idempotency-Key": "synthetic-key-0002"},
+        )
+
+    assert initial.status_code == 201
+    assert initial.json()["allowed_track_sources"] == ["microphone"]
+    assert initial.json()["allowed_actions"] == ["publish"]
+    assert replay.status_code == 200
+    assert overposted.status_code == 422
+    assert "token" not in initial.text
+    assert "server_url" not in initial.text
 
 
 def test_receive_overposting_and_rate_limit_fail_closed(

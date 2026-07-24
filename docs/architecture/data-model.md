@@ -235,6 +235,14 @@ S04-D02 implements the approved persistence and provider boundary:
 - This deliverable adds no LiveKit SDK, AWS resource, managed service, or recurring
   cost.
 
+S04-D04 uses the existing transmit rows without adding a migration. Account-row
+locking serializes publisher authorization; only one non-revoked, non-expired
+transmit grant may be active for an account/device. Each transmit row references its
+caller-owned receive row and copies only opaque provider references. Provider
+promotion must succeed before the row is committed. Release and authentication
+revocation mark local authorization denied before provider cleanup, so uncertain
+provider outcomes never restore local permission.
+
 ## Retention baseline
 
 | Data | Initial rule |

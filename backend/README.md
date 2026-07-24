@@ -1,6 +1,6 @@
 # Backend
 
-Sprint 4 active owner: S04-D03 Receive grant API.
+Sprint 4 active owner: S04-D04 Transmit authorization and revocation.
 
 The backend is a Python/FastAPI modular-monolith control API.
 
@@ -63,6 +63,13 @@ one-time participant token are never stored or logged. Replays return the origin
 grant metadata without another credential. A bounded process-local limiter covers
 peer, account, and device dimensions, while the live provider remains disabled.
 
+S04-D04 adds nested transmit authorization for an active caller-owned receive grant.
+The server alone selects the existing opaque participant, microphone-only scope,
+policy, and expiry. Provider promotion must succeed before local authorization is
+committed; ambiguous outcomes roll back locally and attempt immediate deny
+reconciliation. Release, expiry, receive release, logout, and device revocation
+invalidate publication without a worker or scheduler.
+
 ## Local setup
 
 From the repository root:
@@ -103,7 +110,8 @@ The API listens on `127.0.0.1:8000` by default.
 | `DELETE /api/v1/me/location` | Idempotently pause/remove the authenticated account's current sample. |
 | `GET /api/v1/nearby/summary` | Return only caller-relative availability, coarse bucket, freshness, and caller expiry. |
 | `POST /api/v1/ptt/grants` | Create a receive-only grant for the server-controlled opaque room. |
-| `DELETE /api/v1/ptt/grants/{grant_id}` | Idempotently release an owned receive grant. |
+| `POST /api/v1/ptt/grants/{receive_grant_id}/transmit` | Promote an owned active participant to microphone-only publication for at most 30 seconds. |
+| `DELETE /api/v1/ptt/grants/{grant_id}` | Idempotently release an owned receive or transmit grant. |
 
 ## Checks
 

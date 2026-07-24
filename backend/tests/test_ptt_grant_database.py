@@ -8,8 +8,21 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.config import Settings
 from app.db.models import Account, Device, MediaGrant
-from app.ptt.provider import FakeMediaProvider
-from app.ptt.service import GrantError, create_receive_grant, release_receive_grant
+from app.ptt.provider import FakeMediaProvider, MediaProviderError, MicrophonePublishRequest
+from app.ptt.service import (
+    GrantError,
+    create_receive_grant,
+    create_transmit_grant,
+    release_receive_grant,
+    release_transmit_grant,
+)
+
+
+class FailingPublishProvider(FakeMediaProvider):
+    async def set_microphone_publish(self, request: MicrophonePublishRequest) -> None:
+        self.publish_requests.append(request)
+        if request.enabled:
+            raise MediaProviderError("synthetic ambiguous provider failure")
 
 
 @pytest.mark.skipif(
@@ -75,6 +88,93 @@ async def _receive_grant_lifecycle() -> None:
                     select(func.count())
                     .select_from(MediaGrant)
                     .where(MediaGrant.account_id == account.id)
+                )
+                == 1
+            )
+
+            transmit = await create_transmit_grant(
+                db,
+                account_id=account.id,
+                device_id=device.id,
+                receive_grant_id=created.grant_id,
+                idempotency_key="database-transmit-key-0001",
+                settings=settings,
+                provider=provider,
+                now=now,
+            )
+            transmit_replay = await create_transmit_grant(
+                db,
+                account_id=account.id,
+                device_id=device.id,
+                receive_grant_id=created.grant_id,
+                idempotency_key="database-transmit-key-0001",
+                settings=settings,
+                provider=provider,
+                now=now,
+            )
+            assert transmit.replayed is False
+            assert transmit_replay.grant_id == transmit.grant_id
+            assert transmit_replay.replayed is True
+            assert sum(request.enabled for request in provider.publish_requests) == 1
+
+            with pytest.raises(GrantError) as busy:
+                await create_transmit_grant(
+                    db,
+                    account_id=account.id,
+                    device_id=device.id,
+                    receive_grant_id=created.grant_id,
+                    idempotency_key="database-transmit-key-0002",
+                    settings=settings,
+                    provider=provider,
+                    now=now,
+                )
+            assert busy.value.code == "PTT_TRANSMIT_BUSY"
+
+            transmit_release = await release_transmit_grant(
+                db,
+                account_id=account.id,
+                device_id=device.id,
+                grant_id=transmit.grant_id,
+                provider=provider,
+                now=now,
+            )
+            transmit_release_replay = await release_transmit_grant(
+                db,
+                account_id=account.id,
+                device_id=device.id,
+                grant_id=transmit.grant_id,
+                provider=provider,
+                now=now,
+            )
+            assert transmit_release.replayed is False
+            assert transmit_release_replay.replayed is True
+            assert provider.publish_requests[-1].enabled is False
+
+            failing_provider = FailingPublishProvider(now=lambda: now)
+            with pytest.raises(GrantError) as provider_failure:
+                await create_transmit_grant(
+                    db,
+                    account_id=account.id,
+                    device_id=device.id,
+                    receive_grant_id=created.grant_id,
+                    idempotency_key="database-transmit-key-failure",
+                    settings=settings,
+                    provider=failing_provider,
+                    now=now,
+                )
+            assert provider_failure.value.code == "PTT_PROVIDER_UNAVAILABLE"
+            assert [request.enabled for request in failing_provider.publish_requests] == [
+                True,
+                False,
+            ]
+            assert (
+                await db.scalar(
+                    select(func.count())
+                    .select_from(MediaGrant)
+                    .where(
+                        MediaGrant.account_id == account.id,
+                        MediaGrant.grant_kind == "transmit",
+                    )
                 )
                 == 1
             )

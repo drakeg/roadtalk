@@ -37,6 +37,10 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Synthetic LiveKit claim tests that allow room join/subscribe while explicitly
   denying media/data publication, room administration, recording, and egress-related
   capabilities.
+- Nested transmit authorization for an active caller-owned receive grant, with
+  microphone-only provider promotion, one active publisher, 30-second expiry,
+  idempotent revocation, receive-release cascade, and failure-closed reconciliation.
+- Logout and owned-device revocation synchronously invalidate local transmit grants.
 - No LiveKit SDK, live provider call, token/secret/audio storage, AWS resource, managed
   service, payment method, or incremental recurring cost.
 

@@ -61,6 +61,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.ptt_limiter = PttLimiter(
         receive_limit=resolved.ptt_receive_grant_limit,
         receive_window_seconds=resolved.ptt_receive_grant_window_seconds,
+        transmit_limit=resolved.ptt_transmit_grant_limit,
+        transmit_window_seconds=resolved.ptt_transmit_grant_window_seconds,
     )
     app.state.media_provider = media_provider_from_settings(resolved)
     if resolved.database_check_enabled:
