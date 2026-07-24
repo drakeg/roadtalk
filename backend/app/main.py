@@ -7,6 +7,7 @@ from app.api.auth import router as auth_router
 from app.api.identity import router as identity_router
 from app.api.location import nearby_router
 from app.api.location import router as location_router
+from app.api.ptt import router as ptt_router
 from app.api.recovery import router as recovery_router
 from app.api.system import router as system_router
 from app.config import Settings, get_settings
@@ -17,6 +18,8 @@ from app.location.limiter import LocationLimiter
 from app.logging import configure_logging
 from app.middleware import RequestContextMiddleware
 from app.problems import install_problem_handlers
+from app.ptt.limiter import PttLimiter
+from app.ptt.provider import media_provider_from_settings
 from app.recovery.limiter import RecoveryLimiter
 
 
@@ -55,6 +58,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         nearby_read_limit=resolved.location_nearby_read_limit,
         nearby_read_window_seconds=resolved.location_nearby_read_window_seconds,
     )
+    app.state.ptt_limiter = PttLimiter(
+        receive_limit=resolved.ptt_receive_grant_limit,
+        receive_window_seconds=resolved.ptt_receive_grant_window_seconds,
+    )
+    app.state.media_provider = media_provider_from_settings(resolved)
     if resolved.database_check_enabled:
         app.state.readiness.register("database", check_database)
     app.add_middleware(RequestContextMiddleware, settings=resolved)
@@ -65,6 +73,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(recovery_router)
     app.include_router(location_router)
     app.include_router(nearby_router)
+    app.include_router(ptt_router)
     return app
 
 

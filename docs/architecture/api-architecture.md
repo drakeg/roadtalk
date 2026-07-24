@@ -115,8 +115,8 @@ Private channels are not implemented until Sprint 6.
 
 | Endpoint | Method | Purpose |
 |---|---|---|
-| `/ptt/grants` | POST | Evaluate channel, proximity, presence, rate, mute/block, and policy rules; return scoped LiveKit grant. |
-| `/ptt/grants/{grant_id}` | DELETE | Release/revoke the caller's grant. |
+| `/ptt/grants` | POST | Create an authenticated receive-only grant for the opaque controlled room; server derives ownership, room, participant, scope, policy, and TTL. |
+| `/ptt/grants/{grant_id}` | DELETE | Idempotently release the caller/device-owned receive grant and remove its participant. |
 | `/ptt/transmissions/{transmission_id}/feedback` | POST | Record technical outcome or later moderation reference; never audio. |
 
 Grant response includes:
@@ -183,6 +183,9 @@ Any unknown foundational state fails closed.
 - Anonymous-session creation, channel changes, grant creation, feedback, and deletion requests accept idempotency keys.
 - Keys are scoped to account, route, and normalized request hash.
 - Reusing a key with a different body returns a conflict.
+- PTT stores only a SHA-256 key digest and normalized-request fingerprint. The raw
+  key and one-time participant token are never persisted or logged; successful replay
+  returns the original metadata without reissuing credentials.
 - Location updates use client sequence plus server version; older samples are rejected.
 - Mutable resources carry `version` and support conditional updates.
 - PTT uses one active publishing grant per account/device unless a later requirement changes it.

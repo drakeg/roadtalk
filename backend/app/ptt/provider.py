@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import NoReturn, Protocol
 
+import jwt
 from pydantic import SecretStr
 
 from app.config import Settings
@@ -93,10 +94,31 @@ class FakeMediaProvider:
         self, request: ReceiveCredentialRequest
     ) -> ReceiveCredential:
         self.receive_requests.append(request)
+        issued_at = self._now()
+        expires_at = issued_at + timedelta(seconds=request.ttl_seconds)
+        token = jwt.encode(
+            {
+                "iss": "synthetic-livekit-key",
+                "sub": request.participant_ref,
+                "nbf": int(issued_at.timestamp()),
+                "exp": int(expires_at.timestamp()),
+                "video": {
+                    "room": request.room_ref,
+                    "roomJoin": True,
+                    "canSubscribe": True,
+                    "canPublish": False,
+                    "canPublishData": False,
+                    "roomAdmin": False,
+                    "recorder": False,
+                },
+            },
+            "synthetic-livekit-secret-for-tests-only",
+            algorithm="HS256",
+        )
         return ReceiveCredential(
             server_url="wss://synthetic.invalid",
-            participant_token=SecretStr(f"synthetic-provider-token::{request.participant_ref}"),
-            expires_at=self._now() + timedelta(seconds=request.ttl_seconds),
+            participant_token=SecretStr(token),
+            expires_at=expires_at,
         )
 
     async def set_microphone_publish(self, request: MicrophonePublishRequest) -> None:

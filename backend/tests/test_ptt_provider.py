@@ -1,6 +1,7 @@
 import asyncio
 from datetime import UTC, datetime
 
+import jwt
 import pytest
 from pydantic import SecretStr
 
@@ -76,7 +77,25 @@ def test_fake_provider_is_deterministic_and_masks_token() -> None:
         assert credential.server_url == "wss://synthetic.invalid"
         assert credential.expires_at.timestamp() - fixed_now.timestamp() == 300
         assert isinstance(credential.participant_token, SecretStr)
-        assert "synthetic-provider-token" not in repr(credential)
+        assert credential.participant_token.get_secret_value() not in repr(credential)
+        claims = jwt.decode(
+            credential.participant_token.get_secret_value(),
+            "synthetic-livekit-secret-for-tests-only",
+            algorithms=["HS256"],
+            options={"verify_aud": False, "verify_exp": False, "verify_nbf": False},
+        )
+        assert claims["sub"] == request.participant_ref
+        assert claims["video"] == {
+            "room": request.room_ref,
+            "roomJoin": True,
+            "canSubscribe": True,
+            "canPublish": False,
+            "canPublishData": False,
+            "roomAdmin": False,
+            "recorder": False,
+        }
+        assert "roomRecord" not in claims["video"]
+        assert "egress" not in claims["video"]
 
     asyncio.run(exercise())
 

@@ -30,6 +30,8 @@ def test_media_grant_is_metadata_only_and_account_device_owned() -> None:
         provider_participant_ref="participant_opaque_1",
         action_scope="subscribe",
         policy_version="ptt-v1",
+        idempotency_key_hash="a" * 64,
+        request_fingerprint="b" * 64,
         issued_at=now,
         expires_at=now + timedelta(minutes=5),
     )
@@ -74,6 +76,8 @@ def test_media_grant_constraints_and_indexes_fail_closed() -> None:
         "ck_media_grant_room_ref_present",
         "ck_media_grant_participant_ref_present",
         "ck_media_grant_policy_version_present",
+        "ck_media_grant_idempotency_hash_valid",
+        "ck_media_grant_request_fingerprint_valid",
         "ck_media_grant_expiry_after_issue",
         "ck_media_grant_revocation_after_issue",
     } <= checks
@@ -82,6 +86,7 @@ def test_media_grant_constraints_and_indexes_fail_closed() -> None:
         "ix_media_grant_device_id",
         "ix_media_grant_parent_grant_id",
         "ix_media_grant_provider_participant",
+        "uq_media_grant_account_kind_idempotency",
     }
 
 
@@ -99,6 +104,8 @@ def test_transmit_grant_references_receive_grant_without_media_content() -> None
         provider_participant_ref="participant_opaque_1",
         action_scope="microphone_publish",
         policy_version="ptt-v1",
+        idempotency_key_hash="c" * 64,
+        request_fingerprint="d" * 64,
         issued_at=now,
         expires_at=now + timedelta(seconds=30),
     )
