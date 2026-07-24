@@ -61,6 +61,14 @@ class Settings(BaseSettings):
     location_nearby_read_window_seconds: int = Field(default=60, ge=1, le=3_600)
     location_nearby_radius_m: float = Field(default=5_000, gt=0, le=100_000)
     location_nearby_many_threshold: int = Field(default=5, ge=2, le=100)
+    ptt_policy_version: str = Field(default="ptt-v1", min_length=1, max_length=32)
+    ptt_receive_grant_ttl_seconds: int = Field(default=300, ge=30, le=900)
+    ptt_transmit_grant_ttl_seconds: int = Field(default=30, ge=5, le=60)
+    ptt_media_provider_enabled: bool = False
+    ptt_media_provider: Literal["disabled", "livekit"] = "disabled"
+    ptt_livekit_url: str | None = None
+    ptt_livekit_api_key: SecretStr | None = None
+    ptt_livekit_api_secret: SecretStr | None = None
 
     @model_validator(mode="after")
     def validate_location_policy(self) -> Self:
@@ -72,6 +80,29 @@ class Settings(BaseSettings):
             raise ValueError(
                 "location_degraded_ttl_seconds must not exceed location_usable_ttl_seconds"
             )
+        if self.ptt_transmit_grant_ttl_seconds > self.ptt_receive_grant_ttl_seconds:
+            raise ValueError(
+                "ptt_transmit_grant_ttl_seconds must not exceed ptt_receive_grant_ttl_seconds"
+            )
+
+        livekit_values = (
+            self.ptt_livekit_url,
+            self.ptt_livekit_api_key,
+            self.ptt_livekit_api_secret,
+        )
+        if not self.ptt_media_provider_enabled:
+            if self.ptt_media_provider != "disabled" or any(
+                value is not None for value in livekit_values
+            ):
+                raise ValueError("disabled PTT media must not configure a provider or credentials")
+            return self
+
+        if self.ptt_media_provider != "livekit":
+            raise ValueError("enabled PTT media requires the livekit provider")
+        if any(value is None for value in livekit_values):
+            raise ValueError("enabled PTT media requires URL, API key, and API secret")
+        if not self.ptt_livekit_url or not self.ptt_livekit_url.startswith("wss://"):
+            raise ValueError("PTT LiveKit URL must use wss://")
         return self
 
 

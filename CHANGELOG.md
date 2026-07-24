@@ -23,6 +23,16 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - No cloud project, live secret, AWS resource, payment method, paid plan, or recurring
   spend above $10/month is authorized.
 
+### Added
+
+- Metadata-only `media_grant` persistence with account/device ownership, receive/
+  transmit parentage, opaque provider references, scoped actions, policy, expiry,
+  revocation, stable outcomes, fail-closed constraints, and authorization indexes.
+- Disabled-by-default PTT media configuration that rejects stray provider credentials,
+  plus a typed no-network provider protocol and deterministic CI fake.
+- No LiveKit SDK, live provider call, token/secret/audio storage, AWS resource, managed
+  service, payment method, or incremental recurring cost.
+
 ### Cost controls
 
 - Planning and proposed local/GitHub CI implementation remain **$0 AWS + $0 LiveKit**.
