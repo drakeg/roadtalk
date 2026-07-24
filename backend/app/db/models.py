@@ -249,6 +249,8 @@ class MediaGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             name="participant_ref_present",
         ),
         CheckConstraint("length(policy_version) > 0", name="policy_version_present"),
+        CheckConstraint("length(idempotency_key_hash) = 64", name="idempotency_hash_valid"),
+        CheckConstraint("length(request_fingerprint) = 64", name="request_fingerprint_valid"),
         CheckConstraint("expires_at > issued_at", name="expiry_after_issue"),
         CheckConstraint(
             "revoked_at IS NULL OR revoked_at >= issued_at",
@@ -262,6 +264,13 @@ class MediaGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         ),
         Index("ix_media_grant_device_id", "device_id"),
         Index("ix_media_grant_parent_grant_id", "parent_grant_id"),
+        Index(
+            "uq_media_grant_account_kind_idempotency",
+            "account_id",
+            "grant_kind",
+            "idempotency_key_hash",
+            unique=True,
+        ),
         Index(
             "ix_media_grant_provider_participant",
             "provider_room_ref",
@@ -280,6 +289,8 @@ class MediaGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     provider_participant_ref: Mapped[str] = mapped_column(String(128))
     action_scope: Mapped[str] = mapped_column(String(32))
     policy_version: Mapped[str] = mapped_column(String(32))
+    idempotency_key_hash: Mapped[str] = mapped_column(String(64))
+    request_fingerprint: Mapped[str] = mapped_column(String(64))
     issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
