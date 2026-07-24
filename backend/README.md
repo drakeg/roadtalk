@@ -1,6 +1,6 @@
 # Backend
 
-Sprint 3 active owner: S03-D05 Coarse nearby summary.
+Sprint 4 active owner: S04-D03 Receive grant API.
 
 The backend is a Python/FastAPI modular-monolith control API.
 
@@ -56,6 +56,13 @@ GiST-indexed PostGIS `ST_DWithin` predicate. The response contains only availabi
 a `none`/`few`/`many` bucket, freshness, and the caller's expiry boundary. Exact
 counts, thresholds, identities, coordinates, distances, and bearings remain private.
 
+S04-D03 adds authenticated receive-only PTT grant creation and release. Ownership,
+the controlled room, opaque participant reference, provider scope, policy, and TTL
+are server-derived. Only SHA-256 idempotency metadata is persisted; the raw key and
+one-time participant token are never stored or logged. Replays return the original
+grant metadata without another credential. A bounded process-local limiter covers
+peer, account, and device dimensions, while the live provider remains disabled.
+
 ## Local setup
 
 From the repository root:
@@ -95,6 +102,8 @@ The API listens on `127.0.0.1:8000` by default.
 | `PUT /api/v1/me/location` | Submit one validated current foreground sample; response omits coordinates. |
 | `DELETE /api/v1/me/location` | Idempotently pause/remove the authenticated account's current sample. |
 | `GET /api/v1/nearby/summary` | Return only caller-relative availability, coarse bucket, freshness, and caller expiry. |
+| `POST /api/v1/ptt/grants` | Create a receive-only grant for the server-controlled opaque room. |
+| `DELETE /api/v1/ptt/grants/{grant_id}` | Idempotently release an owned receive grant. |
 
 ## Checks
 
