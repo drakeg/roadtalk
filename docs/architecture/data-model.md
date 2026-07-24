@@ -223,6 +223,9 @@ S04-D02 implements the approved persistence and provider boundary:
   version, issue/expiry/revocation timestamps, and a stable technical outcome code.
 - Database constraints bind receive grants to `subscribe`, transmit grants to
   `microphone_publish`, and transmit grants to a parent receive grant.
+- Grant idempotency stores fixed-length SHA-256 digests for the client key and
+  normalized request. A unique account/kind/key index prevents duplicate grants
+  without retaining the raw key or any provider token.
 - Account, device, and parent deletion cascade; expiry and ownership indexes support
   later authorization without a cache or background worker.
 - No signed token, provider secret, audio, transcript, coordinates, callsign, listener
