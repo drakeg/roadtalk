@@ -1,7 +1,7 @@
 # Mobile
 
-Current owner: S03-D09 review. The retained identity and recovery flows were delivered by
-S02-D05, S02-D06, and S02-D08.
+Current owner: S04-D05 mobile microphone and media foundation. The retained identity,
+recovery, and foreground-location flows were delivered by S02-D05–D08 and S03-D05–D07.
 
 This directory contains the Expo/React Native/TypeScript development-build application.
 
@@ -34,6 +34,38 @@ The current application provides:
 - owner-only, non-authoritative accuracy, heading, speed, and freshness display
 - semantic `none`, `few`, or `many` nearby awareness with no identity or exact value
 - bounded nearby polling that stops with the foreground location lifecycle
+- purpose-before-permission microphone onboarding with denied, blocked, unavailable,
+  retry, and settings guidance
+- pinned LiveKit Expo development-build dependencies behind a fakeable room adapter
+- receive-only room join and remote-audio subscription with microphone capture off
+- deterministic room, audio-session, and grant cleanup on every lifecycle exit
+
+## Microphone and receive-ready media
+
+Authenticated users can open **Microphone and live audio** and review the purpose,
+storage limits, and receive-ready behavior before the operating-system prompt. The
+prompt is requested only after **Enable live audio**. The user can continue without
+audio, retry a denial, or open device settings after the platform blocks another
+request.
+
+The controller joins only after the app, screen, and authenticated session are active.
+It accepts only a server response scoped to `join` and `subscribe` with no allowed
+track sources. The LiveKit adapter starts a foreground audio session, subscribes to
+remote audio, and explicitly keeps the local microphone disabled. Backgrounding,
+screen exit, logout, device revocation, account/session loss, explicit disconnect,
+connection failure, and unmount disconnect the room, stop the audio session, and
+release the short-lived receive grant.
+
+The Expo configuration uses a RoadTalk-owned audio-only WebRTC plugin because the
+generic plugin requests camera, overlay, and wake-lock capabilities that this sprint
+forbids. Resolved iOS and Android prebuilds contain the purpose-accurate microphone
+description and foreground audio permissions only; camera, screen sharing, background
+audio services, wake lock, and overlay permissions are absent or explicitly blocked.
+This requires an Expo development build and is not claimed to work in Expo Go.
+
+No LiveKit project, provider credential, AWS resource, recording, transcription,
+egress, or paid feature is created or enabled. Current and incremental recurring cost
+remain **$0/month**.
 
 ## Foreground location lifecycle
 
@@ -162,12 +194,19 @@ Before a field test:
 5. confirm no permission is requested before **Enable location** is selected;
 6. exercise precise and approximate/reduced permission, denial, blocked/settings,
    disabled services, pause, background/foreground, screen exit, logout, and unmount;
-7. confirm only foreground/when-in-use location is requested and no microphone,
-   notification, motion, background-location, or tracking permission appears;
+7. confirm only foreground/when-in-use location is requested before entering the
+   microphone screen and no notification, motion, background-location, or tracking
+   permission appears;
 8. observe that sampling stops on every lifecycle exit and assess battery behavior.
 9. verify available/unavailable heading and speed, accuracy, current/stale state, and
    each semantic nearby bucket without any identity, exact count, distance, or bearing;
 10. confirm nearby polling stops on pause, background, screen exit, logout, and unmount.
+11. confirm no microphone prompt appears before **Enable live audio**, then exercise
+    granted, denied, blocked/settings, unavailable, and changed-in-settings states;
+12. confirm receive-ready plays permitted remote audio without starting capture and
+    disconnects on background, screen exit, logout/revocation, failure, and unmount;
+13. inspect the built manifests for no camera, background-audio service, wake lock,
+    overlay permission, screen share, recording, or transcription capability.
 
 These physical-device permission, battery, native-storage, and lifecycle checks remain
 pending until the inherited S01-E01 hardware evidence gate is closed. Automated tests
@@ -189,8 +228,10 @@ development logs must never print request bodies, authorization headers, or stor
 
 ## Scope boundary
 
-Sprint 3 exposes only foreground permission/lifecycle, owner-local sensor quality, and
-the server's semantic nearby bucket. Maps, routes, nearby identities, exact counts,
-distances or bearings to another user, location history, audio, PTT, channels, and
-background collection remain unavailable. Privacy/security hardening, operator
-guidance, synthetic evidence, and review are recorded in S03-D08 and S03-D09.
+S04-D05 adds the microphone permission and receive-ready media foundation only. It
+does not add a hold-to-talk control, microphone capture/publication, transmit grant,
+channel selection, user channels, recording, transcription, background audio, or
+provider deployment. Those interaction and hardening steps remain assigned to
+S04-D06–D09. Real-device audio route, interruption, Bluetooth, network transition,
+battery, latency, and LiveKit Cloud outcomes remain pending approved physical/provider
+evidence.

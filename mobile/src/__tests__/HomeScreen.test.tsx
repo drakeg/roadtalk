@@ -42,6 +42,12 @@ describe("foundation screen", () => {
     );
     expect(navigate).toHaveBeenCalledWith("LocationPermission");
     await fireEvent.press(
+      view.getByRole("button", {
+        name: "Review microphone and live audio privacy",
+      }),
+    );
+    expect(navigate).toHaveBeenCalledWith("MicrophonePermission");
+    await fireEvent.press(
       view.getByRole("button", { name: "Open app diagnostics" }),
     );
     expect(navigate).toHaveBeenCalledWith("Diagnostics");

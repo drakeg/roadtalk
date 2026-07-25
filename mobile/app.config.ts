@@ -10,9 +10,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.roadtalk.mobile",
+    infoPlist: {
+      NSMicrophoneUsageDescription:
+        "RoadTalk uses your microphone only while you explicitly hold the push-to-talk control. Audio is sent live and is not recorded or transcribed.",
+    },
   },
   android: {
     package: "com.roadtalk.mobile",
+    blockedPermissions: [
+      "android.permission.CAMERA",
+      "android.permission.SYSTEM_ALERT_WINDOW",
+      "android.permission.WAKE_LOCK",
+    ],
     adaptiveIcon: {
       backgroundColor: "#10212b",
     },
@@ -34,8 +43,32 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         isAndroidBackgroundLocationEnabled: false,
       },
     ],
+    [
+      "expo-audio",
+      {
+        microphonePermission:
+          "RoadTalk uses your microphone only while you explicitly hold the push-to-talk control. Audio is sent live and is not recorded or transcribed.",
+        recordAudioAndroid: true,
+        enableBackgroundRecording: false,
+        enableBackgroundPlayback: false,
+      },
+    ],
+    [
+      "@livekit/react-native-expo-plugin",
+      {
+        android: {
+          audioType: "communication",
+          enableScreenShareService: false,
+        },
+        ios: {
+          enableMultitaskingCameraAccess: false,
+        },
+      },
+    ],
+    "./plugins/withRoadTalkAudioOnlyWebRTC.cjs",
   ],
   extra: {
-    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1",
+    apiBaseUrl:
+      process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1",
   },
 });

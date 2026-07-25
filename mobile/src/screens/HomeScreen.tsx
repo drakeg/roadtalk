@@ -36,6 +36,19 @@ export function HomeScreen({ navigation }: Props) {
       {authenticated ? (
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel="Review microphone and live audio privacy"
+          onPress={() => navigation.navigate("MicrophonePermission")}
+          style={({ pressed }) => [
+            styles.button,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          <Text style={styles.buttonText}>Microphone and live audio</Text>
+        </Pressable>
+      ) : null}
+      {authenticated ? (
+        <Pressable
+          accessibilityRole="button"
           accessibilityLabel="Review foreground location privacy"
           onPress={() => navigation.navigate("LocationPermission")}
           style={({ pressed }) => [
