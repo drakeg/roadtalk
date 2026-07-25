@@ -14,10 +14,14 @@ class PttLimiter:
         *,
         receive_limit: int,
         receive_window_seconds: int,
+        transmit_limit: int | None = None,
+        transmit_window_seconds: int | None = None,
         max_buckets: int = 20_000,
     ) -> None:
         self.receive_limit = receive_limit
         self.receive_window_seconds = receive_window_seconds
+        self.transmit_limit = transmit_limit or receive_limit
+        self.transmit_window_seconds = transmit_window_seconds or receive_window_seconds
         self.max_buckets = max_buckets
         self._events: dict[tuple[str, str], deque[float]] = {}
 
@@ -37,6 +41,25 @@ class PttLimiter:
             ),
             limit=self.receive_limit,
             window_seconds=self.receive_window_seconds,
+            now=now,
+        )
+
+    def check_transmit(
+        self,
+        *,
+        peer: str,
+        account_id: str,
+        device_id: str,
+        now: float,
+    ) -> None:
+        self._check_many(
+            (
+                ("transmit-peer", peer),
+                ("transmit-account", account_id),
+                ("transmit-device", device_id),
+            ),
+            limit=self.transmit_limit,
+            window_seconds=self.transmit_window_seconds,
             now=now,
         )
 

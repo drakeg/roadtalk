@@ -27,6 +27,22 @@ class ReceiveGrantResponse(BaseModel):
     participant_token: str | None = Field(default=None, repr=False)
 
 
+class TransmitGrantRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class TransmitGrantResponse(BaseModel):
+    grant_id: uuid.UUID
+    receive_grant_id: uuid.UUID
+    mode: Literal["transmit"] = "transmit"
+    allowed_actions: tuple[Literal["publish"], ...] = ("publish",)
+    allowed_track_sources: tuple[Literal["microphone"], ...] = ("microphone",)
+    issued_at: datetime
+    expires_at: datetime
+    policy_version: str
+    replayed: bool
+
+
 class GrantReleaseResponse(BaseModel):
     grant_id: uuid.UUID
     state: Literal["released"] = "released"

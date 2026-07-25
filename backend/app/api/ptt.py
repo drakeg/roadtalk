@@ -7,8 +7,21 @@ from fastapi import APIRouter, Header, HTTPException, Request, Response, status
 from app.api.auth import CurrentSession, DatabaseSession
 from app.ptt.limiter import PttLimiter, PttRateLimitError
 from app.ptt.provider import MediaProvider
-from app.ptt.schemas import GrantReleaseResponse, ReceiveGrantRequest, ReceiveGrantResponse
-from app.ptt.service import GrantError, create_receive_grant, release_receive_grant
+from app.ptt.schemas import (
+    GrantReleaseResponse,
+    ReceiveGrantRequest,
+    ReceiveGrantResponse,
+    TransmitGrantRequest,
+    TransmitGrantResponse,
+)
+from app.ptt.service import (
+    GrantError,
+    create_receive_grant,
+    create_transmit_grant,
+)
+from app.ptt.service import (
+    release_grant as release_owned_grant,
+)
 
 router = APIRouter(prefix="/api/v1/ptt/grants", tags=["push-to-talk"])
 IdempotencyKey = Annotated[
@@ -27,6 +40,27 @@ def _check_receive_limit(request: Request, current: CurrentSession) -> None:
     peer = request.client.host if request.client is not None else "unknown"
     try:
         limiter.check_receive(
+            peer=peer,
+            account_id=str(current.account.id),
+            device_id=str(current.device.id),
+            now=time.monotonic(),
+        )
+    except PttRateLimitError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "code": "PTT_RATE_LIMITED",
+                "detail": "PTT grant requests are temporarily limited.",
+            },
+            headers={"Retry-After": str(exc.retry_after)},
+        ) from exc
+
+
+def _check_transmit_limit(request: Request, current: CurrentSession) -> None:
+    limiter = cast(PttLimiter, request.app.state.ptt_limiter)
+    peer = request.client.host if request.client is not None else "unknown"
+    try:
+        limiter.check_transmit(
             peer=peer,
             account_id=str(current.account.id),
             device_id=str(current.device.id),
@@ -85,6 +119,39 @@ async def create_grant(
     return ReceiveGrantResponse(**receipt.__dict__)
 
 
+@router.post(
+    "/{receive_grant_id}/transmit",
+    response_model=TransmitGrantResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_transmit(
+    receive_grant_id: uuid.UUID,
+    request: Request,
+    response: Response,
+    payload: TransmitGrantRequest,
+    idempotency_key: IdempotencyKey,
+    db: DatabaseSession,
+    current: CurrentSession,
+) -> TransmitGrantResponse:
+    del payload
+    _check_transmit_limit(request, current)
+    try:
+        receipt = await create_transmit_grant(
+            db,
+            account_id=current.account.id,
+            device_id=current.device.id,
+            receive_grant_id=receive_grant_id,
+            idempotency_key=idempotency_key,
+            settings=request.app.state.settings,
+            provider=cast(MediaProvider, request.app.state.media_provider),
+        )
+    except GrantError as exc:
+        raise _grant_error(exc) from exc
+    if receipt.replayed:
+        response.status_code = status.HTTP_200_OK
+    return TransmitGrantResponse(**receipt.__dict__)
+
+
 @router.delete("/{grant_id}", response_model=GrantReleaseResponse)
 async def release_grant(
     grant_id: uuid.UUID,
@@ -95,7 +162,7 @@ async def release_grant(
 ) -> GrantReleaseResponse:
     del idempotency_key
     try:
-        receipt = await release_receive_grant(
+        receipt = await release_owned_grant(
             db,
             account_id=current.account.id,
             device_id=current.device.id,

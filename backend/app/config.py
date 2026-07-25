@@ -66,6 +66,8 @@ class Settings(BaseSettings):
     ptt_transmit_grant_ttl_seconds: int = Field(default=30, ge=5, le=60)
     ptt_receive_grant_limit: int = Field(default=10, ge=1, le=300)
     ptt_receive_grant_window_seconds: int = Field(default=60, ge=1, le=3_600)
+    ptt_transmit_grant_limit: int = Field(default=60, ge=1, le=600)
+    ptt_transmit_grant_window_seconds: int = Field(default=60, ge=1, le=3_600)
     ptt_controlled_room_ref: str = Field(
         default="rm_7f3d2c9a1b6e4d08",
         min_length=16,

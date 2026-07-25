@@ -167,14 +167,17 @@ Events are at-least-once where replay is supported. Clients deduplicate by `even
 ## Authorization order for transmit
 
 1. active, non-revoked session
-2. accepted current policy/consent versions
-3. non-expired presence and usable location
-4. channel eligibility
-5. mute/block/moderation policy
-6. rate and concurrency limits
-7. proximity policy
-8. media service availability
-9. least-privilege token issuance
+2. caller-owned, non-revoked, non-expired receive grant
+3. current server PTT policy
+4. bounded peer/account/device rate limit
+5. no active publisher for the account or device
+6. media service availability
+7. microphone-only participant permission update
+
+Location, proximity, channels, presence, and moderation are intentionally deferred to
+later approved sprints. Transmit uses
+`POST /api/v1/ptt/grants/{receive_grant_id}/transmit` with an empty, extra-forbidden
+body; clients cannot select provider identifiers, sources, permissions, or TTL.
 
 Any unknown foundational state fails closed.
 
