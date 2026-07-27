@@ -33,7 +33,6 @@ mobile_dependencies = dependency_names(ROOT / "mobile/package.json", "dependenci
 forbidden_mobile_dependencies = {
     "@aws-sdk/client-s3",
     "@react-native-async-storage/async-storage",
-    "expo-audio",
     "expo-av",
     "expo-camera",
     "expo-image-picker",
@@ -79,15 +78,13 @@ for source in recovery_sources:
     )
 
 app_config = ROOT / "mobile/app.config.ts"
+# Later approved sprints may add foreground location and microphone declarations.
+# This retained Sprint 2 gate still rejects camera capability and relies on the
+# active-sprint scope tests for purpose text and audio-only permission bounds.
 require_absent(
     app_config,
     (
         "NSCameraUsageDescription",
-        "NSLocation",
-        "NSMicrophoneUsageDescription",
-        "android.permission.ACCESS_",
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
     ),
 )
 

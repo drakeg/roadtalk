@@ -1,0 +1,62 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+import type { ConfigContext } from "expo/config";
+
+import appConfig from "../../app.config";
+
+describe("audio-only foreground media scope", () => {
+  it("pins native development-build dependencies and disables background features", () => {
+    const config = appConfig({ config: {} } as ConfigContext);
+    const audio = config.plugins?.find(
+      (candidate) => Array.isArray(candidate) && candidate[0] === "expo-audio",
+    );
+    const liveKit = config.plugins?.find(
+      (candidate) =>
+        Array.isArray(candidate) &&
+        candidate[0] === "@livekit/react-native-expo-plugin",
+    );
+
+    expect(audio?.[1]).toEqual(
+      expect.objectContaining({
+        recordAudioAndroid: true,
+        enableBackgroundRecording: false,
+        enableBackgroundPlayback: false,
+        microphonePermission: expect.stringMatching(/only while.*hold/i),
+      }),
+    );
+    expect(liveKit?.[1]).toEqual(
+      expect.objectContaining({
+        android: expect.objectContaining({ enableScreenShareService: false }),
+        ios: expect.objectContaining({
+          enableMultitaskingCameraAccess: false,
+        }),
+      }),
+    );
+    expect(config.android?.blockedPermissions).toEqual(
+      expect.arrayContaining([
+        "android.permission.CAMERA",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.WAKE_LOCK",
+      ]),
+    );
+  });
+
+  it("contains no capture-on-join, camera, recording, transcription, or logging path", () => {
+    const root = resolve(__dirname, "..");
+    const source = [
+      "media/api.ts",
+      "media/liveKitRoom.ts",
+      "media/MediaLifecycleController.ts",
+      "media/permission.ts",
+      "media/types.ts",
+    ]
+      .map((path) => readFileSync(resolve(root, path), "utf8"))
+      .join("\n");
+
+    expect(source).toMatch(/setMicrophoneEnabled\(false\)/);
+    expect(source).not.toMatch(
+      /setMicrophoneEnabled\(true\)|setCameraEnabled|startRecording|transcri|console\./i,
+    );
+  });
+});

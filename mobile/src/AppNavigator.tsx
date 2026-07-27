@@ -5,6 +5,7 @@ import { DiagnosticsScreen } from "./screens/DiagnosticsScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { IdentityScreen } from "./screens/IdentityScreen";
 import { LocationPermissionScreen } from "./screens/LocationPermissionScreen";
+import { MicrophonePermissionScreen } from "./screens/MicrophonePermissionScreen";
 import { RecoveryScreen } from "./screens/RecoveryScreen";
 import { colors } from "./theme";
 
@@ -13,6 +14,7 @@ export type RootStackParamList = {
   Diagnostics: undefined;
   Identity: undefined;
   LocationPermission: undefined;
+  MicrophonePermission: undefined;
   Recovery: undefined;
 };
 
@@ -43,6 +45,11 @@ export function AppNavigator() {
           component={LocationPermissionScreen}
           name="LocationPermission"
           options={{ title: "Location privacy" }}
+        />
+        <Stack.Screen
+          component={MicrophonePermissionScreen}
+          name="MicrophonePermission"
+          options={{ title: "Microphone and live audio" }}
         />
         <Stack.Screen
           component={HomeScreen}

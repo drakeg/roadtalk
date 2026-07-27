@@ -41,8 +41,15 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
   microphone-only provider promotion, one active publisher, 30-second expiry,
   idempotent revocation, receive-release cascade, and failure-closed reconciliation.
 - Logout and owned-device revocation synchronously invalidate local transmit grants.
-- No LiveKit SDK, live provider call, token/secret/audio storage, AWS resource, managed
-  service, payment method, or incremental recurring cost.
+- Pinned Expo 57-compatible LiveKit native dependencies, an audio-only config plugin,
+  purpose-before-permission microphone states, receive-only room/audio adapters, and
+  deterministic cleanup on background, screen exit, logout/revocation, failure, and
+  unmount.
+- Receive-ready explicitly keeps microphone capture off, validates join/subscribe-only
+  credentials, and exposes stable connecting, ready, reconnecting, blocked, unavailable,
+  and retry states through a fake-tested mobile lifecycle.
+- No LiveKit project, live provider call, token/secret/audio storage, AWS resource,
+  managed service, payment method, or incremental recurring cost.
 
 ### Cost controls
 
