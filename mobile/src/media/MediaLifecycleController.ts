@@ -6,8 +6,25 @@ import type {
   ReceiveGrantTransport,
   ReceiveRoomAdapter,
 } from "./types";
+import { MediaGrantError } from "./api";
 
 type Listener = () => void;
+type TimerHandle = ReturnType<typeof setTimeout>;
+type Scheduler = {
+  setTimeout(callback: () => void, delayMs: number): TimerHandle;
+  clearTimeout(handle: TimerHandle): void;
+};
+
+const systemScheduler: Scheduler = {
+  setTimeout: (callback, delayMs) => {
+    const handle = setTimeout(callback, delayMs);
+    if (typeof handle === "object" && "unref" in handle) {
+      handle.unref();
+    }
+    return handle;
+  },
+  clearTimeout: (handle) => clearTimeout(handle),
+};
 
 export class MediaLifecycleController implements MediaLifecycleControl {
   private snapshot: MediaLifecycleSnapshot = { status: "purpose" };
@@ -21,12 +38,20 @@ export class MediaLifecycleController implements MediaLifecycleControl {
   private disposed = false;
   private permissionConfirmed = false;
   private grantId: string | null = null;
+  private transmitGrantId: string | null = null;
+  private transmitTimer: TimerHandle | null = null;
+  private held = false;
+  private remoteReceiving = false;
   private generation = 0;
+  private transmitGeneration = 0;
+  private microphoneOperation: Promise<void> = Promise.resolve();
 
   constructor(
     private readonly permission: MicrophonePermissionGateway,
     private readonly transport: ReceiveGrantTransport,
     private readonly room: ReceiveRoomAdapter,
+    private readonly scheduler: Scheduler = systemScheduler,
+    private readonly maximumTransmitMs = 30_000,
   ) {}
 
   subscribe(listener: Listener): () => void {
@@ -70,6 +95,56 @@ export class MediaLifecycleController implements MediaLifecycleControl {
     await this.stop();
     if (!this.disposed) {
       this.publish({ status: "paused" });
+    }
+  }
+
+  async pressToTalk(): Promise<void> {
+    if (
+      this.disposed ||
+      !this.connected ||
+      this.grantId === null ||
+      this.held ||
+      ![
+        "ready",
+        "receiving",
+        "busy",
+        "degraded",
+        "transmit_error",
+      ].includes(this.snapshot.status)
+    ) {
+      return;
+    }
+    this.held = true;
+    const generation = ++this.transmitGeneration;
+    const receiveGrantId = this.grantId;
+    this.publish({ status: "authorizing" });
+    try {
+      const transmit = await this.transport.createTransmitGrant(receiveGrantId);
+      if (!this.canStartTransmission(generation, receiveGrantId)) {
+        await this.safeRelease(transmit.grantId);
+        return;
+      }
+      this.transmitGrantId = transmit.grantId;
+      await this.setMicrophoneEnabled(true);
+      if (!this.canStartTransmission(generation, receiveGrantId)) {
+        await this.stopTransmission();
+        return;
+      }
+      this.transmitTimer = this.scheduler.setTimeout(() => {
+        void this.maximumReached();
+      }, this.maximumTransmitMs);
+      this.publish({ status: "transmitting" });
+    } catch (error) {
+      await this.handleTransmitFailure(error, generation);
+    }
+  }
+
+  async releaseToTalk(): Promise<void> {
+    this.held = false;
+    this.transmitGeneration += 1;
+    await this.stopTransmission();
+    if (this.connected && !this.disposed) {
+      this.publishReceiveState();
     }
   }
 
@@ -167,17 +242,28 @@ export class MediaLifecycleController implements MediaLifecycleControl {
       await this.room.connectReceiveOnly(grant, {
         reconnecting: () => {
           if (this.isCurrent(generation)) {
-            this.publish({ status: "reconnecting" });
+            void this.handleReconnecting(generation);
           }
         },
         reconnected: () => {
           if (this.isCurrent(generation)) {
-            this.publish({ status: "ready" });
+            this.publishReceiveState();
           }
         },
         disconnected: () => {
           if (this.isCurrent(generation)) {
             void this.failAndStop();
+          }
+        },
+        receivingChanged: (receiving) => {
+          if (this.isCurrent(generation)) {
+            this.remoteReceiving = receiving;
+            if (
+              this.snapshot.status === "ready" ||
+              this.snapshot.status === "receiving"
+            ) {
+              this.publishReceiveState();
+            }
           }
         },
       });
@@ -186,7 +272,7 @@ export class MediaLifecycleController implements MediaLifecycleControl {
         return;
       }
       this.connected = true;
-      this.publish({ status: "ready" });
+      this.publishReceiveState();
     } catch {
       if (this.isCurrent(generation)) {
         await this.failAndStop();
@@ -217,11 +303,15 @@ export class MediaLifecycleController implements MediaLifecycleControl {
 
   private async stop(): Promise<void> {
     this.generation += 1;
+    this.held = false;
+    this.transmitGeneration += 1;
     this.connecting = false;
     this.connected = false;
     this.permissionConfirmed = false;
+    this.remoteReceiving = false;
     const grantId = this.grantId;
     this.grantId = null;
+    await this.stopTransmission();
     try {
       await this.room.disconnect();
     } catch {
@@ -232,12 +322,117 @@ export class MediaLifecycleController implements MediaLifecycleControl {
     }
   }
 
+  private canStartTransmission(
+    generation: number,
+    receiveGrantId: string,
+  ): boolean {
+    return (
+      generation === this.transmitGeneration &&
+      this.held &&
+      this.connected &&
+      this.grantId === receiveGrantId &&
+      this.isCurrent(this.generation)
+    );
+  }
+
+  private async maximumReached(): Promise<void> {
+    this.held = false;
+    this.transmitGeneration += 1;
+    await this.stopTransmission();
+    if (this.connected && !this.disposed) {
+      this.publish({ status: "ready", reason: "maximum" });
+    }
+  }
+
+  private async handleReconnecting(generation: number): Promise<void> {
+    this.held = false;
+    this.transmitGeneration += 1;
+    await this.stopTransmission();
+    if (this.isCurrent(generation)) {
+      this.publish({ status: "reconnecting" });
+    }
+  }
+
+  private async handleTransmitFailure(
+    error: unknown,
+    generation: number,
+  ): Promise<void> {
+    this.held = false;
+    await this.stopTransmission();
+    if (
+      generation !== this.transmitGeneration ||
+      !this.connected ||
+      this.disposed
+    ) {
+      return;
+    }
+    if (error instanceof MediaGrantError) {
+      if (error.code === "PTT_TRANSMIT_BUSY") {
+        this.publish({ status: "busy" });
+        return;
+      }
+      if (
+        error.code === "PTT_PROVIDER_UNAVAILABLE" ||
+        error.code === "PTT_RATE_LIMITED"
+      ) {
+        this.publish({ status: "degraded" });
+        return;
+      }
+    }
+    try {
+      const permission = await this.permission.getPermission();
+      if (permission.status !== "granted") {
+        this.enabled = false;
+        await this.stop();
+        this.publish({
+          status: permission.canAskAgain ? "denied" : "blocked",
+        });
+        return;
+      }
+    } catch {
+      // A permission check failure remains a generic fail-closed media error.
+    }
+    this.publish({ status: "transmit_error" });
+  }
+
+  private async stopTransmission(): Promise<void> {
+    if (this.transmitTimer !== null) {
+      this.scheduler.clearTimeout(this.transmitTimer);
+      this.transmitTimer = null;
+    }
+    const transmitGrantId = this.transmitGrantId;
+    this.transmitGrantId = null;
+    try {
+      // Capture is always disabled before any remote cleanup attempt.
+      await this.setMicrophoneEnabled(false);
+    } catch {
+      // Continue server-side revocation even if native capture cleanup reports.
+    }
+    if (transmitGrantId !== null) {
+      await this.safeRelease(transmitGrantId);
+    }
+  }
+
+  private publishReceiveState(): void {
+    this.publish({
+      status: this.remoteReceiving ? "receiving" : "ready",
+    });
+  }
+
   private async safeRelease(grantId: string): Promise<void> {
     try {
       await this.transport.releaseGrant(grantId);
     } catch {
       // The short-lived server grant expires independently of client cleanup.
     }
+  }
+
+  private setMicrophoneEnabled(enabled: boolean): Promise<void> {
+    const operation = this.microphoneOperation
+      .catch(() => undefined)
+      .then(() => this.room.setMicrophoneEnabled(enabled));
+    this.microphoneOperation = operation.catch(() => undefined);
+    return operation;
   }
 
   private publish(snapshot: MediaLifecycleSnapshot): void {

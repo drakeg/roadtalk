@@ -6,6 +6,7 @@ import type {
   ReceiveGrantTransport,
   ReceiveRoomAdapter,
   RoomConnectionHandlers,
+  TransmitGrant,
 } from "../media/types";
 
 class FakePermission implements MicrophonePermissionGateway {
@@ -31,7 +32,15 @@ class FakeTransport implements ReceiveGrantTransport {
     serverUrl: "wss://synthetic.invalid",
     participantToken: "synthetic-test-token",
   };
+  readonly transmit: TransmitGrant = {
+    grantId: "transmit-1",
+    receiveGrantId: "grant-1",
+    expiresAt: "2026-07-26T12:00:30Z",
+  };
   readonly createReceiveGrant = jest.fn(async () => this.grant);
+  readonly createTransmitGrant = jest.fn(async (_receiveGrantId: string) => {
+    return this.transmit;
+  });
   readonly releaseGrant = jest.fn(async (_grantId: string) => undefined);
 }
 
@@ -41,6 +50,9 @@ class FakeRoom implements ReceiveRoomAdapter {
     async (_grant: ReceiveGrant, handlers: RoomConnectionHandlers) => {
       this.handlers = handlers;
     },
+  );
+  readonly setMicrophoneEnabled = jest.fn(
+    async (_enabled: boolean) => undefined,
   );
   readonly disconnect = jest.fn(async () => undefined);
 }
@@ -143,6 +155,7 @@ describe("microphone and receive-room lifecycle", () => {
     await controller.enable();
 
     room.handlers?.reconnecting();
+    await new Promise((resolve) => setImmediate(resolve));
     expect(controller.getSnapshot()).toEqual({ status: "reconnecting" });
     room.handlers?.reconnected();
     expect(controller.getSnapshot()).toEqual({ status: "ready" });

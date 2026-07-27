@@ -1,6 +1,6 @@
 # Mobile
 
-Current owner: S04-D05 mobile microphone and media foundation. The retained identity,
+Current owner: S04-D06 mobile hold-to-talk experience. The retained identity,
 recovery, and foreground-location flows were delivered by S02-D05–D08 and S03-D05–D07.
 
 This directory contains the Expo/React Native/TypeScript development-build application.
@@ -38,9 +38,14 @@ The current application provides:
   retry, and settings guidance
 - pinned LiveKit Expo development-build dependencies behind a fakeable room adapter
 - receive-only room join and remote-audio subscription with microphone capture off
+- accessible press-and-hold authorization, transmission, receiving, busy, degraded,
+  reconnecting, permission-denied, and error states
+- server-authorized microphone-only publication with a deterministic 30-second maximum
+- capture-off-first release, background, screen-exit, logout, reconnect, and failure
+  ordering, including rapid press/release and cancellation races
 - deterministic room, audio-session, and grant cleanup on every lifecycle exit
 
-## Microphone and receive-ready media
+## Microphone and hold-to-talk media
 
 Authenticated users can open **Microphone and live audio** and review the purpose,
 storage limits, and receive-ready behavior before the operating-system prompt. The
@@ -51,10 +56,23 @@ request.
 The controller joins only after the app, screen, and authenticated session are active.
 It accepts only a server response scoped to `join` and `subscribe` with no allowed
 track sources. The LiveKit adapter starts a foreground audio session, subscribes to
-remote audio, and explicitly keeps the local microphone disabled. Backgrounding,
-screen exit, logout, device revocation, account/session loss, explicit disconnect,
-connection failure, and unmount disconnect the room, stop the audio session, and
-release the short-lived receive grant.
+remote audio, reports whether a remote participant is speaking, and explicitly keeps
+the local microphone disabled while receive-ready.
+
+Pressing and continuing to hold the large push-to-talk control requests a nested
+transmit grant for the active receive grant. The client rejects any response that is
+not exactly `publish` plus `microphone`; capture starts only after this authorization
+returns. Release disables capture before revoking the transmit grant. The same
+capture-off-first ordering applies to the 30-second maximum, backgrounding, screen
+exit, logout or revocation, reconnect, connection failure, and unmount. Microphone
+operations are serialized so a release cannot be overtaken by an in-flight native
+enable call.
+
+The control provides changing screen-reader labels, text and symbol cues that do not
+depend on color, and a 112-point minimum touch target. Busy, provider-degraded,
+authorization-error, permission-revoked, receiving, and reconnecting outcomes remain
+explicit and fail closed. There is no toggle, hands-free, background-transmit,
+proximity, or channel-selection mode.
 
 The Expo configuration uses a RoadTalk-owned audio-only WebRTC plugin because the
 generic plugin requests camera, overlay, and wake-lock capabilities that this sprint
@@ -65,7 +83,10 @@ This requires an Expo development build and is not claimed to work in Expo Go.
 
 No LiveKit project, provider credential, AWS resource, recording, transcription,
 egress, or paid feature is created or enabled. Current and incremental recurring cost
-remain **$0/month**.
+remain **$0/month**. The activation projections remain those approved in the Sprint 4
+readiness record: LiveKit Build can remain $0 within its documented caps; a bounded
+AWS test window is planned at roughly $4–$6 in an active month; no activation or spend
+is authorized by this deliverable.
 
 ## Foreground location lifecycle
 
@@ -205,7 +226,13 @@ Before a field test:
     granted, denied, blocked/settings, unavailable, and changed-in-settings states;
 12. confirm receive-ready plays permitted remote audio without starting capture and
     disconnects on background, screen exit, logout/revocation, failure, and unmount;
-13. inspect the built manifests for no camera, background-audio service, wake lock,
+13. verify remote speaking, authorizing, transmitting, busy, degraded, reconnecting,
+    permission-revoked, 30-second maximum, rapid press/release, and cancellation states;
+14. confirm capture begins only after server authorization and turns off before grant
+    cleanup on release, background, screen exit, logout, reconnect, and failure;
+15. verify screen-reader double-tap-and-hold/release behavior, dynamic text,
+    non-color cues, large text, and the push-to-talk touch target;
+16. inspect the built manifests for no camera, background-audio service, wake lock,
     overlay permission, screen share, recording, or transcription capability.
 
 These physical-device permission, battery, native-storage, and lifecycle checks remain
@@ -228,10 +255,10 @@ development logs must never print request bodies, authorization headers, or stor
 
 ## Scope boundary
 
-S04-D05 adds the microphone permission and receive-ready media foundation only. It
-does not add a hold-to-talk control, microphone capture/publication, transmit grant,
-channel selection, user channels, recording, transcription, background audio, or
-provider deployment. Those interaction and hardening steps remain assigned to
-S04-D06–D09. Real-device audio route, interruption, Bluetooth, network transition,
-battery, latency, and LiveKit Cloud outcomes remain pending approved physical/provider
-evidence.
+S04-D06 adds the accessible foreground hold-to-talk experience and deterministic
+client safety tests only. It does not add proximity, channel selection, user channels,
+background transmission, hands-free/toggle behavior, recording, transcription,
+provider deployment, or any cloud resource. Hardening, operations/evidence, and final
+review remain assigned to S04-D07–D09. Real-device audio route, interruption,
+Bluetooth, network transition, battery, latency, screen-reader gesture, and LiveKit
+Cloud outcomes remain pending approved physical/provider evidence.

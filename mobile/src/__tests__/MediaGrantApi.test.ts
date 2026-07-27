@@ -1,4 +1,4 @@
-import { MediaGrantApi } from "../media/api";
+import { MediaGrantApi, MediaGrantError } from "../media/api";
 
 function response(body: unknown, status = 201): Response {
   return new Response(JSON.stringify(body), {
@@ -7,7 +7,7 @@ function response(body: unknown, status = 201): Response {
   });
 }
 
-describe("mobile receive-grant transport", () => {
+describe("mobile media-grant transport", () => {
   it("accepts only receive-only join/subscribe credentials", async () => {
     const authenticatedFetch = jest.fn(async () =>
       response({
@@ -92,6 +92,92 @@ describe("mobile receive-grant transport", () => {
         method: "DELETE",
         headers: { "Idempotency-Key": "release-key-123456" },
       },
+    );
+  });
+
+  it("requests and accepts only a nested microphone-only transmit grant", async () => {
+    const authenticatedFetch = jest.fn(async () =>
+      response({
+        grant_id: "transmit-1",
+        receive_grant_id: "receive/grant",
+        mode: "transmit",
+        allowed_actions: ["publish"],
+        allowed_track_sources: ["microphone"],
+        expires_at: "2026-07-26T12:00:30Z",
+      }),
+    );
+    const api = new MediaGrantApi(
+      "https://api.synthetic.invalid/api/v1",
+      { authenticatedFetch } as never,
+      () => "transmit-key-123456",
+    );
+
+    await expect(api.createTransmitGrant("receive/grant")).resolves.toEqual({
+      grantId: "transmit-1",
+      receiveGrantId: "receive/grant",
+      expiresAt: "2026-07-26T12:00:30Z",
+    });
+    expect(authenticatedFetch).toHaveBeenCalledWith(
+      "https://api.synthetic.invalid/api/v1/ptt/grants/receive%2Fgrant/transmit",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": "transmit-key-123456",
+        },
+        body: "{}",
+      },
+    );
+  });
+
+  it.each([
+    { allowed_actions: ["publish", "subscribe"] },
+    { allowed_track_sources: ["microphone", "camera"] },
+    { allowed_track_sources: ["camera"] },
+    { receive_grant_id: "different-receive" },
+    { expires_at: "not-a-date" },
+  ])("rejects an invalid or over-scoped transmit grant", async (override) => {
+    const authenticatedFetch = jest.fn(async () =>
+      response({
+        grant_id: "transmit-1",
+        receive_grant_id: "receive-1",
+        mode: "transmit",
+        allowed_actions: ["publish"],
+        allowed_track_sources: ["microphone"],
+        expires_at: "2026-07-26T12:00:30Z",
+        ...override,
+      }),
+    );
+    const api = new MediaGrantApi("https://api.synthetic.invalid/api/v1", {
+      authenticatedFetch,
+    } as never);
+
+    await expect(api.createTransmitGrant("receive-1")).rejects.toEqual(
+      expect.objectContaining({
+        name: "MediaGrantError",
+        code: "PTT_TRANSMIT_SCOPE_INVALID",
+      }),
+    );
+  });
+
+  it("preserves a nested stable transmit denial code", async () => {
+    const authenticatedFetch = jest.fn(async () =>
+      response(
+        {
+          detail: {
+            code: "PTT_TRANSMIT_BUSY",
+            detail: "Synthetic detail is not shown to the user.",
+          },
+        },
+        409,
+      ),
+    );
+    const api = new MediaGrantApi("https://api.synthetic.invalid/api/v1", {
+      authenticatedFetch,
+    } as never);
+
+    await expect(api.createTransmitGrant("receive-1")).rejects.toEqual(
+      new MediaGrantError("PTT_TRANSMIT_BUSY"),
     );
   });
 });

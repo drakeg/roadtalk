@@ -42,21 +42,32 @@ describe("audio-only foreground media scope", () => {
     );
   });
 
-  it("contains no capture-on-join, camera, recording, transcription, or logging path", () => {
+  it("limits capture to the server-authorized controller path", () => {
     const root = resolve(__dirname, "..");
-    const source = [
+    const paths = [
       "media/api.ts",
       "media/liveKitRoom.ts",
       "media/MediaLifecycleController.ts",
       "media/permission.ts",
       "media/types.ts",
-    ]
-      .map((path) => readFileSync(resolve(root, path), "utf8"))
-      .join("\n");
+    ];
+    const files = paths.map((path) => ({
+      path,
+      source: readFileSync(resolve(root, path), "utf8"),
+    }));
+    const source = files.map(({ source: contents }) => contents).join("\n");
+    const captureEnablers = files.filter(({ source: contents }) =>
+      /setMicrophoneEnabled\(true\)/.test(contents),
+    );
 
     expect(source).toMatch(/setMicrophoneEnabled\(false\)/);
+    expect(source).toMatch(/createTransmitGrant\(receiveGrantId\)/);
+    expect(captureEnablers.map(({ path }) => path)).toEqual([
+      "media/MediaLifecycleController.ts",
+    ]);
+    expect(source.match(/setMicrophoneEnabled\(true\)/g)).toHaveLength(1);
     expect(source).not.toMatch(
-      /setMicrophoneEnabled\(true\)|setCameraEnabled|startRecording|transcri|console\./i,
+      /setCameraEnabled|startRecording|transcri|console\./i,
     );
   });
 });
