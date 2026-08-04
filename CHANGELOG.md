@@ -80,6 +80,11 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Added a migrated-PostgreSQL grant-service measurement at 100 registered accounts,
   25 connected receivers, and 10 publishers with eligible/denied p95 assertions at
   the approved 250 ms target, plus a final-review integrity gate.
+- Recorded Sprint 4 product-owner acceptance by merged PR #108 and tracker closure.
+- Added the proposed Sprint 5 proximity specification/readiness gate: indexed
+  server-authoritative eligibility, default-deny selective subscription, verified
+  publication, no recipient-membership persistence, $0 implementation, and explicit
+  live/device/cloud exceptions. Sprint 5 coding remains unapproved.
 - No LiveKit project, live provider call, token/secret/audio storage, AWS resource,
   managed service, payment method, or incremental recurring cost.
 

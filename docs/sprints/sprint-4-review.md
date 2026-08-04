@@ -1,7 +1,7 @@
 # Sprint 4 review record
 
 - Sprint: 4 — Push-to-Talk
-- Status: Approved upon merge of this review
+- Status: Approved — merged PR #108 on 2026-08-04
 - Review date: 2026-08-04
 - Deliverable: S04-D09
 - Issue: #99
@@ -22,10 +22,9 @@ receive-only join authority, nested microphone-only publication, deterministic m
 permission/media lifecycles, accessible hold-to-talk behavior, failure-closed
 reconciliation, and operational/cost controls.
 
-All repository/CI evidence is green. The product-owner decision
-becomes **APPROVED** when this review pull request is merged. Issue #99 and tracker
-#100 may then close, and Sprint 5 planning may begin under its own specification and
-readiness gate.
+All repository/CI evidence is green. The product-owner decision became **APPROVED**
+when PR #108 was merged. Issue #99 and tracker #100 are closed, and Sprint 5 planning
+may proceed under its own specification and readiness gate.
 
 ## Synthetic demonstration record
 
@@ -69,11 +68,10 @@ Detailed mappings are in [Sprint 4 traceability](sprint-4-traceability.md) and
 - [x] no simulated result is represented as physical-device or provider evidence
 - [x] current cost, future activation ranges, hard stops, privacy and risks reviewed
 - [x] D09 review CI, including S04-T10 synthetic scale, passes
-- [ ] S04-D09 review merged and S04-T12 product-owner approval effective
-- [ ] issue #99 and Sprint 4 tracker #100 closed as completed
+- [x] S04-D09 review merged and S04-T12 product-owner approval effective
+- [x] issue #99 and Sprint 4 tracker #100 closed as completed
 
-The final two boxes complete operationally through merge. They must not
-be represented as complete beforehand.
+The merge and tracker closure completed the final operational acceptance steps.
 
 ## Cost decision
 
@@ -128,7 +126,7 @@ Improvements:
 
 ## Approval decision and next action
 
-**Decision: approved upon merge.** Merging this review completes S04-D09 and S04-T12,
-authorizes closing issue #99 and tracker #100, and permits Sprint 5 planning. It does
-not authorize Sprint 5 coding before its specification/readiness approval, and it does
-not authorize AWS or LiveKit activation while the named exceptions remain open.
+**Decision: approved by merged PR #108.** S04-D09 and S04-T12 are complete, issue #99
+and tracker #100 are closed, and Sprint 5 planning is permitted. This does not
+authorize Sprint 5 coding before its specification/readiness approval, and it does not
+authorize AWS or LiveKit activation while the named exceptions remain open.

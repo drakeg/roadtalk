@@ -40,7 +40,7 @@ for identifier in (
 
 require(
     traceability,
-    "status: ready for product-owner approval",
+    "status: complete — product-owner approved by merged pr #108",
     "current and incremental recurring cost is **$0/month**",
     "100 synthetic accounts, 25 connected receivers, 10 publishers",
     "synthetic grant p95 does not prove media latency or physical capacity",
@@ -50,8 +50,8 @@ require(
 review = "docs/sprints/sprint-4-review.md"
 require(
     review,
-    "status: approved upon merge of this review",
-    "becomes **approved** when this review pull request is merged",
+    "status: approved — merged pr #108 on 2026-08-04",
+    "product-owner decision became **approved**",
     "does **not** create or enable aws or livekit",
     "approved current and incremental cost: $0 aws + $0 livekit per month",
     "always-on aws, paid livekit",
@@ -65,7 +65,7 @@ require(
     "d09 ci and measured grant p95: [run 30872939267]",
     "95 eligible requests at 6.57 ms p95",
     "10 busy denials at 3.97 ms p95",
-    "review approval does not activate a provider or cloud environment",
+    "review approval did not activate a provider or cloud environment",
 )
 
 scale_test = "backend/tests/test_ptt_scale.py"

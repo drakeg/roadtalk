@@ -11,13 +11,20 @@
 
 - [Sprint 4: Push-to-Talk](sprints/sprint-4-push-to-talk.md) — APPROVED
 - [Sprint 4 readiness](sprints/sprint-4-readiness.md) — READY
-- [Sprint 4 traceability](sprints/sprint-4-traceability.md) — ready for review
-- [Sprint 4 review](sprints/sprint-4-review.md) — approval effective upon merge
+- [Sprint 4 traceability](sprints/sprint-4-traceability.md) — COMPLETE
+- [Sprint 4 review](sprints/sprint-4-review.md) — APPROVED
 - Completed planning/approval issue [#90](https://github.com/drakeg/roadtalk/issues/90)
 - Implementation tracker [#100](https://github.com/drakeg/roadtalk/issues/100)
 - [Sprint 4 synthetic PTT evidence](evidence/sprint-4/README.md)
 - Current and incremental local/CI implementation cost: $0 AWS + $0 LiveKit
 - Cloud activation, paid plans, and recurring spend above $10/month remain unauthorized
+
+## Sprint 5 planning
+
+- [Sprint 5: Proximity Engine](sprints/sprint-5-proximity.md) — PROPOSED
+- [Sprint 5 readiness](sprints/sprint-5-readiness.md) — NOT READY; approval pending
+- Planning/current/incremental cost: $0 AWS + $0 LiveKit
+- Coding, provider/cloud activation, paid plans, and new recurring spend are unauthorized
 
 ## Sprint 3 — Location (complete)
 

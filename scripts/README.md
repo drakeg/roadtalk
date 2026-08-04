@@ -28,6 +28,10 @@ Scripts must:
   S04-T01–T12, and S04-D01–D09 traceability; merge-bound product-owner approval;
   honest live/device exceptions; $0 current cost; and synthetic 100/25/10 grant-scale
   measurement against the 250 ms p95 target.
+- `scripts/ci/check-sprint-5-planning.py` locks the proposed S05-R01–R12,
+  S05-T01–T12, and S05-D01–D09 scope; default-deny selective subscription;
+  non-persistence of recipient membership; the 100/25/10 and 400 ms targets; named
+  field exceptions; and $0/no-new-service planning boundaries before approval.
 
-Run all five locally before opening a pull request; GitHub CI runs them again in the
+Run all six locally before opening a pull request; GitHub CI runs them again in the
 security job.

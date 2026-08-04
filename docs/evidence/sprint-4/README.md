@@ -6,6 +6,7 @@
 - D07 CI: [run 30867485264](https://github.com/drakeg/roadtalk/actions/runs/30867485264)
 - D08 CI: [run 30872097026](https://github.com/drakeg/roadtalk/actions/runs/30872097026)
 - D09 CI and measured grant p95: [run 30872939267](https://github.com/drakeg/roadtalk/actions/runs/30872939267) — eligible 6.57 ms; denied 3.97 ms
+- D09 final confirmation: [run 30873126123](https://github.com/drakeg/roadtalk/actions/runs/30873126123)
 - AWS/LiveKit resources created: none
 - Current and incremental cost: **$0/month**
 - Live-provider and physical-device status: **not performed**
@@ -74,8 +75,8 @@ separately approved test record. Use the
 
 ## Final review
 
-The complete requirement, acceptance-test, and deliverable mapping is in
+The complete approved requirement, acceptance-test, and deliverable mapping is in
 [Sprint 4 traceability](../../sprints/sprint-4-traceability.md). The product-owner
-decision is recorded by merging the [Sprint 4 review](../../sprints/sprint-4-review.md)
-only after its CI run is green. Review approval does not activate a provider or cloud
-environment.
+decision was recorded by merged PR #108 through the
+[Sprint 4 review](../../sprints/sprint-4-review.md). Review approval did not activate a
+provider or cloud environment.

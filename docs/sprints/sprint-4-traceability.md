@@ -1,7 +1,7 @@
 # Sprint 4 traceability and evidence
 
 - Sprint: 4 — Push-to-Talk
-- Status: Ready for product-owner approval
+- Status: Complete — product-owner approved by merged PR #108
 - Deliverable: S04-D09
 - Issue: #99
 - Implementation baseline: merge commit `1ce65eced0a1be4bab40279c0b652b3a9ef9d0d5`

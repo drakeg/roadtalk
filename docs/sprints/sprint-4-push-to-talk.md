@@ -2,10 +2,10 @@
 
 ## Status
 
-Approved — product owner approved the specification, readiness gate, and zero-
-revenue cost policy on 2026-07-23. Local/GitHub CI implementation is authorized
-through tracker #100; S04-D02 through S04-D08 are merged and S04-D09 final review is
-pending. Cloud activation remains unauthorized.
+Complete — product owner accepted Sprint 4 by merging PR #108 on 2026-08-04. Issues
+#91–#99 and tracker #100 are closed. Sprint 5 planning is authorized; Sprint 5 coding
+and cloud/provider activation remain unauthorized until a separate specification and
+readiness approval.
 
 ## Objective
 
