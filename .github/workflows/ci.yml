@@ -148,6 +148,8 @@ jobs:
         run: python scripts/ci/check-location-privacy.py
       - name: Check Sprint 4 PTT privacy and scope
         run: python scripts/ci/check-ptt-privacy.py
+      - name: Check Sprint 4 PTT operations and cost controls
+        run: python scripts/ci/check-ptt-operations.py
       - name: Validate and lint Terraform
         id: terraform
         run: |

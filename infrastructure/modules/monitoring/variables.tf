@@ -14,9 +14,14 @@ variable "alert_email" {
 }
 
 variable "monthly_budget_usd" {
-  description = "Small monthly field-test budget limit."
+  description = "Hard monthly field-test notification ceiling."
   type        = number
-  default     = 20
+  default     = 10
+
+  validation {
+    condition     = var.monthly_budget_usd > 0 && var.monthly_budget_usd <= 10
+    error_message = "monthly_budget_usd must be from $1 through the approved $10 ceiling."
+  }
 }
 
 variable "log_retention_days" {

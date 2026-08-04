@@ -68,6 +68,12 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
   columns, and later-sprint proximity/channel drift while preserving prior gates.
 - Refreshed the test-tool and transitive mobile dependency resolutions for current
   security advisories without adding runtime packages or changing approved scope.
+- Added the S04-D08 PTT operator runbook, provider activation/rotation/revocation
+  procedures, scheduled AWS pre-cost and destroy checks, synthetic evidence, and
+  privacy-safe physical-device/cloud test templates.
+- Enforced 3,000 participant-minute, 10 GB, 25-connection, and $10 stops in a dedicated
+  operations gate; Terraform's disabled field-test budget now defaults to and rejects
+  activation above the approved $10 ceiling.
 - No LiveKit project, live provider call, token/secret/audio storage, AWS resource,
   managed service, payment method, or incremental recurring cost.
 

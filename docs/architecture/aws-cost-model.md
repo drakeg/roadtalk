@@ -2,8 +2,8 @@
 
 - Status: Planning estimate
 - Region: `us-east-1`
-- AWS pricing checked: 2026-07-12
-- LiveKit pricing checked: 2026-07-16
+- AWS pricing checked: 2026-08-03
+- LiveKit pricing checked: 2026-08-03
 - Issue: #10
 - Requirements: S00-R06
 - Acceptance: S00-T04
@@ -45,7 +45,7 @@ field-test targets. A resize creates an explicit new monthly-cost decision.
 
 ## Sprint 4 LiveKit Cloud scenarios
 
-Pricing checked on 2026-07-16. LiveKit measures participant connection time in
+Pricing checked on 2026-08-03. LiveKit measures participant connection time in
 one-minute increments and downstream transfer in 0.01 GB increments. Connection time,
 not speaking time, is the primary minute driver for a receive-ready PTT client.
 
@@ -121,7 +121,8 @@ self-hosting remain excluded.
 
 ## Cost controls
 
-- AWS Budget alerts at $25, $50, $100, and forecasted overage during field test
+- one $10 AWS Budget with forecasted 80% and actual 100% notifications; alerts are
+  not automatic shutdown
 - cost-anomaly detection
 - short log retention with explicit extensions
 - no NAT Gateway in field test

@@ -10,4 +10,4 @@ backup_retention_days  = 30
 owner                  = "roadtalk"
 enable_monitoring      = false
 alert_email            = "replace-with-operations-email@example.com"
-monthly_budget_usd     = 20
+monthly_budget_usd     = 10

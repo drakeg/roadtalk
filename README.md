@@ -19,8 +19,8 @@ projected recurring spend above $10/month remain unauthorized.
 
 | Path | Purpose | Current boundary |
 |---|---|---|
-| `mobile/` | React Native, Expo development-build, and TypeScript mobile application | Sprint 3 location is complete; proposed Sprint 4 adds receive-ready audio and hold-to-talk only after approval |
-| `backend/` | FastAPI modular-monolith API, migrations, and backend tests | Sprint 3 location is complete; proposed Sprint 4 adds metadata-only grants and a disabled provider boundary |
+| `mobile/` | React Native, Expo development-build, and TypeScript mobile application | Sprint 4 synthetic receive-ready and hold-to-talk behavior is implemented; live/device evidence remains pending |
+| `backend/` | FastAPI modular-monolith API, migrations, and backend tests | Sprint 4 metadata-only grants and the disabled provider boundary are implemented; no live adapter is active |
 | `infrastructure/` | Terraform bootstrap, environment roots, and reusable modules | Remains disabled by default; Sprint 4 proposes no new AWS resource |
 | `scripts/` | Cross-project developer and operational helper scripts | Added only with a traced requirement |
 | `docs/` | Architecture, sprint records, ADRs, security, privacy, design, and runbooks | Sprint 4 is approved; documentation tracks implementation and evidence |
@@ -35,13 +35,18 @@ projected recurring spend above $10/month remain unauthorized.
 5. Implement only the linked requirement/deliverable.
 6. Record tests, privacy impact, cost impact, and evidence in the pull request.
 
-Sprint 4 planning and proposed local/CI implementation add $0 AWS and $0 LiveKit
-cost. While RoadTalk earns $0, the operating target is $0 and the initial hard ceiling
+Sprint 4 planning and local/CI implementation remain at $0 AWS and $0 LiveKit cost.
+While RoadTalk earns $0, the operating target is $0 and the initial hard ceiling
 is $10/month. LiveKit Build is free within hard limits. AWS is used only in separately
 approved scheduled test windows, projected around $4–$6 in an active testing month,
 and stopped or destroyed afterward. Always-on infrastructure, paid LiveKit, or any
 projected recurring spend above $10/month requires a new written approval and
 completed applicable Sprint 1 exceptions.
+
+S04-D08 operations preserve those boundaries with lower controlled-test stops of
+3,000 participant-minutes, 10 GB downstream transfer, 25 concurrent participants,
+and $10 incremental monthly cost. Crossing any stop pauses testing; budgets and
+provider quotas never authorize automatic upgrade or continued spend.
 
 ## Source of truth
 

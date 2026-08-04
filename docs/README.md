@@ -13,6 +13,7 @@
 - [Sprint 4 readiness](sprints/sprint-4-readiness.md) — READY
 - Completed planning/approval issue [#90](https://github.com/drakeg/roadtalk/issues/90)
 - Implementation tracker [#100](https://github.com/drakeg/roadtalk/issues/100)
+- [Sprint 4 synthetic PTT evidence](evidence/sprint-4/README.md)
 - Current and incremental local/CI implementation cost: $0 AWS + $0 LiveKit
 - Cloud activation, paid plans, and recurring spend above $10/month remain unauthorized
 
@@ -76,6 +77,7 @@
 - [Authentication operations](runbooks/authentication-operations.md)
 - [Identity and recovery operations](runbooks/identity-recovery-operations.md)
 - [Foreground location operations](runbooks/location-operations.md)
+- [Push-to-Talk operations and cost controls](runbooks/ptt-operations.md)
 - [CI quality and security](runbooks/ci-quality-security.md)
 - [Field-test deployment and rollback](runbooks/field-test-deployment.md)
 - [Database backup and restore](runbooks/database-backup-restore.md)
