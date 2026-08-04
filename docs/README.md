@@ -11,6 +11,8 @@
 
 - [Sprint 4: Push-to-Talk](sprints/sprint-4-push-to-talk.md) — APPROVED
 - [Sprint 4 readiness](sprints/sprint-4-readiness.md) — READY
+- [Sprint 4 traceability](sprints/sprint-4-traceability.md) — ready for review
+- [Sprint 4 review](sprints/sprint-4-review.md) — approval effective upon merge
 - Completed planning/approval issue [#90](https://github.com/drakeg/roadtalk/issues/90)
 - Implementation tracker [#100](https://github.com/drakeg/roadtalk/issues/100)
 - [Sprint 4 synthetic PTT evidence](evidence/sprint-4/README.md)

@@ -74,6 +74,12 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Enforced 3,000 participant-minute, 10 GB, 25-connection, and $10 stops in a dedicated
   operations gate; Terraform's disabled field-test budget now defaults to and rejects
   activation above the approved $10 ceiling.
+- Added the S04-D09 requirement/test/deliverable traceability, synthetic PTT
+  demonstration, security/privacy/cost review, limitations, retrospective, and
+  merge-bound product-owner decision.
+- Added a migrated-PostgreSQL grant-service measurement at 100 registered accounts,
+  25 connected receivers, and 10 publishers with eligible/denied p95 assertions at
+  the approved 250 ms target, plus a final-review integrity gate.
 - No LiveKit project, live provider call, token/secret/audio storage, AWS resource,
   managed service, payment method, or incremental recurring cost.
 

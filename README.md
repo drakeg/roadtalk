@@ -48,6 +48,10 @@ S04-D08 operations preserve those boundaries with lower controlled-test stops of
 and $10 incremental monthly cost. Crossing any stop pauses testing; budgets and
 provider quotas never authorize automatic upgrade or continued spend.
 
+Sprint 4 implementation is complete through S04-D08. S04-D09 final traceability,
+synthetic grant-scale evidence, retrospective, and product-owner review are pending;
+merging that review will authorize Sprint 5 planning but no cloud activation.
+
 ## Source of truth
 
 This repository is authoritative for:
