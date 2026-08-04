@@ -30,7 +30,7 @@
 | S04-R07 Receive-ready media | D05–D07 | T07, T10 | fake room/audio adapter, join-with-capture-off, remote events, reconnect and lifecycle cleanup tests | Passed — automated; live/device evidence pending |
 | S04-R08 Hold-to-talk state machine | D06, D07 | T08, T10 | PRs [#105](https://github.com/drakeg/roadtalk/pull/105) and #106; fake-clock authorization/capture ordering, 30-second stop, accessibility states | Passed — automated; field evidence pending |
 | S04-R09 Media privacy/security | D02–D07 | T09 | exact OpenAPI, provider claims, dependencies, native configuration, database/log/evidence gates | Passed — automated and inspection |
-| S04-R10 Reliability/evidence | D03–D09 | T10, T12 | failure/reconnect/revocation suites, synthetic scale test, evidence corpus, final review | Passed upon green review CI; media NFRs pending field evidence |
+| S04-R10 Reliability/evidence | D03–D09 | T10, T12 | failure/reconnect/revocation suites, synthetic scale test, evidence corpus, final review | Passed — automated; media NFRs pending field evidence |
 | S04-R11 Cost controls | D01, D05–D09 | T11 | PR [#107](https://github.com/drakeg/roadtalk/pull/107); disabled Terraform, $10 cap, usage stops, activation/destroy runbook | Passed — automated and inspection |
 | S04-R12 Compatibility/scope | D01–D09 | T09–T12 | full Sprint 1–3 regressions and exact privacy/scope gates | Approved upon review merge |
 
@@ -47,7 +47,7 @@
 | S04-T07 receive-ready media | Fake adapter join/receive/reconnect/background/exit/logout/unmount with capture disabled | PASS — automated; live provider not performed |
 | S04-T08 hold-to-talk | Fake-clock press/release/races/timeout/incoming/busy/error/accessibility and mandatory stops | PASS — automated; physical device not performed |
 | S04-T09 security/privacy | OpenAPI, claims, dependency/config, native permission, storage/log/database/evidence and scope gates | PASS — automated and inspection |
-| S04-T10 reliability/scale | Full regression suites plus 100 synthetic accounts, 25 connected receivers, 10 publishers, eligible and denied grant p95 ≤250 ms | PASS upon green review CI; live media NFRs not performed |
+| S04-T10 reliability/scale | Full regression suites plus 100 synthetic accounts, 25 connected receivers, 10 publishers, eligible and denied grant p95 ≤250 ms | PASS — automated; 6.57 ms eligible and 3.97 ms denied p95; live media NFRs not performed |
 | S04-T11 zero-cost IaC | Disabled zero-resource Terraform, TFLint/Trivy, forbidden-service scan, $10 budget and operator stops | PASS — automated and inspection |
 | S04-T12 demonstration/review | Synthetic lifecycle, traceability, privacy/security/cost/risk review, limitations and retrospective | APPROVED UPON REVIEW MERGE |
 
@@ -58,6 +58,12 @@ validated the final D08 evidence commit `705da42f3b87c5d3702dc3e5bd73f233c8d5082
 Backend/PostGIS/migrations, mobile, dependency audits, privacy/scope gates, Terraform,
 TFLint, Trivy, container build/scan, and artifact reporting all passed. The D09 review
 pull request must pass those same jobs plus the synthetic scale measurement.
+
+[CI run 30872939267](https://github.com/drakeg/roadtalk/actions/runs/30872939267)
+validated the D09 review implementation. The migrated PostgreSQL scale result was 6.57
+ms eligible p95 across 95 requests and 3.97 ms denied p95 across 10 requests at 100
+registered accounts, 25 connected receivers, and 10 active publishers. All backend,
+mobile, privacy, review, dependency, Terraform, security, and container jobs passed.
 
 ## Deliverable audit
 

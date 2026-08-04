@@ -22,7 +22,7 @@ receive-only join authority, nested microphone-only publication, deterministic m
 permission/media lifecycles, accessible hold-to-talk behavior, failure-closed
 reconciliation, and operational/cost controls.
 
-All repository/CI evidence must be green before merge. The product-owner decision
+All repository/CI evidence is green. The product-owner decision
 becomes **APPROVED** when this review pull request is merged. Issue #99 and tracker
 #100 may then close, and Sprint 5 planning may begin under its own specification and
 readiness gate.
@@ -55,7 +55,7 @@ Detailed mappings are in [Sprint 4 traceability](sprint-4-traceability.md) and
 | S04-T01–T05 provider, persistence, receive/transmit, release | PASS | Contract, migration/PostGIS, claim, idempotency, ownership, expiry, concurrency and failure tests |
 | S04-T06–T08 mobile permission, receive-ready, hold-to-talk | PASS — automated | Fake native/provider adapters, fake clocks, permission/accessibility and mandatory-stop tests; device evidence pending |
 | S04-T09 security/privacy | PASS | Exact OpenAPI/config/dependency/native/database/log/evidence and scope gates |
-| S04-T10 reliability/scale | PASS UPON GREEN REVIEW CI | Full regressions and synthetic 100/25/10 grant-state measurement; live media NFRs pending |
+| S04-T10 reliability/scale | PASS — automated | Full regressions and synthetic 100/25/10 grant-state measurement: eligible 6.57 ms and denied 3.97 ms p95; live media NFRs pending |
 | S04-T11 cost/IaC | PASS | Zero-resource Terraform, forbidden-service scans, $10 ceiling and operator stops |
 | S04-T12 review | APPROVED UPON MERGE | Traceability, demonstration, cost/privacy/risk, limitations, retrospective and decision |
 
@@ -68,11 +68,11 @@ Detailed mappings are in [Sprint 4 traceability](sprint-4-traceability.md) and
   failure-closed behavior documented
 - [x] no simulated result is represented as physical-device or provider evidence
 - [x] current cost, future activation ranges, hard stops, privacy and risks reviewed
-- [ ] D09 review CI, including S04-T10 synthetic scale, passes
+- [x] D09 review CI, including S04-T10 synthetic scale, passes
 - [ ] S04-D09 review merged and S04-T12 product-owner approval effective
 - [ ] issue #99 and Sprint 4 tracker #100 closed as completed
 
-The final three boxes complete operationally through green CI and merge. They must not
+The final two boxes complete operationally through merge. They must not
 be represented as complete beforehand.
 
 ## Cost decision

@@ -62,8 +62,9 @@ require(
 evidence = "docs/evidence/sprint-4/README.md"
 require(
     evidence,
-    "d09 ci and measured grant p95: pending this review pull request's successful run",
-    "100 registered accounts, 25 connected receivers, 10 active publishers",
+    "d09 ci and measured grant p95: [run 30872939267]",
+    "95 eligible requests at 6.57 ms p95",
+    "10 busy denials at 3.97 ms p95",
     "review approval does not activate a provider or cloud environment",
 )
 

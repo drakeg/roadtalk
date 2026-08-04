@@ -5,7 +5,7 @@
 - Baseline: merge commit `f98676ae48a758fbfe9bb723fcd253945145f79c`
 - D07 CI: [run 30867485264](https://github.com/drakeg/roadtalk/actions/runs/30867485264)
 - D08 CI: [run 30872097026](https://github.com/drakeg/roadtalk/actions/runs/30872097026)
-- D09 CI and measured grant p95: pending this review pull request's successful run
+- D09 CI and measured grant p95: [run 30872939267](https://github.com/drakeg/roadtalk/actions/runs/30872939267) — eligible 6.57 ms; denied 3.97 ms
 - AWS/LiveKit resources created: none
 - Current and incremental cost: **$0/month**
 - Live-provider and physical-device status: **not performed**
@@ -29,7 +29,7 @@ outcomes only; it does not retain generated values.
 | Configuration/dependencies | Settings tests, dependency allowlists, Expo Doctor, npm/pip audits | Live configuration is disabled; CI has no provider credential/network call or paid/background capability. |
 | Zero-resource cost | disabled Terraform plans, TFLint/Trivy, cost guardrails, and operations gate | Default plans create zero resources; the notification budget is capped at $10; prohibited managed services remain absent. |
 | Prior-sprint compatibility | full backend/mobile/privacy/security/migration/container CI jobs | Sprint 1–3 authentication, identity, recovery, location, privacy, and infrastructure gates remain green. |
-| Synthetic field-test grant scale | `test_ptt_scale.py` with migrated PostgreSQL | 100 registered accounts, 25 connected receivers, 10 active publishers, eligible replays, and busy denials are measured against the 250 ms p95 grant target. |
+| Synthetic field-test grant scale | `test_ptt_scale.py` with migrated PostgreSQL | 100 registered accounts, 25 connected receivers, 10 active publishers, 95 eligible requests at 6.57 ms p95, and 10 busy denials at 3.97 ms p95 passed the 250 ms target. |
 
 ## S04-D08 cost-control evidence
 
