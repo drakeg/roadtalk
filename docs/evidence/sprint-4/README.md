@@ -4,7 +4,7 @@
 - Evidence type: deterministic automated tests, zero-resource plans, and repository inspection
 - Baseline: merge commit `f98676ae48a758fbfe9bb723fcd253945145f79c`
 - D07 CI: [run 30867485264](https://github.com/drakeg/roadtalk/actions/runs/30867485264)
-- D08 CI: pending this pull request's successful run
+- D08 CI: [run 30872097026](https://github.com/drakeg/roadtalk/actions/runs/30872097026)
 - AWS/LiveKit resources created: none
 - Current and incremental cost: **$0/month**
 - Live-provider and physical-device status: **not performed**
