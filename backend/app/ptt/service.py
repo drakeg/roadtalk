@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import or_, select, update
+from sqlalchemy import and_, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -56,6 +56,22 @@ class TransmitGrantReceipt:
     expires_at: datetime
     policy_version: str
     replayed: bool
+
+
+@dataclass(frozen=True)
+class MediaReconciliationReceipt:
+    grants_examined: int
+    grants_locally_revoked: int
+    participants_reconciled: int
+    participants_pending: int
+
+
+_PROVIDER_CLEANUP_OUTCOMES = {
+    "provider_cleanup_pending",
+    "session_revoked",
+    "device_revoked",
+    "account_revoked",
+}
 
 
 def utcnow() -> datetime:
@@ -323,6 +339,7 @@ async def create_transmit_grant(
     )
     room_ref = receive.provider_room_ref
     participant_ref = receive.provider_participant_ref
+    receive_id = receive.id
     db.add(grant)
     try:
         await provider.set_microphone_publish(
@@ -335,12 +352,33 @@ async def create_transmit_grant(
         await db.commit()
     except (MediaProviderError, IntegrityError) as exc:
         await db.rollback()
+        await db.execute(
+            update(MediaGrant)
+            .where(
+                MediaGrant.id == receive_id,
+                MediaGrant.revoked_at.is_(None),
+            )
+            .values(
+                revoked_at=resolved_now,
+                outcome_code="provider_cleanup_pending",
+            )
+        )
+        await db.commit()
         try:
             await provider.set_microphone_publish(
                 MicrophonePublishRequest(
                     room_ref=room_ref,
                     participant_ref=participant_ref,
                     enabled=False,
+                )
+            )
+        except MediaProviderError:
+            pass
+        try:
+            await provider.remove_participant(
+                ParticipantRequest(
+                    room_ref=room_ref,
+                    participant_ref=participant_ref,
                 )
             )
         except MediaProviderError:
@@ -397,8 +435,9 @@ async def release_receive_grant(
     grant.revoked_at = resolved_now
     grant.outcome_code = "released"
     await db.commit()
-    try:
-        if active_transmits:
+    cleanup_error: MediaProviderError | None = None
+    if active_transmits:
+        try:
             await provider.set_microphone_publish(
                 MicrophonePublishRequest(
                     room_ref=grant.provider_room_ref,
@@ -406,6 +445,9 @@ async def release_receive_grant(
                     enabled=False,
                 )
             )
+        except MediaProviderError as exc:
+            cleanup_error = exc
+    try:
         await provider.remove_participant(
             ParticipantRequest(
                 room_ref=grant.provider_room_ref,
@@ -413,10 +455,14 @@ async def release_receive_grant(
             )
         )
     except MediaProviderError as exc:
+        cleanup_error = cleanup_error or exc
+    if cleanup_error is not None:
+        grant.outcome_code = "provider_cleanup_pending"
+        await db.commit()
         raise GrantError(
             "PTT_PROVIDER_UNAVAILABLE",
             "The receive grant is locally released; provider cleanup is pending.",
-        ) from exc
+        ) from cleanup_error
     return GrantReleaseReceipt(
         grant_id=grant.id,
         released_at=resolved_now,
@@ -461,6 +507,29 @@ async def release_transmit_grant(
             )
         )
     except MediaProviderError as exc:
+        grant.outcome_code = "provider_cleanup_pending"
+        if grant.parent_grant_id is not None:
+            await db.execute(
+                update(MediaGrant)
+                .where(
+                    MediaGrant.id == grant.parent_grant_id,
+                    MediaGrant.revoked_at.is_(None),
+                )
+                .values(
+                    revoked_at=resolved_now,
+                    outcome_code="provider_cleanup_pending",
+                )
+            )
+        await db.commit()
+        try:
+            await provider.remove_participant(
+                ParticipantRequest(
+                    room_ref=grant.provider_room_ref,
+                    participant_ref=grant.provider_participant_ref,
+                )
+            )
+        except MediaProviderError:
+            pass
         raise GrantError(
             "PTT_PROVIDER_UNAVAILABLE",
             "Transmit is locally revoked; provider reconciliation is pending.",
@@ -505,7 +574,7 @@ async def release_grant(
     raise GrantError("PTT_GRANT_NOT_FOUND", "The grant was not found.")
 
 
-async def revoke_device_transmit_grants(
+async def revoke_device_media_grants(
     db: AsyncSession,
     *,
     account_id: uuid.UUID,
@@ -519,8 +588,101 @@ async def revoke_device_transmit_grants(
         .where(
             MediaGrant.account_id == account_id,
             MediaGrant.device_id == device_id,
-            MediaGrant.grant_kind == "transmit",
             MediaGrant.revoked_at.is_(None),
         )
         .values(revoked_at=resolved_now, outcome_code=reason)
+    )
+
+
+async def reconcile_media_grants(
+    db: AsyncSession,
+    *,
+    provider: MediaProvider,
+    now: datetime | None = None,
+    limit: int = 100,
+) -> MediaReconciliationReceipt:
+    """Fail closed locally, then retry bounded provider cleanup.
+
+    This routine is deliberately transport-agnostic and unscheduled. D07 tests inject
+    the deterministic fake; a future approved operator path may invoke it without
+    adding a queue, worker, cloud resource, or background provider call to CI.
+    """
+    if limit < 1 or limit > 1_000:
+        raise ValueError("media reconciliation limit must be between 1 and 1000")
+
+    resolved_now = now or utcnow()
+    grants = (
+        await db.scalars(
+            select(MediaGrant)
+            .where(
+                or_(
+                    and_(
+                        MediaGrant.revoked_at.is_(None),
+                        MediaGrant.expires_at <= resolved_now,
+                    ),
+                    MediaGrant.outcome_code.in_(_PROVIDER_CLEANUP_OUTCOMES),
+                )
+            )
+            .order_by(MediaGrant.expires_at, MediaGrant.id)
+            .limit(limit)
+            .with_for_update(skip_locked=True)
+        )
+    ).all()
+
+    locally_revoked = 0
+    participants: dict[tuple[str, str], list[MediaGrant]] = {}
+    for grant in grants:
+        if grant.revoked_at is None:
+            grant.revoked_at = resolved_now
+            grant.outcome_code = "expired"
+            locally_revoked += 1
+        participants.setdefault(
+            (grant.provider_room_ref, grant.provider_participant_ref), []
+        ).append(grant)
+    await db.commit()
+
+    reconciled = 0
+    pending = 0
+    for (room_ref, participant_ref), participant_grants in participants.items():
+        cleanup_failed = False
+        try:
+            await provider.set_microphone_publish(
+                MicrophonePublishRequest(
+                    room_ref=room_ref,
+                    participant_ref=participant_ref,
+                    enabled=False,
+                )
+            )
+        except MediaProviderError:
+            cleanup_failed = True
+        should_remove = any(
+            grant.grant_kind == "receive" or grant.outcome_code in _PROVIDER_CLEANUP_OUTCOMES
+            for grant in participant_grants
+        )
+        if should_remove:
+            try:
+                await provider.remove_participant(
+                    ParticipantRequest(
+                        room_ref=room_ref,
+                        participant_ref=participant_ref,
+                    )
+                )
+            except MediaProviderError:
+                cleanup_failed = True
+        if cleanup_failed:
+            pending += 1
+            for grant in participant_grants:
+                grant.outcome_code = "provider_cleanup_pending"
+        else:
+            reconciled += 1
+            for grant in participant_grants:
+                if grant.outcome_code in _PROVIDER_CLEANUP_OUTCOMES:
+                    grant.outcome_code = "provider_reconciled"
+
+    await db.commit()
+    return MediaReconciliationReceipt(
+        grants_examined=len(grants),
+        grants_locally_revoked=locally_revoked,
+        participants_reconciled=reconciled,
+        participants_pending=pending,
     )

@@ -16,5 +16,11 @@ Scripts must:
 - `scripts/ci/check-identity-privacy.py` rejects Sprint 2 identity/recovery scope drift.
 - `scripts/ci/check-location-privacy.py` rejects background location, coordinate
   persistence/logging paths, maps/geocoding, location history, paid providers, and
-  unapproved managed-service dependencies. Run both locally before opening a pull
-  request; GitHub CI runs them again in the security job.
+  unapproved managed-service dependencies.
+- `scripts/ci/check-ptt-privacy.py` rejects live provider configuration/network paths,
+  over-scoped or paid media capabilities, background/camera/media persistence paths,
+  token/secret/audio/transcript logging or evidence, later-sprint proximity/channel
+  drift, and non-metadata grant columns.
+
+Run all three locally before opening a pull request; GitHub CI runs them again in the
+security job.

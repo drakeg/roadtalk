@@ -96,6 +96,17 @@ def test_fake_provider_is_deterministic_and_masks_token() -> None:
         }
         assert "roomRecord" not in claims["video"]
         assert "egress" not in claims["video"]
+        for forbidden_claim in (
+            "canPublishSources",
+            "hidden",
+            "ingressAdmin",
+            "roomCreate",
+            "roomList",
+            "roomRecord",
+            "roomAdmin",
+            "recorder",
+        ):
+            assert claims["video"].get(forbidden_claim) in (None, False)
 
     asyncio.run(exercise())
 

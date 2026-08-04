@@ -150,38 +150,6 @@ async def _receive_grant_lifecycle() -> None:
             assert transmit_release_replay.replayed is True
             assert provider.publish_requests[-1].enabled is False
 
-            failing_provider = FailingPublishProvider(now=lambda: now)
-            with pytest.raises(GrantError) as provider_failure:
-                await create_transmit_grant(
-                    db,
-                    account_id=account.id,
-                    device_id=device.id,
-                    receive_grant_id=created.grant_id,
-                    idempotency_key="database-transmit-key-failure",
-                    settings=settings,
-                    provider=failing_provider,
-                    now=now,
-                )
-            assert provider_failure.value.code == "PTT_PROVIDER_UNAVAILABLE"
-            assert [request.enabled for request in failing_provider.publish_requests] == [
-                True,
-                False,
-            ]
-            await db.refresh(account)
-            await db.refresh(device)
-            await db.refresh(other_device)
-            assert (
-                await db.scalar(
-                    select(func.count())
-                    .select_from(MediaGrant)
-                    .where(
-                        MediaGrant.account_id == account.id,
-                        MediaGrant.grant_kind == "transmit",
-                    )
-                )
-                == 1
-            )
-
             with pytest.raises(GrantError) as cross_device_replay:
                 await create_receive_grant(
                     db,
@@ -237,6 +205,52 @@ async def _receive_grant_lifecycle() -> None:
             assert release_replay.replayed is True
             assert len(provider.remove_requests) == 1
 
+            cleanup_receive = await create_receive_grant(
+                db,
+                account_id=account.id,
+                device_id=device.id,
+                idempotency_key="database-key-cleanup",
+                settings=settings,
+                provider=provider,
+                now=now,
+                random_ref=lambda: "opaque-cleanup",
+            )
+            failing_provider = FailingPublishProvider(now=lambda: now)
+            with pytest.raises(GrantError) as provider_failure:
+                await create_transmit_grant(
+                    db,
+                    account_id=account.id,
+                    device_id=device.id,
+                    receive_grant_id=cleanup_receive.grant_id,
+                    idempotency_key="database-transmit-key-failure",
+                    settings=settings,
+                    provider=failing_provider,
+                    now=now,
+                )
+            assert provider_failure.value.code == "PTT_PROVIDER_UNAVAILABLE"
+            assert [request.enabled for request in failing_provider.publish_requests] == [
+                True,
+                False,
+            ]
+            assert len(failing_provider.remove_requests) == 1
+            cleanup_stored = await db.scalar(
+                select(MediaGrant).where(MediaGrant.id == cleanup_receive.grant_id)
+            )
+            assert cleanup_stored is not None
+            assert cleanup_stored.revoked_at == now
+            assert cleanup_stored.outcome_code == "provider_cleanup_pending"
+            assert (
+                await db.scalar(
+                    select(func.count())
+                    .select_from(MediaGrant)
+                    .where(
+                        MediaGrant.account_id == account.id,
+                        MediaGrant.grant_kind == "transmit",
+                    )
+                )
+                == 1
+            )
+
             stored = await db.scalar(select(MediaGrant).where(MediaGrant.id == created.grant_id))
             assert stored is not None
             assert stored.idempotency_key_hash != "database-key-0001"
@@ -249,5 +263,13 @@ async def _receive_grant_lifecycle() -> None:
 
             await db.execute(delete(Account).where(Account.id == account.id))
             await db.commit()
+            assert (
+                await db.scalar(
+                    select(func.count())
+                    .select_from(MediaGrant)
+                    .where(MediaGrant.account_id == account.id)
+                )
+                == 0
+            )
     finally:
         await engine.dispose()

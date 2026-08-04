@@ -1,6 +1,6 @@
 # Backend
 
-Sprint 4 active owner: S04-D04 Transmit authorization and revocation.
+Sprint 4 active owner: S04-D07 Security, privacy, and reliability hardening.
 
 The backend is a Python/FastAPI modular-monolith control API.
 
@@ -69,6 +69,16 @@ policy, and expiry. Provider promotion must succeed before local authorization i
 committed; ambiguous outcomes roll back locally and attempt immediate deny
 reconciliation. Release, expiry, receive release, logout, and device revocation
 invalidate publication without a worker or scheduler.
+
+S04-D07 makes ambiguous provider state durably fail closed. A failed promotion revokes
+its parent receive grant and attempts both microphone denial and participant removal.
+Delayed release, refresh replay, logout, and device revocation mark all related local
+media grants revoked before any later provider cleanup. A bounded, explicitly invoked
+reconciliation helper processes expired or cleanup-pending metadata with an injected
+provider; it is not scheduled and creates no queue, worker, network call, or cloud
+resource in CI. Dedicated privacy gates reject live credentials/network adapters,
+paid or background media features, sensitive logs/evidence, non-metadata columns, and
+Sprint 5/6 drift.
 
 ## Local setup
 

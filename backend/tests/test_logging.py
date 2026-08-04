@@ -52,6 +52,10 @@ def test_json_formatter_rejects_unapproved_events_and_sensitive_extras() -> None
     record.heading_deg = 91.5
     record.speed_mps = 12.75
     record.source_device_id = "synthetic-source-device"
+    record.participant_token = "eyJ.synthetic-livekit-token"
+    record.provider_secret = "synthetic-livekit-provider-secret"
+    record.audio_payload = b"synthetic-raw-audio-payload"
+    record.transcript = "synthetic words that must not enter logs"
     record.route = "/api/v1/sessions/recover"
 
     payload = json.loads(JsonFormatter().format(record))
@@ -70,6 +74,10 @@ def test_json_formatter_rejects_unapproved_events_and_sensitive_extras() -> None
         "91.5",
         "12.75",
         "synthetic-source-device",
+        "eyJ.synthetic-livekit-token",
+        "synthetic-livekit-provider-secret",
+        "synthetic-raw-audio-payload",
+        "synthetic words that must not enter logs",
     ):
         assert private_value not in encoded
 
