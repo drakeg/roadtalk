@@ -92,12 +92,12 @@ export function MicrophonePermissionScreen({ lifecycle, navigation }: Props) {
         RoadTalk does not record, transcribe, or store it.
       </Text>
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Receive-ready is microphone-off</Text>
+        <Text style={styles.cardTitle}>Release always means microphone off</Text>
         <Text style={styles.body}>
-          Enabling this foundation joins receive-only with automatic remote
-          audio subscription. It never starts microphone capture. Publishing
-          remains unavailable until the separate hold-to-talk flow is added and
-          the server authorizes it.
+          Enabling live audio joins receive-only. RoadTalk requests a separate,
+          short-lived server authorization only after you press and hold the
+          control below. Releasing, leaving this screen, or reaching 30 seconds
+          turns capture off before cleanup.
         </Text>
       </View>
       <View accessibilityLiveRegion="polite" style={styles.statusCard}>
@@ -143,7 +143,48 @@ export function MicrophonePermissionScreen({ lifecycle, navigation }: Props) {
         </Pressable>
       ) : null}
 
+      {isPushToTalkVisible(snapshot) ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={pushToTalkLabel(snapshot)}
+          accessibilityHint="Double tap and continue holding to request microphone transmission. Release to stop."
+          onPressIn={() => void ownedLifecycle.pressToTalk()}
+          onPressOut={() => void ownedLifecycle.releaseToTalk()}
+          style={({ pressed }) => [
+            styles.pushToTalkButton,
+            snapshot.status === "transmitting" &&
+              styles.pushToTalkButtonActive,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          <Text
+            style={[
+              styles.pushToTalkCue,
+              snapshot.status === "transmitting" &&
+                styles.pushToTalkTextActive,
+            ]}
+          >
+            {pushToTalkCue(snapshot)}
+          </Text>
+          <Text
+            style={[
+              styles.pushToTalkText,
+              snapshot.status === "transmitting" &&
+                styles.pushToTalkTextActive,
+            ]}
+          >
+            {pushToTalkText(snapshot)}
+          </Text>
+        </Pressable>
+      ) : null}
+
       {snapshot.status === "ready" ||
+      snapshot.status === "receiving" ||
+      snapshot.status === "authorizing" ||
+      snapshot.status === "transmitting" ||
+      snapshot.status === "busy" ||
+      snapshot.status === "degraded" ||
+      snapshot.status === "transmit_error" ||
       snapshot.status === "reconnecting" ||
       snapshot.status === "connecting" ? (
         <Pressable
@@ -183,6 +224,12 @@ function statusTitle(snapshot: MediaLifecycleSnapshot): string {
     unavailable: "Microphone unavailable",
     connecting: "Connecting receive-only",
     ready: "Receive-ready · microphone off",
+    receiving: "Receiving remote audio · microphone off",
+    authorizing: "Authorizing · microphone off",
+    transmitting: "Transmitting · release to stop",
+    busy: "Channel busy · microphone off",
+    degraded: "Transmission temporarily unavailable · microphone off",
+    transmit_error: "Transmission failed · microphone off",
     reconnecting: "Reconnecting · microphone off",
     paused: "Disconnected",
     error: "Live audio unavailable",
@@ -195,7 +242,28 @@ function statusBody(snapshot: MediaLifecycleSnapshot): string {
     return "RoadTalk cannot ask again. You can change microphone access in device settings.";
   }
   if (snapshot.status === "ready") {
+    if (snapshot.reason === "maximum") {
+      return "The 30-second maximum was reached. Release, then press and hold again for a new authorization.";
+    }
     return "Remote audio can play while this screen is active. Microphone capture is off.";
+  }
+  if (snapshot.status === "receiving") {
+    return "Another participant is speaking. You can listen now; hold the control when the channel is available.";
+  }
+  if (snapshot.status === "authorizing") {
+    return "Keep holding. RoadTalk is requesting a short-lived microphone-only authorization; capture is still off.";
+  }
+  if (snapshot.status === "transmitting") {
+    return "Your microphone is live. Release now to stop; RoadTalk also stops automatically at 30 seconds.";
+  }
+  if (snapshot.status === "busy") {
+    return "Another transmission has priority. Nothing was captured; release and try again.";
+  }
+  if (snapshot.status === "degraded") {
+    return "The live-audio provider is temporarily unavailable or rate limited. Nothing was captured.";
+  }
+  if (snapshot.status === "transmit_error") {
+    return "RoadTalk stopped capture and released the transmission authorization. Release and try again.";
   }
   if (snapshot.status === "reconnecting") {
     return "The network changed. RoadTalk is restoring receive-only audio without starting the microphone.";
@@ -210,6 +278,48 @@ function statusBody(snapshot: MediaLifecycleSnapshot): string {
     return "RoadTalk disconnected and released local audio resources. You can try again.";
   }
   return "You can continue without granting access.";
+}
+
+function isPushToTalkVisible(snapshot: MediaLifecycleSnapshot): boolean {
+  return [
+    "ready",
+    "receiving",
+    "authorizing",
+    "transmitting",
+    "busy",
+    "degraded",
+    "transmit_error",
+  ].includes(snapshot.status);
+}
+
+function pushToTalkLabel(snapshot: MediaLifecycleSnapshot): string {
+  if (snapshot.status === "transmitting") {
+    return "Transmitting. Release to stop";
+  }
+  if (snapshot.status === "authorizing") {
+    return "Authorizing microphone transmission. Keep holding";
+  }
+  return "Hold to talk. Microphone off";
+}
+
+function pushToTalkCue(snapshot: MediaLifecycleSnapshot): string {
+  if (snapshot.status === "transmitting") {
+    return "● LIVE";
+  }
+  if (snapshot.status === "authorizing") {
+    return "… WAIT";
+  }
+  return "○ OFF";
+}
+
+function pushToTalkText(snapshot: MediaLifecycleSnapshot): string {
+  if (snapshot.status === "transmitting") {
+    return "RELEASE TO STOP";
+  }
+  if (snapshot.status === "authorizing") {
+    return "KEEP HOLDING";
+  }
+  return "HOLD TO TALK";
 }
 
 const styles = StyleSheet.create({
@@ -263,6 +373,34 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 17,
     fontWeight: "600",
+  },
+  pushToTalkButton: {
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderColor: colors.primary,
+    borderRadius: 18,
+    borderWidth: 3,
+    gap: spacing.small,
+    justifyContent: "center",
+    minHeight: 112,
+    padding: spacing.large,
+  },
+  pushToTalkButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  pushToTalkCue: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  pushToTalkText: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+  },
+  pushToTalkTextActive: {
+    color: colors.surface,
   },
   textButton: { alignItems: "center", justifyContent: "center", minHeight: 44 },
   textButtonText: { color: colors.primary, fontSize: 16, fontWeight: "600" },

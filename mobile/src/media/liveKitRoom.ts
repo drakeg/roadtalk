@@ -46,6 +46,14 @@ export class LiveKitReceiveRoom implements ReceiveRoomAdapter {
       room.on(RoomEvent.Reconnecting, handlers.reconnecting);
       room.on(RoomEvent.Reconnected, handlers.reconnected);
       room.on(RoomEvent.Disconnected, handlers.disconnected);
+      room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
+        handlers.receivingChanged(
+          speakers.some(
+            (participant) =>
+              participant.identity !== room.localParticipant.identity,
+          ),
+        );
+      });
       this.room = room;
       await room.connect(grant.serverUrl, grant.participantToken, {
         autoSubscribe: true,
@@ -56,6 +64,16 @@ export class LiveKitReceiveRoom implements ReceiveRoomAdapter {
       await this.disconnect();
       throw error;
     }
+  }
+
+  async setMicrophoneEnabled(enabled: boolean): Promise<void> {
+    if (this.room === null) {
+      if (enabled) {
+        throw new Error("The receive room is not connected.");
+      }
+      return;
+    }
+    await this.room.localParticipant.setMicrophoneEnabled(enabled);
   }
 
   async disconnect(): Promise<void> {

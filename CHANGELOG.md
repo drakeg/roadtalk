@@ -48,6 +48,15 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Receive-ready explicitly keeps microphone capture off, validates join/subscribe-only
   credentials, and exposes stable connecting, ready, reconnecting, blocked, unavailable,
   and retry states through a fake-tested mobile lifecycle.
+- Accessible foreground hold-to-talk requests a nested server transmit grant before
+  enabling capture, accepts only microphone publication scope, and serializes native
+  capture operations so release cannot be overtaken by an in-flight enable.
+- Receiving, authorizing, transmitting, busy, provider-degraded, transmit-error,
+  reconnecting, permission-revoked, and 30-second-maximum states use dynamic
+  screen-reader labels, non-color text/symbol cues, and a 112-point control.
+- Fake-clock and cancellation tests cover maximum duration, rapid press/release,
+  denied authorization, incoming audio, reconnect, background, screen exit, logout,
+  and capture-off-before-cleanup ordering.
 - No LiveKit project, live provider call, token/secret/audio storage, AWS resource,
   managed service, payment method, or incremental recurring cost.
 
