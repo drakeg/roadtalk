@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+from collections.abc import Callable
 from datetime import UTC, datetime
 from math import ceil
 from time import perf_counter
@@ -18,6 +19,10 @@ from app.ptt.service import GrantError, create_receive_grant, create_transmit_gr
 def _p95(milliseconds: list[float]) -> float:
     ordered = sorted(milliseconds)
     return ordered[max(0, ceil(len(ordered) * 0.95) - 1)]
+
+
+def _fixed_ref(value: str) -> Callable[[], str]:
+    return lambda: value
 
 
 @pytest.mark.skipif(
@@ -55,7 +60,7 @@ async def _grant_service_at_synthetic_field_test_scale() -> None:
             receive_grants = []
             for index in range(25):
                 started = perf_counter()
-                grant = await create_receive_grant(
+                receive_grant = await create_receive_grant(
                     db,
                     account_id=accounts[index].id,
                     device_id=devices[index].id,
@@ -63,15 +68,15 @@ async def _grant_service_at_synthetic_field_test_scale() -> None:
                     settings=settings,
                     provider=provider,
                     now=now,
-                    random_ref=lambda index=index: f"scale{index:03d}",
+                    random_ref=_fixed_ref(f"scale{index:03d}"),
                 )
                 eligible_ms.append((perf_counter() - started) * 1_000)
-                receive_grants.append(grant)
+                receive_grants.append(receive_grant)
 
             transmit_grants = []
             for index in range(10):
                 started = perf_counter()
-                grant = await create_transmit_grant(
+                transmit_grant = await create_transmit_grant(
                     db,
                     account_id=accounts[index].id,
                     device_id=devices[index].id,
@@ -82,7 +87,7 @@ async def _grant_service_at_synthetic_field_test_scale() -> None:
                     now=now,
                 )
                 eligible_ms.append((perf_counter() - started) * 1_000)
-                transmit_grants.append(grant)
+                transmit_grants.append(transmit_grant)
 
             # Idempotent replays add authenticated eligible load without increasing
             # provider connections or publisher state beyond the approved scale.
