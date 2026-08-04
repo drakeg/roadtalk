@@ -55,6 +55,7 @@ async def _receive_grant_lifecycle() -> None:
         async with factory() as db:
             db.add_all([account, device, other_device])
             await db.commit()
+            account_id = account.id
 
             created = await create_receive_grant(
                 db,
@@ -244,7 +245,7 @@ async def _receive_grant_lifecycle() -> None:
                     select(func.count())
                     .select_from(MediaGrant)
                     .where(
-                        MediaGrant.account_id == account.id,
+                        MediaGrant.account_id == account_id,
                         MediaGrant.grant_kind == "transmit",
                     )
                 )
@@ -261,13 +262,13 @@ async def _receive_grant_lifecycle() -> None:
                 for fragment in ("token", "secret", "audio", "transcript", "listener")
             )
 
-            await db.execute(delete(Account).where(Account.id == account.id))
+            await db.execute(delete(Account).where(Account.id == account_id))
             await db.commit()
             assert (
                 await db.scalar(
                     select(func.count())
                     .select_from(MediaGrant)
-                    .where(MediaGrant.account_id == account.id)
+                    .where(MediaGrant.account_id == account_id)
                 )
                 == 0
             )
