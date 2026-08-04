@@ -24,6 +24,10 @@ Scripts must:
 - `scripts/ci/check-ptt-operations.py` requires the approved PTT stop ceilings,
   activation/revocation/destroy procedures, named live/device exceptions, a $10
   Terraform notification budget, zero-resource defaults, and CI enforcement.
+- `scripts/ci/check-sprint-4-review.py` requires complete S04-R01–R12,
+  S04-T01–T12, and S04-D01–D09 traceability; merge-bound product-owner approval;
+  honest live/device exceptions; $0 current cost; and synthetic 100/25/10 grant-scale
+  measurement against the 250 ms p95 target.
 
-Run all four locally before opening a pull request; GitHub CI runs them again in the
+Run all five locally before opening a pull request; GitHub CI runs them again in the
 security job.

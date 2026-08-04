@@ -4,7 +4,8 @@
 
 Approved — product owner approved the specification, readiness gate, and zero-
 revenue cost policy on 2026-07-23. Local/GitHub CI implementation is authorized
-through tracker #100; cloud activation remains unauthorized.
+through tracker #100; S04-D02 through S04-D08 are merged and S04-D09 final review is
+pending. Cloud activation remains unauthorized.
 
 ## Objective
 

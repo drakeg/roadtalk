@@ -5,6 +5,7 @@
 - Baseline: merge commit `f98676ae48a758fbfe9bb723fcd253945145f79c`
 - D07 CI: [run 30867485264](https://github.com/drakeg/roadtalk/actions/runs/30867485264)
 - D08 CI: [run 30872097026](https://github.com/drakeg/roadtalk/actions/runs/30872097026)
+- D09 CI and measured grant p95: [run 30872939267](https://github.com/drakeg/roadtalk/actions/runs/30872939267) — eligible 6.57 ms; denied 3.97 ms
 - AWS/LiveKit resources created: none
 - Current and incremental cost: **$0/month**
 - Live-provider and physical-device status: **not performed**
@@ -28,6 +29,7 @@ outcomes only; it does not retain generated values.
 | Configuration/dependencies | Settings tests, dependency allowlists, Expo Doctor, npm/pip audits | Live configuration is disabled; CI has no provider credential/network call or paid/background capability. |
 | Zero-resource cost | disabled Terraform plans, TFLint/Trivy, cost guardrails, and operations gate | Default plans create zero resources; the notification budget is capped at $10; prohibited managed services remain absent. |
 | Prior-sprint compatibility | full backend/mobile/privacy/security/migration/container CI jobs | Sprint 1–3 authentication, identity, recovery, location, privacy, and infrastructure gates remain green. |
+| Synthetic field-test grant scale | `test_ptt_scale.py` with migrated PostgreSQL | 100 registered accounts, 25 connected receivers, 10 active publishers, 95 eligible requests at 6.57 ms p95, and 10 busy denials at 3.97 ms p95 passed the 250 ms target. |
 
 ## S04-D08 cost-control evidence
 
@@ -69,3 +71,11 @@ Those remain explicit pending exceptions behind the applicable Sprint 1 gates an
 separately approved test record. Use the
 [physical-device media template](physical-device-media-test-template.md) and
 [scheduled cloud test template](scheduled-cloud-test-record-template.md) only after approval.
+
+## Final review
+
+The complete requirement, acceptance-test, and deliverable mapping is in
+[Sprint 4 traceability](../../sprints/sprint-4-traceability.md). The product-owner
+decision is recorded by merging the [Sprint 4 review](../../sprints/sprint-4-review.md)
+only after its CI run is green. Review approval does not activate a provider or cloud
+environment.
