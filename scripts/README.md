@@ -21,6 +21,9 @@ Scripts must:
   over-scoped or paid media capabilities, background/camera/media persistence paths,
   token/secret/audio/transcript logging or evidence, later-sprint proximity/channel
   drift, and non-metadata grant columns.
+- `scripts/ci/check-ptt-operations.py` requires the approved PTT stop ceilings,
+  activation/revocation/destroy procedures, named live/device exceptions, a $10
+  Terraform notification budget, zero-resource defaults, and CI enforcement.
 
-Run all three locally before opening a pull request; GitHub CI runs them again in the
+Run all four locally before opening a pull request; GitHub CI runs them again in the
 security job.

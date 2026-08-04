@@ -1,6 +1,6 @@
 # Operational runbooks
 
-These runbooks are the operator entry point through Sprint 3. Follow them exactly, use
+These runbooks are the operator entry point through Sprint 4. Follow them exactly, use
 only synthetic data, and record evidence without secrets, tokens, database dumps,
 or personal data.
 
@@ -10,6 +10,7 @@ or personal data.
 | Authentication lifecycle | [Authentication operations](authentication-operations.md) | Redacted status codes and correlation IDs |
 | Identity and anonymous recovery | [Identity and recovery operations](identity-recovery-operations.md) | Stable problem codes, route templates, synthetic lifecycle result |
 | Foreground location | [Foreground location operations](location-operations.md) | Stable problem codes, route templates, semantic synthetic result |
+| Push-to-Talk and media cost | [PTT operations](ptt-operations.md) | Aggregate synthetic results, usage ceilings, cost and destroy verification |
 | CI failure triage | [CI quality and security](ci-quality-security.md) | Workflow URL, failed gate, corrective commit |
 | Field-test deploy/rollback | [Field-test deployment](field-test-deployment.md) | Commit, image digest, SSM command IDs, health results |
 | Backup/restore | [Database backup and restore](database-backup-restore.md) | Object key/version, checksums, row-count comparison |
@@ -30,6 +31,8 @@ or personal data.
   support or administrator bypass for a lost anonymous recovery key.
 - Never request coordinates, accuracy, heading, speed, nearby identities, exact
   counts/distances, or request bodies as location diagnostic evidence.
+- Never request participant tokens, provider keys/secrets, audio, transcripts,
+  room/participant references, or recordings as PTT diagnostic evidence.
 
 ## Rehearsal record
 

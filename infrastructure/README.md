@@ -45,7 +45,9 @@ verifying off-instance backups.
 
 The monitoring baseline adds small CloudWatch alarm/log charges and is required before
 an enabled field test can remain running. Detailed monitoring and custom metrics stay
-off.
+off. The monthly notification budget defaults to the approved **$10 hard ceiling**;
+enabled plans reject a value outside $1–$10. Budget notifications do not stop
+resources, so the approved test window must retain a human destroy owner.
 
 ## Prerequisites
 
@@ -95,7 +97,9 @@ The first plan must report zero resources because `enable_field_test = false`.
 For an approved field-test window, copy `terraform.tfvars.example` to an ignored
 private file, set the real account/bucket values, and change
 `enable_field_test = true`. Save the reviewed plan to a protected location and apply
-that exact plan manually. CI never applies Terraform.
+that exact plan manually. The plan must retain `monthly_budget_usd = 10`. CI never
+applies Terraform. Follow the PTT operations runbook's dated pre-cost and post-destroy
+inventory whenever the window includes media testing.
 
 ## Runtime secrets
 

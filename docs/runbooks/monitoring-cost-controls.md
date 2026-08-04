@@ -9,7 +9,7 @@ Field test cannot be enabled unless `enable_monitoring = true`. The baseline use
 - one sustained CPU alarm;
 - one SNS topic/email subscription;
 - one API log group with three-day retention;
-- one monthly budget with forecasted 80% and actual 100% email notifications.
+- one **$10 monthly budget** with forecasted 80% and actual 100% email notifications.
 
 CloudWatch alarms and log ingestion can incur small charges. This is the minimum
 accepted field-test set; no paid dashboard, custom metric, high-frequency metric,
@@ -45,13 +45,17 @@ Never generate uncontrolled load merely to trigger an alarm.
 
 At 80% forecast:
 
-1. verify the field test is actively needed;
-2. stop the instance outside scheduled testing if acceptable;
-3. inspect EC2, public IPv4, EBS, ECR, S3, logs, and alarm charges;
-4. remove stale images/backups only within retention policy.
+1. pause new test activation and verify the field test is actively needed;
+2. determine whether the approved script can finish below the $10 hard ceiling;
+3. stop or destroy the stack outside scheduled testing;
+4. inspect EC2, public IPv4, EBS, ECR, S3, logs, and alarm charges;
+5. remove stale images/backups only within retention policy.
 
-At 100% actual, pause the field test unless the owner explicitly approves continued
-spend. A budget is notification, not an automatic shutdown.
+At 100% actual, stop the field test and disconnect provider participants. Continued
+testing requires a new dated estimate and explicit product-owner decision; it cannot
+be authorized by changing the budget in place. A budget is notification, not an
+automatic shutdown. Follow the PTT runbook for LiveKit's separate aggregate usage
+stops and the mandatory post-test destroy/inventory procedure.
 
 ## Scaling rule
 

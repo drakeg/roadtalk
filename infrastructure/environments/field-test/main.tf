@@ -17,9 +17,11 @@ resource "terraform_data" "validation" {
       condition = (
         can(regex("^[0-9]{12}$", var.aws_account_id)) &&
         length(var.backup_bucket_name) >= 3 &&
-        var.enable_monitoring
+        var.enable_monitoring &&
+        var.monthly_budget_usd > 0 &&
+        var.monthly_budget_usd <= 10
       )
-      error_message = "Enabled field test requires account ID, backup bucket, and monitoring."
+      error_message = "Enabled field test requires account ID, backup bucket, monitoring, and a budget from $1 through $10."
     }
   }
 }
