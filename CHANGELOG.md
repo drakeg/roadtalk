@@ -40,7 +40,7 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Nested transmit authorization for an active caller-owned receive grant, with
   microphone-only provider promotion, one active publisher, 30-second expiry,
   idempotent revocation, receive-release cascade, and failure-closed reconciliation.
-- Logout and owned-device revocation synchronously invalidate local transmit grants.
+- Logout and owned-device revocation synchronously invalidate local media grants.
 - Pinned Expo 57-compatible LiveKit native dependencies, an audio-only config plugin,
   purpose-before-permission microphone states, receive-only room/audio adapters, and
   deterministic cleanup on background, screen exit, logout/revocation, failure, and
@@ -57,6 +57,17 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Fake-clock and cancellation tests cover maximum duration, rapid press/release,
   denied authorization, incoming audio, reconnect, background, screen exit, logout,
   and capture-off-before-cleanup ordering.
+- Ambiguous promotion or delayed release now revokes affected local media authority,
+  records metadata-only provider-cleanup state, and attempts microphone denial plus
+  participant removal without reauthorizing uncertain state.
+- Refresh replay, logout, and device revocation invalidate all active media grants for
+  the affected device, with a bounded unscheduled reconciliation helper for expired or
+  cleanup-pending participants.
+- A dedicated Sprint 4 CI gate rejects live provider configuration/network paths,
+  paid/background media capabilities, sensitive logging/evidence, non-metadata grant
+  columns, and later-sprint proximity/channel drift while preserving prior gates.
+- Refreshed the test-tool and transitive mobile dependency resolutions for current
+  security advisories without adding runtime packages or changing approved scope.
 - No LiveKit project, live provider call, token/secret/audio storage, AWS resource,
   managed service, payment method, or incremental recurring cost.
 

@@ -258,7 +258,7 @@ development logs must never print request bodies, authorization headers, or stor
 S04-D06 adds the accessible foreground hold-to-talk experience and deterministic
 client safety tests only. It does not add proximity, channel selection, user channels,
 background transmission, hands-free/toggle behavior, recording, transcription,
-provider deployment, or any cloud resource. Hardening, operations/evidence, and final
-review remain assigned to S04-D07–D09. Real-device audio route, interruption,
+provider deployment, or any cloud resource. Operations/evidence and final review
+remain assigned to S04-D08–D09. Real-device audio route, interruption,
 Bluetooth, network transition, battery, latency, screen-reader gesture, and LiveKit
 Cloud outcomes remain pending approved physical/provider evidence.

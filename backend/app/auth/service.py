@@ -11,7 +11,7 @@ from app.auth.schemas import AnonymousSessionRequest, AnonymousSessionResponse, 
 from app.auth.security import hash_refresh_token, issue_access_token, new_refresh_token
 from app.config import Settings
 from app.db.models import Account, Device, Session
-from app.ptt.service import revoke_device_transmit_grants
+from app.ptt.service import revoke_device_media_grants
 
 
 class AuthenticationError(ValueError):
@@ -110,6 +110,13 @@ async def rotate_refresh_token(db: AsyncSession, raw_token: str, settings: Setti
             )
             .values(revoked_at=now, revoke_reason="refresh_replay")
         )
+        await revoke_device_media_grants(
+            db,
+            account_id=current.account_id,
+            device_id=current.device_id,
+            reason="session_revoked",
+            now=now,
+        )
         await db.commit()
         raise AuthenticationError(
             "REFRESH_REPLAY_DETECTED",
@@ -169,7 +176,7 @@ async def revoke_session(db: AsyncSession, session: Session, reason: str) -> Non
     if session.revoked_at is None:
         session.revoked_at = utcnow()
         session.revoke_reason = reason
-        await revoke_device_transmit_grants(
+        await revoke_device_media_grants(
             db,
             account_id=session.account_id,
             device_id=session.device_id,
@@ -195,7 +202,7 @@ async def revoke_device_sessions(
         )
         .values(revoked_at=utcnow(), revoke_reason="device_revoked")
     )
-    await revoke_device_transmit_grants(
+    await revoke_device_media_grants(
         db,
         account_id=account_id,
         device_id=device_id,

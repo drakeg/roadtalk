@@ -47,7 +47,9 @@ def test_replayed_refresh_revokes_the_active_token_family() -> None:
         asyncio.run(rotate_refresh_token(db, raw_token, config))
 
     assert raised.value.code == "REFRESH_REPLAY_DETECTED"
-    db.execute.assert_awaited_once()
+    assert db.execute.await_count == 2
+    media_statement = str(db.execute.await_args_list[1].args[0])
+    assert "media_grant.revoked_at IS NULL" in media_statement
     db.commit.assert_awaited_once()
 
 
@@ -94,4 +96,8 @@ def test_revoke_session_is_idempotent() -> None:
     asyncio.run(revoke_session(db, current, "logout"))
 
     assert current.revoke_reason == "logout"
+    statement = str(db.execute.await_args.args[0])
+    assert "media_grant.grant_kind" not in statement
+    assert "media_grant.revoked_at IS NULL" in statement
+    db.execute.assert_awaited_once()
     db.commit.assert_awaited_once()
