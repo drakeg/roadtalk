@@ -2,10 +2,10 @@
 
 ## Status
 
-Proposed — awaiting product-owner approval. Sprint 4 was accepted by merged PR #108
-on 2026-08-04 and authorizes Sprint 5 planning only. Coding and cloud/provider
-activation remain unauthorized until this specification and readiness gate are
-approved.
+Approved for local/GitHub CI implementation on 2026-08-06 through product-owner
+approval issue #109, deliverable issues #110–#118, and tracker #119. This approval
+does not authorize AWS or LiveKit activation, a paid plan, provider calls, or recurring
+spend.
 
 ## Objective
 
