@@ -2,6 +2,31 @@
 
 All notable RoadTalk changes are recorded here. The repository history and sprint review records remain the detailed source of truth.
 
+## Unreleased — Sprint 5: Proximity Engine
+
+### Planning
+
+- Approved S05-R01–R12, S05-T01–T12, S05-D01–D09, readiness, the $0
+  local/GitHub CI implementation policy, and named live/device/cloud exceptions on
+  2026-08-06 through issue #109.
+- Created deliverable issues #110–#118 and tracker #119; implementation begins with
+  S05-D02 (#111).
+- AWS and LiveKit activation, provider calls, paid plans, payment methods, always-on
+  operation, and recurring spend remain unauthorized.
+
+### Added
+
+- Versioned, server-controlled proximity policy with a 5,000-meter planning default
+  and a configuration invariant requiring location usability to cover the complete
+  transmit window.
+- Private indexed eligibility query joining current same-device locations to active
+  accounts, sessions, consent, and controlled-room receive grants through delivery
+  expiry using inclusive PostGIS `ST_DWithin`.
+- Exact transient opaque receiver result shape, boundary/high-latitude/antimeridian
+  database fixtures, GiST plan evidence, and a dedicated proximity privacy/scope gate.
+- No new database object, API, provider dependency/call, AWS resource, managed service,
+  or recurring cost.
+
 ## Unreleased — Sprint 4: Push-to-Talk
 
 ### Planning

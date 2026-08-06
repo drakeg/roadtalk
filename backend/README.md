@@ -1,6 +1,6 @@
 # Backend
 
-Sprint 4 active owner: S04-D07 Security, privacy, and reliability hardening.
+Sprint 5 active owner: S05-D02 Proximity policy and indexed query.
 
 The backend is a Python/FastAPI modular-monolith control API.
 
@@ -79,6 +79,16 @@ provider; it is not scheduled and creates no queue, worker, network call, or clo
 resource in CI. Dedicated privacy gates reject live credentials/network adapters,
 paid or background media features, sensitive logs/evidence, non-metadata columns, and
 Sprint 5/6 drift.
+
+S05-D02 adds a versioned server-only proximity policy and a private authorization
+query over the existing PostGIS location and media-grant tables. The sender location
+and every candidate location must remain usable through the complete 30-second
+delivery window. Candidates also require same-device location ownership, an active
+account/session/receive grant through that window, the controlled room, current
+consent, the current policies, and the inclusive GiST-backed `ST_DWithin` predicate.
+The query returns only transient opaque grant/account/device/participant references
+to the authorization service; it adds no API, persistence, migration, provider call,
+worker, cache, AWS resource, or recurring cost.
 
 ## Local setup
 

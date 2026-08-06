@@ -14,6 +14,9 @@ def test_ptt_provider_is_disabled_and_secret_free_by_default() -> None:
     assert settings.ptt_livekit_api_key is None
     assert settings.ptt_livekit_api_secret is None
     assert settings.ptt_transmit_grant_ttl_seconds <= settings.ptt_receive_grant_ttl_seconds
+    assert settings.ptt_transmit_grant_ttl_seconds <= settings.location_usable_ttl_seconds
+    assert settings.ptt_proximity_policy_version == "proximity-v1"
+    assert settings.ptt_proximity_radius_m == 5_000
 
 
 def test_disabled_ptt_rejects_stray_provider_configuration() -> None:

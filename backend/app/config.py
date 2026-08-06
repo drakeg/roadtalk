@@ -68,6 +68,8 @@ class Settings(BaseSettings):
     ptt_receive_grant_window_seconds: int = Field(default=60, ge=1, le=3_600)
     ptt_transmit_grant_limit: int = Field(default=60, ge=1, le=600)
     ptt_transmit_grant_window_seconds: int = Field(default=60, ge=1, le=3_600)
+    ptt_proximity_policy_version: str = Field(default="proximity-v1", min_length=1, max_length=32)
+    ptt_proximity_radius_m: float = Field(default=5_000, gt=0, le=100_000)
     ptt_controlled_room_ref: str = Field(
         default="rm_7f3d2c9a1b6e4d08",
         min_length=16,
@@ -93,6 +95,10 @@ class Settings(BaseSettings):
         if self.ptt_transmit_grant_ttl_seconds > self.ptt_receive_grant_ttl_seconds:
             raise ValueError(
                 "ptt_transmit_grant_ttl_seconds must not exceed ptt_receive_grant_ttl_seconds"
+            )
+        if self.ptt_transmit_grant_ttl_seconds > self.location_usable_ttl_seconds:
+            raise ValueError(
+                "ptt_transmit_grant_ttl_seconds must not exceed location_usable_ttl_seconds"
             )
 
         livekit_values = (

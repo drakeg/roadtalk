@@ -1,0 +1,139 @@
+import asyncio
+import uuid
+from datetime import UTC, datetime
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
+
+import pytest
+from geoalchemy2 import WKTElement
+from geoalchemy2.elements import WKBElement
+from pydantic_core import ValidationError
+from sqlalchemy.dialects.postgresql.base import PGDialect
+
+from app.config import Settings
+from app.ptt.proximity import (
+    EligibleReceiveGrant,
+    ProximityEligibilityError,
+    find_eligible_receive_grants,
+    proximity_policy_from_settings,
+)
+
+
+def test_proximity_policy_is_versioned_server_configuration() -> None:
+    settings = Settings(environment="test")
+
+    policy = proximity_policy_from_settings(settings)
+
+    assert policy.version == "proximity-v1"
+    assert policy.radius_m == 5_000
+    assert policy.delivery_window_seconds == 30
+    assert policy.location_policy_version == "location-v1"
+    assert policy.ptt_policy_version == "ptt-v1"
+    assert policy.max_usable_accuracy_m == 100
+    assert policy.room_ref == settings.ptt_controlled_room_ref
+
+
+def test_location_ttl_must_support_the_complete_delivery_window() -> None:
+    with pytest.raises(ValidationError, match="must not exceed location_usable"):
+        Settings(
+            environment="test",
+            location_usable_ttl_seconds=20,
+            location_degraded_ttl_seconds=20,
+            ptt_transmit_grant_ttl_seconds=30,
+        )
+
+
+def test_proximity_query_fails_closed_without_sender_location() -> None:
+    asyncio.run(_missing_sender())
+
+
+async def _missing_sender() -> None:
+    db = AsyncMock()
+    db.scalar.return_value = None
+
+    with pytest.raises(ProximityEligibilityError):
+        await find_eligible_receive_grants(
+            db,
+            sender_account_id=uuid.uuid4(),
+            sender_device_id=uuid.uuid4(),
+            policy=proximity_policy_from_settings(Settings(environment="test")),
+            now=datetime(2026, 8, 6, 1, tzinfo=UTC),
+        )
+
+    db.scalar.assert_awaited_once()
+    db.execute.assert_not_awaited()
+
+
+def test_proximity_query_returns_only_transient_opaque_receiver_metadata() -> None:
+    asyncio.run(_private_eligibility())
+
+
+async def _private_eligibility() -> None:
+    sender_account_id = uuid.uuid4()
+    sender_device_id = uuid.uuid4()
+    receive_grant_id = uuid.uuid4()
+    recipient_account_id = uuid.uuid4()
+    recipient_device_id = uuid.uuid4()
+    sender_position = WKTElement("POINT(-75 40)", srid=4326)
+    result = SimpleNamespace(
+        all=lambda: [
+            (
+                receive_grant_id,
+                recipient_account_id,
+                recipient_device_id,
+                "participant_opaque_receiver",
+            )
+        ]
+    )
+    db = AsyncMock()
+    db.scalar.return_value = SimpleNamespace(position=sender_position)
+    db.execute.return_value = result
+
+    eligible = await find_eligible_receive_grants(
+        db,
+        sender_account_id=sender_account_id,
+        sender_device_id=sender_device_id,
+        policy=proximity_policy_from_settings(Settings(environment="test")),
+        now=datetime(2026, 8, 6, 1, tzinfo=UTC),
+    )
+
+    assert len(eligible) == 1
+    assert eligible[0].receive_grant_id == receive_grant_id
+    assert eligible[0].account_id == recipient_account_id
+    assert eligible[0].device_id == recipient_device_id
+    assert eligible[0].participant_ref == "participant_opaque_receiver"
+    assert set(eligible[0].__dict__) == {
+        "receive_grant_id",
+        "account_id",
+        "device_id",
+        "participant_ref",
+    }
+
+    statement = db.execute.await_args.args[0]
+    compiled = str(
+        statement.compile(
+            dialect=PGDialect(),  # type: ignore[no-untyped-call]
+            compile_kwargs={"render_postcompile": True},
+        )
+    ).lower()
+    assert "st_dwithin" in compiled
+    assert "current_location.source_device_id = media_grant.device_id" in compiled
+    assert "media_grant.grant_kind" in compiled
+    assert "media_grant.provider_room_ref" in compiled
+    assert "session.revoked_at is null" in compiled
+    assert "account.status" in compiled
+    assert "distance" not in compiled
+    assert "st_distance" not in compiled
+    assert "latitude" not in compiled
+    assert "longitude" not in compiled
+
+
+def test_eligible_receiver_shape_cannot_include_location_values() -> None:
+    annotations = EligibleReceiveGrant.__annotations__
+    assert annotations == {
+        "receive_grant_id": uuid.UUID,
+        "account_id": uuid.UUID,
+        "device_id": uuid.UUID,
+        "participant_ref": str,
+    }
+    assert WKBElement not in annotations.values()
