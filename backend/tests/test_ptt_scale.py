@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import uuid
 from collections.abc import Callable
 from datetime import UTC, datetime
 from math import ceil
@@ -8,11 +9,12 @@ from time import perf_counter
 
 import pytest
 from sqlalchemy import delete
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import Settings
 from app.db.models import Account, Device
 from app.ptt.provider import FakeMediaProvider
+from app.ptt.proximity import EligibleReceiveGrant, ProximityPolicy
 from app.ptt.service import GrantError, create_receive_grant, create_transmit_grant
 
 
@@ -23,6 +25,25 @@ def _p95(milliseconds: list[float]) -> float:
 
 def _fixed_ref(value: str) -> Callable[[], str]:
     return lambda: value
+
+
+async def _synthetic_sprint4_audience(
+    db: AsyncSession,
+    *,
+    sender_account_id: uuid.UUID,
+    sender_device_id: uuid.UUID,
+    policy: ProximityPolicy,
+    now: datetime | None = None,
+) -> tuple[EligibleReceiveGrant, ...]:
+    del db, sender_account_id, sender_device_id, policy, now
+    return (
+        EligibleReceiveGrant(
+            receive_grant_id=uuid.uuid4(),
+            account_id=uuid.uuid4(),
+            device_id=uuid.uuid4(),
+            participant_ref="participant_synthetic_scale",
+        ),
+    )
 
 
 @pytest.mark.skipif(
@@ -84,6 +105,7 @@ async def _grant_service_at_synthetic_field_test_scale() -> None:
                     idempotency_key=f"scale-transmit-{index:03d}",
                     settings=settings,
                     provider=provider,
+                    eligibility_finder=_synthetic_sprint4_audience,
                     now=now,
                 )
                 eligible_ms.append((perf_counter() - started) * 1_000)

@@ -26,6 +26,13 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
   database fixtures, GiST plan evidence, and a dedicated proximity privacy/scope gate.
 - No new database object, API, provider dependency/call, AWS resource, managed service,
   or recurring cost.
+- Nearby-scoped transmit authorization now requires a usable sender location and a
+  non-empty server-derived audience before transmit persistence or microphone
+  promotion. Stable `PTT_LOCATION_UNAVAILABLE` and `PTT_NO_NEARBY_LISTENERS`
+  denials disclose no membership details.
+- Recipient eligibility remains transient in process memory; transmit request and
+  response schemas, provider behavior, persistence, infrastructure, and recurring
+  cost are unchanged.
 
 ## Unreleased — Sprint 4: Push-to-Talk
 

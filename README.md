@@ -50,7 +50,8 @@ and $10 incremental monthly cost. Crossing any stop pauses testing; budgets and
 provider quotas never authorize automatic upgrade or continued spend.
 
 Sprint 4 is complete and product-owner accepted by merged PR #108. Sprint 5 proximity
-implementation is active through tracker #119, beginning with S05-D02 (#111). Only
+implementation is active through tracker #119; S05-D02 (#111) is complete and
+S05-D03 (#112) is active. Only
 local/GitHub CI implementation is authorized; cloud/provider activation and spend
 remain blocked.
 

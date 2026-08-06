@@ -1,14 +1,16 @@
 import asyncio
 import os
+import uuid
 from datetime import UTC, datetime
 
 import pytest
 from sqlalchemy import delete, func, select
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import Settings
 from app.db.models import Account, Device, MediaGrant
 from app.ptt.provider import FakeMediaProvider, MediaProviderError, MicrophonePublishRequest
+from app.ptt.proximity import EligibleReceiveGrant, ProximityPolicy
 from app.ptt.service import (
     GrantError,
     create_receive_grant,
@@ -16,6 +18,25 @@ from app.ptt.service import (
     release_receive_grant,
     release_transmit_grant,
 )
+
+
+async def _synthetic_eligible_audience(
+    db: AsyncSession,
+    *,
+    sender_account_id: uuid.UUID,
+    sender_device_id: uuid.UUID,
+    policy: ProximityPolicy,
+    now: datetime | None = None,
+) -> tuple[EligibleReceiveGrant, ...]:
+    del db, sender_account_id, sender_device_id, policy, now
+    return (
+        EligibleReceiveGrant(
+            receive_grant_id=uuid.uuid4(),
+            account_id=uuid.uuid4(),
+            device_id=uuid.uuid4(),
+            participant_ref="participant_synthetic_eligible",
+        ),
+    )
 
 
 class FailingPublishProvider(FakeMediaProvider):
@@ -101,6 +122,7 @@ async def _receive_grant_lifecycle() -> None:
                 idempotency_key="database-transmit-key-0001",
                 settings=settings,
                 provider=provider,
+                eligibility_finder=_synthetic_eligible_audience,
                 now=now,
             )
             transmit_replay = await create_transmit_grant(
@@ -226,6 +248,7 @@ async def _receive_grant_lifecycle() -> None:
                     idempotency_key="database-transmit-key-failure",
                     settings=settings,
                     provider=failing_provider,
+                    eligibility_finder=_synthetic_eligible_audience,
                     now=now,
                 )
             assert provider_failure.value.code == "PTT_PROVIDER_UNAVAILABLE"

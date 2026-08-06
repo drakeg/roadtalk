@@ -1,6 +1,6 @@
 # Backend
 
-Sprint 5 active owner: S05-D02 Proximity policy and indexed query.
+Sprint 5 active owner: S05-D03 Nearby-scoped transmit authorization.
 
 The backend is a Python/FastAPI modular-monolith control API.
 
@@ -89,6 +89,13 @@ consent, the current policies, and the inclusive GiST-backed `ST_DWithin` predic
 The query returns only transient opaque grant/account/device/participant references
 to the authorization service; it adds no API, persistence, migration, provider call,
 worker, cache, AWS resource, or recurring cost.
+
+S05-D03 integrates that private query into transmit creation after caller-owned
+receive-grant and concurrency checks and before any transmit persistence or microphone
+promotion. Missing usable sender location fails as `PTT_LOCATION_UNAVAILABLE`; an
+empty audience fails as `PTT_NO_NEARBY_LISTENERS`. Recipient membership remains
+transient process memory and is neither returned nor stored. The API shape, provider
+boundary, disabled defaults, and $0 infrastructure posture remain unchanged.
 
 ## Local setup
 

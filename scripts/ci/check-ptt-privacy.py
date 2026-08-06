@@ -129,7 +129,6 @@ forbid_tokens(
 for path in (
     "backend/app/api/ptt.py",
     "backend/app/ptt/schemas.py",
-    "backend/app/ptt/service.py",
 ):
     forbid_tokens(
         path,
@@ -142,6 +141,19 @@ for path in (
             "proximity",
         ),
     )
+
+# Sprint 5 authorizes server-only proximity decisions inside the service while the
+# retained Sprint 4 API/schema boundary must remain entirely non-disclosing.
+forbid_tokens(
+    "backend/app/ptt/service.py",
+    (
+        "callsign",
+        "channel_id",
+        "latitude",
+        "longitude",
+        "nearby_radius",
+    ),
+)
 
 config_sources = [ROOT / ".env.example"]
 config_sources.extend((ROOT / ".github/workflows").glob("*.y*ml"))
