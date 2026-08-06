@@ -229,6 +229,35 @@ def test_transmit_is_microphone_only_and_returns_no_provider_credential(
     assert "server_url" not in initial.text
 
 
+def test_transmit_no_nearby_listener_denial_is_stable_and_non_disclosing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def create(*args: object, **kwargs: object) -> TransmitGrantReceipt:
+        del args, kwargs
+        raise GrantError(
+            "PTT_NO_NEARBY_LISTENERS",
+            "No nearby listeners are currently available.",
+        )
+
+    monkeypatch.setattr(ptt_api, "create_transmit_grant", create)
+    application = authenticated_application()
+    receive_grant_id = uuid.uuid4()
+    with TestClient(application) as client:
+        denied = client.post(
+            f"/api/v1/ptt/grants/{receive_grant_id}/transmit",
+            json={},
+            headers={"Idempotency-Key": IDEMPOTENCY_KEY},
+        )
+
+    assert denied.status_code == 409
+    assert denied.json()["code"] == "PTT_NO_NEARBY_LISTENERS"
+    assert denied.json()["detail"] == "No nearby listeners are currently available."
+    assert not any(
+        fragment in denied.text
+        for fragment in ("recipient", "participant", "distance", "radius", "coordinate")
+    )
+
+
 def test_receive_overposting_and_rate_limit_fail_closed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

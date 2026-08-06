@@ -5,6 +5,7 @@ import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from typing import Protocol
 
 from sqlalchemy import and_, or_, select, update
 from sqlalchemy.exc import IntegrityError
@@ -19,6 +20,13 @@ from app.ptt.provider import (
     ParticipantRequest,
     ReceiveCredentialRequest,
 )
+from app.ptt.proximity import (
+    EligibleReceiveGrant,
+    ProximityEligibilityError,
+    ProximityPolicy,
+    find_eligible_receive_grants,
+    proximity_policy_from_settings,
+)
 
 
 class GrantError(ValueError):
@@ -26,6 +34,18 @@ class GrantError(ValueError):
         super().__init__(detail)
         self.code = code
         self.detail = detail
+
+
+class ProximityEligibilityFinder(Protocol):
+    async def __call__(
+        self,
+        db: AsyncSession,
+        *,
+        sender_account_id: uuid.UUID,
+        sender_device_id: uuid.UUID,
+        policy: ProximityPolicy,
+        now: datetime | None = None,
+    ) -> tuple[EligibleReceiveGrant, ...]: ...
 
 
 @dataclass(frozen=True)
@@ -244,6 +264,7 @@ async def create_transmit_grant(
     idempotency_key: str,
     settings: Settings,
     provider: MediaProvider,
+    eligibility_finder: ProximityEligibilityFinder = find_eligible_receive_grants,
     now: datetime | None = None,
 ) -> TransmitGrantReceipt:
     resolved_now = now or utcnow()
@@ -317,6 +338,22 @@ async def create_transmit_grant(
     )
     if active is not None:
         raise GrantError("PTT_TRANSMIT_BUSY", "A publishing grant is already active.")
+
+    try:
+        eligible_receivers = await eligibility_finder(
+            db,
+            sender_account_id=account_id,
+            sender_device_id=device_id,
+            policy=proximity_policy_from_settings(settings),
+            now=resolved_now,
+        )
+    except ProximityEligibilityError as exc:
+        raise GrantError("PTT_LOCATION_UNAVAILABLE", exc.detail) from exc
+    if not eligible_receivers:
+        raise GrantError(
+            "PTT_NO_NEARBY_LISTENERS",
+            "No nearby listeners are currently available.",
+        )
 
     grant = MediaGrant(
         account_id=account_id,

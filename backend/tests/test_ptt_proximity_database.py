@@ -20,7 +20,9 @@ from app.db.models import (
     MediaGrant,
     Session,
 )
+from app.ptt.provider import FakeMediaProvider
 from app.ptt.proximity import find_eligible_receive_grants, proximity_policy_from_settings
+from app.ptt.service import GrantError, create_transmit_grant
 
 
 @pytest.mark.skipif(
@@ -170,6 +172,82 @@ async def _geodesic_boundaries() -> None:
             found_ids = {item.receive_grant_id for item in found}
             assert antimeridian_grant in found_ids
             assert high_latitude_grant in found_ids
+    finally:
+        async with factory() as db:
+            await db.execute(delete(Account).where(Account.id.in_(account_ids)))
+            await db.commit()
+        await engine.dispose()
+
+
+@pytest.mark.skipif(
+    os.getenv("ROADTALK_RUN_DATABASE_TESTS") != "1",
+    reason="Set ROADTALK_RUN_DATABASE_TESTS=1 against a migrated disposable database.",
+)
+def test_transmit_authorization_rechecks_a_nonempty_nearby_audience() -> None:
+    asyncio.run(_transmit_authorization_rechecks_audience())
+
+
+async def _transmit_authorization_rechecks_audience() -> None:
+    settings = Settings(environment="test")
+    engine = create_async_engine(settings.database_url.get_secret_value())
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    now = datetime.now(UTC)
+    account_ids: list[uuid.UUID] = []
+    provider = FakeMediaProvider(now=lambda: now)
+
+    try:
+        async with factory() as db:
+            sender_account, sender_device, sender_receive = await _add_participant(
+                db,
+                now=now,
+                longitude=0,
+                latitude=0,
+            )
+            account_ids.append(sender_account)
+            assert sender_receive is not None
+            await db.commit()
+
+            with pytest.raises(GrantError) as empty:
+                await create_transmit_grant(
+                    db,
+                    account_id=sender_account,
+                    device_id=sender_device,
+                    receive_grant_id=sender_receive,
+                    idempotency_key="proximity-empty-audience-0001",
+                    settings=settings,
+                    provider=provider,
+                    now=now,
+                )
+            assert empty.value.code == "PTT_NO_NEARBY_LISTENERS"
+            assert provider.publish_requests == []
+
+            recipient_account, _, recipient_receive = await _add_participant(
+                db,
+                now=now,
+                longitude=0.001,
+                latitude=0,
+            )
+            account_ids.append(recipient_account)
+            assert recipient_receive is not None
+            await db.commit()
+
+            authorized = await create_transmit_grant(
+                db,
+                account_id=sender_account,
+                device_id=sender_device,
+                receive_grant_id=sender_receive,
+                idempotency_key="proximity-nonempty-audience-0001",
+                settings=settings,
+                provider=provider,
+                now=now,
+            )
+
+            assert authorized.receive_grant_id == sender_receive
+            assert authorized.replayed is False
+            assert [request.enabled for request in provider.publish_requests] == [True]
+            stored = await db.scalar(select(MediaGrant).where(MediaGrant.id == authorized.grant_id))
+            assert stored is not None
+            assert stored.outcome_code == "issued"
     finally:
         async with factory() as db:
             await db.execute(delete(Account).where(Account.id.in_(account_ids)))

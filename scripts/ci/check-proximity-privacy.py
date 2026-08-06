@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail CI when Sprint 5 proximity policy/query privacy or scope regresses."""
+"""Fail CI when Sprint 5 proximity authorization privacy or scope regresses."""
 
 from __future__ import annotations
 
@@ -66,6 +66,30 @@ for forbidden in (
 ):
     if re.search(rf"\b{forbidden}\b", module, re.I):
         fail(f"proximity module contains prohibited disclosure field {forbidden!r}")
+
+service = read("backend/app/ptt/service.py")
+service_normalized = " ".join(service.split())
+for fragment in (
+    "eligible_receivers = await eligibility_finder(",
+    "policy=proximity_policy_from_settings(settings)",
+    '"PTT_NO_NEARBY_LISTENERS"',
+    '"PTT_LOCATION_UNAVAILABLE"',
+):
+    if fragment not in service_normalized:
+        fail(f"nearby-scoped transmit authorization is missing {fragment!r}")
+
+eligibility_index = service_normalized.index("eligible_receivers = await eligibility_finder(")
+persist_index = service_normalized.index("db.add(grant)", eligibility_index)
+promotion_index = service_normalized.index("await provider.set_microphone_publish(", eligibility_index)
+if not eligibility_index < persist_index < promotion_index:
+    fail("eligibility must deny before transmit persistence or provider promotion")
+
+schemas = read("backend/app/ptt/schemas.py")
+if any(
+    re.search(rf"\b{field}\b", schemas, re.I)
+    for field in ("recipient", "listener", "distance", "radius", "coordinate")
+):
+    fail("PTT API schemas disclose proximity or recipient state")
 
 backend_project = tomllib.loads(read("backend/pyproject.toml"))
 dependencies = {
