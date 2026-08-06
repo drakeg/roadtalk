@@ -39,6 +39,13 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - The deterministic no-network provider fake makes replay idempotent and injected
   subscription failures atomic, without adding a live adapter, provider dependency,
   secret, network call, infrastructure resource, or recurring cost.
+- Added the exact authenticated nested publication handshake accepting only one opaque
+  track reference. It verifies the caller's active microphone publication, recomputes
+  current proximity eligibility, and applies only the sorted eligible participant set.
+- Transmit grants retain only the verified opaque track reference, proximity policy
+  version, evaluation timestamp, and semantic delivery outcome. Recipient membership,
+  location data, provider payloads, credentials, infrastructure, and recurring cost
+  remain absent.
 
 ## Unreleased — Sprint 4: Push-to-Talk
 

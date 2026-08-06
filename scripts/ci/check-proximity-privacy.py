@@ -91,6 +91,38 @@ if any(
 ):
     fail("PTT API schemas disclose proximity or recipient state")
 
+for fragment in (
+    "class PublicationRequest(BaseModel):",
+    "track_ref: str = Field(",
+    "class PublicationResponse(BaseModel):",
+    'delivery_state: Literal["ready", "no_nearby_listeners", "reconciling", "ended"]',
+):
+    if fragment not in " ".join(schemas.split()):
+        fail(f"publication API boundary is missing {fragment!r}")
+
+publication_migration = read("backend/migrations/versions/0007_publication_metadata.py")
+for column in (
+    "provider_track_ref",
+    "proximity_policy_version",
+    "eligibility_evaluated_at",
+):
+    if publication_migration.count(f'\"{column}\"') < 2:
+        fail(f"publication metadata migration is missing reversible column {column!r}")
+for forbidden in (
+    "recipient",
+    "listener",
+    "latitude",
+    "longitude",
+    "distance",
+    "radius",
+    "count",
+    "token",
+    "secret",
+    "payload",
+):
+    if re.search(rf"\b{forbidden}\b", publication_migration, re.I):
+        fail(f"publication migration contains prohibited durable field {forbidden!r}")
+
 provider = read("backend/app/ptt/provider.py")
 provider_normalized = " ".join(provider.split())
 for fragment in (

@@ -9,12 +9,18 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from app.config import Settings
 from app.db.models import Account, Device, MediaGrant
-from app.ptt.provider import FakeMediaProvider, MediaProviderError, MicrophonePublishRequest
+from app.ptt.provider import (
+    FakeMediaProvider,
+    MediaProviderError,
+    MicrophonePublishRequest,
+    ProviderTrackState,
+)
 from app.ptt.proximity import EligibleReceiveGrant, ProximityPolicy
 from app.ptt.service import (
     GrantError,
     create_receive_grant,
     create_transmit_grant,
+    publish_transmit_track,
     release_receive_grant,
     release_transmit_grant,
 )
@@ -139,6 +145,52 @@ async def _receive_grant_lifecycle() -> None:
             assert transmit_replay.grant_id == transmit.grant_id
             assert transmit_replay.replayed is True
             assert sum(request.enabled for request in provider.publish_requests) == 1
+
+            publication_provider = FakeMediaProvider(
+                now=lambda: now,
+                tracks=(
+                    ProviderTrackState(
+                        room_ref=settings.ptt_controlled_room_ref,
+                        participant_ref=created.participant_ref,
+                        track_ref="database_microphone_track_opaque",
+                        source="microphone",
+                        active=True,
+                    ),
+                ),
+            )
+            publication = await publish_transmit_track(
+                db,
+                account_id=account.id,
+                device_id=device.id,
+                transmit_grant_id=transmit.grant_id,
+                track_ref="database_microphone_track_opaque",
+                settings=settings,
+                provider=publication_provider,
+                eligibility_finder=_synthetic_eligible_audience,
+                now=now,
+            )
+            publication_replay = await publish_transmit_track(
+                db,
+                account_id=account.id,
+                device_id=device.id,
+                transmit_grant_id=transmit.grant_id,
+                track_ref="database_microphone_track_opaque",
+                settings=settings,
+                provider=publication_provider,
+                now=now,
+            )
+            assert publication.delivery_state == "ready"
+            assert publication_replay.replayed is True
+            assert len(publication_provider.track_lookup_requests) == 1
+            assert len(publication_provider.subscription_requests) == 1
+            stored_publication = await db.scalar(
+                select(MediaGrant).where(MediaGrant.id == transmit.grant_id)
+            )
+            assert stored_publication is not None
+            assert stored_publication.provider_track_ref == "database_microphone_track_opaque"
+            assert stored_publication.proximity_policy_version == "proximity-v1"
+            assert stored_publication.eligibility_evaluated_at == now
+            assert stored_publication.outcome_code == "delivery_ready"
 
             with pytest.raises(GrantError) as busy:
                 await create_transmit_grant(

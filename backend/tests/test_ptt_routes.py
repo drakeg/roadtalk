@@ -19,6 +19,7 @@ from app.main import create_app
 from app.ptt.service import (
     GrantError,
     GrantReleaseReceipt,
+    PublicationReceipt,
     ReceiveGrantReceipt,
     TransmitGrantReceipt,
 )
@@ -75,10 +76,12 @@ def test_ptt_openapi_is_authenticated_and_server_controlled() -> None:
     create = schema["paths"]["/api/v1/ptt/grants"]["post"]
     release = schema["paths"]["/api/v1/ptt/grants/{grant_id}"]["delete"]
     transmit = schema["paths"]["/api/v1/ptt/grants/{receive_grant_id}/transmit"]["post"]
+    publication = schema["paths"]["/api/v1/ptt/grants/{transmit_grant_id}/publication"]["post"]
 
     assert create["security"] == [{"HTTPBearer": []}]
     assert release["security"] == [{"HTTPBearer": []}]
     assert transmit["security"] == [{"HTTPBearer": []}]
+    assert publication["security"] == [{"HTTPBearer": []}]
     assert create["tags"] == ["push-to-talk"]
     assert release["tags"] == ["push-to-talk"]
     properties = schema["components"]["schemas"]["ReceiveGrantRequest"]["properties"]
@@ -113,6 +116,17 @@ def test_ptt_openapi_is_authenticated_and_server_controlled() -> None:
         "policy_version",
         "replayed",
     }
+    publication_properties = schema["components"]["schemas"]["PublicationRequest"]["properties"]
+    assert set(publication_properties) == {"track_ref"}
+    publication_response = schema["components"]["schemas"]["PublicationResponse"]["properties"]
+    assert set(publication_response) == {
+        "transmit_grant_id",
+        "delivery_state",
+        "proximity_policy_version",
+        "evaluated_at",
+        "expires_at",
+        "replayed",
+    }
 
 
 def test_ptt_routes_require_authentication_and_idempotency_key() -> None:
@@ -129,6 +143,10 @@ def test_ptt_routes_require_authentication_and_idempotency_key() -> None:
             f"/api/v1/ptt/grants/{grant_id}",
             headers={"Idempotency-Key": IDEMPOTENCY_KEY},
         )
+        publication = client.post(
+            f"/api/v1/ptt/grants/{grant_id}/publication",
+            json={"track_ref": "track_opaque"},
+        )
     with TestClient(authenticated, raise_server_exceptions=False) as client:
         missing_key = client.post("/api/v1/ptt/grants", json={"mode": "receive"})
 
@@ -136,6 +154,7 @@ def test_ptt_routes_require_authentication_and_idempotency_key() -> None:
     assert unauthenticated.json()["code"] == "AUTHENTICATION_REQUIRED"
     assert missing_key.status_code == 422
     assert release.status_code == 401
+    assert publication.status_code == 401
 
 
 def test_receive_creation_returns_token_once_and_release_is_idempotent(
@@ -255,6 +274,64 @@ def test_transmit_no_nearby_listener_denial_is_stable_and_non_disclosing(
     assert not any(
         fragment in denied.text
         for fragment in ("recipient", "participant", "distance", "radius", "coordinate")
+    )
+
+
+def test_publication_route_is_exact_metadata_only_and_replay_safe(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    now = datetime(2026, 8, 6, 4, tzinfo=UTC)
+    transmit_grant_id = uuid.uuid4()
+    calls = 0
+
+    async def publish(*args: object, **kwargs: object) -> PublicationReceipt:
+        nonlocal calls
+        del args, kwargs
+        calls += 1
+        return PublicationReceipt(
+            transmit_grant_id=transmit_grant_id,
+            delivery_state="ready",
+            proximity_policy_version="proximity-v1",
+            evaluated_at=now,
+            expires_at=now + timedelta(seconds=30),
+            replayed=calls > 1,
+        )
+
+    monkeypatch.setattr(ptt_api, "publish_transmit_track", publish)
+    application = authenticated_application()
+    path = f"/api/v1/ptt/grants/{transmit_grant_id}/publication"
+    with TestClient(application) as client:
+        initial = client.post(path, json={"track_ref": "track_opaque"})
+        replay = client.post(path, json={"track_ref": "track_opaque"})
+        overposted = client.post(
+            path,
+            json={"track_ref": "track_opaque", "participant_refs": ["listener_opaque"]},
+        )
+
+    assert initial.status_code == 200
+    assert initial.json()["delivery_state"] == "ready"
+    assert replay.json()["replayed"] is True
+    assert overposted.status_code == 422
+    assert set(initial.json()) == {
+        "transmit_grant_id",
+        "delivery_state",
+        "proximity_policy_version",
+        "evaluated_at",
+        "expires_at",
+        "replayed",
+    }
+    assert not any(
+        fragment in initial.text
+        for fragment in (
+            "recipient",
+            "participant",
+            "coordinate",
+            "distance",
+            "radius",
+            "count",
+            "token",
+            "provider",
+        )
     )
 
 
