@@ -1,16 +1,17 @@
 # Sprint 5 readiness
 
 - Sprint: 5 — Proximity Engine
-- Status: NOT READY — awaiting product-owner approval
+- Status: READY — approved for local/GitHub CI implementation
 - Planning date: 2026-08-04
 - Current and incremental cost: **$0 AWS + $0 LiveKit per month**
 
 ## Authorization boundary
 
-Sprint 4 merge authorizes this planning record only. Sprint 5 coding begins only after
-the product owner explicitly approves the specification, readiness gate, cost policy,
-evidence boundary, and tracker scope. Approval does not activate AWS or LiveKit, close
-Sprint 1 exceptions, add a payment method, or authorize a paid/always-on environment.
+The product owner approved the specification, readiness gate, $0 implementation
+policy, named evidence exceptions, and locked tracker/issue creation on 2026-08-06.
+Implementation is authorized only for local/GitHub CI. Approval does not activate AWS
+or LiveKit, close Sprint 1 exceptions, add a payment method, or authorize a paid or
+always-on environment.
 
 ## Scope readiness
 
@@ -183,17 +184,17 @@ automatic shutdown or permission to spend.
 - [x] Current/incremental cost is $0 and future scenarios/stops are recorded.
 - [x] No AWS/LiveKit activation or paid capability is required.
 - [x] Requirements/tests/deliverables and implementation order are complete.
-- [ ] Product owner approves Sprint 5 specification, readiness, cost and evidence
-  boundaries.
-- [ ] Tracker and implementation issues are created from the approved wording.
+- [x] Product owner approved Sprint 5 specification, readiness, cost and evidence
+  boundaries through issue #109 on 2026-08-06.
+- [x] Tracker #119 and implementation issues #110–#118 were created from the approved
+  wording.
 
 ## Readiness decision
 
-**NOT READY.** Planning is complete enough for product-owner review, but coding remains
-blocked until explicit approval. Approval changes this record to READY and authorizes
-only local/GitHub CI Sprint 5 implementation at $0. It does not authorize a live
-provider adapter, project, credential/call, AWS resource, payment method, paid plan,
-field test, always-on environment, or recurring spend.
+**READY.** Product-owner approval on 2026-08-06 authorizes only local/GitHub CI Sprint
+5 implementation at $0 through tracker #119. It does not authorize a live provider
+adapter, project, credential/call, AWS resource, payment method, paid plan, field test,
+always-on environment, or recurring spend.
 
 ## References
 
