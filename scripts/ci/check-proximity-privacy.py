@@ -91,6 +91,22 @@ if any(
 ):
     fail("PTT API schemas disclose proximity or recipient state")
 
+provider = read("backend/app/ptt/provider.py")
+provider_normalized = " ".join(provider.split())
+for fragment in (
+    "auto_subscribe: Literal[False] = False",
+    "class MicrophoneTrackLookupRequest:",
+    "class VerifiedMicrophoneTrack:",
+    'source: Literal["microphone"] = "microphone"',
+    "active: Literal[True] = True",
+    "class SelectiveSubscriptionRequest:",
+    'action: Literal["subscribe", "unsubscribe"]',
+    "async def verify_microphone_track(",
+    "async def update_track_subscriptions(",
+):
+    if fragment not in provider_normalized:
+        fail(f"selective-subscription provider boundary is missing {fragment!r}")
+
 backend_project = tomllib.loads(read("backend/pyproject.toml"))
 dependencies = {
     re.split(r"[<=>\[]", dependency, maxsplit=1)[0]

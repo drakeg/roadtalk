@@ -33,6 +33,12 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 - Recipient eligibility remains transient in process memory; transmit request and
   response schemas, provider behavior, persistence, infrastructure, and recurring
   cost are unchanged.
+- Typed provider contracts now require receive connections to declare automatic
+  subscription disabled, verify an opaque active microphone track against its room
+  and publishing participant, and apply sorted opaque subscribe/unsubscribe sets.
+- The deterministic no-network provider fake makes replay idempotent and injected
+  subscription failures atomic, without adding a live adapter, provider dependency,
+  secret, network call, infrastructure resource, or recurring cost.
 
 ## Unreleased — Sprint 4: Push-to-Talk
 
