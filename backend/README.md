@@ -1,6 +1,6 @@
 # Backend
 
-Sprint 5 active owner: S05-D03 Nearby-scoped transmit authorization.
+Sprint 5 active owner: S05-D04 Selective-subscription provider boundary.
 
 The backend is a Python/FastAPI modular-monolith control API.
 
@@ -96,6 +96,15 @@ promotion. Missing usable sender location fails as `PTT_LOCATION_UNAVAILABLE`; a
 empty audience fails as `PTT_NO_NEARBY_LISTENERS`. Recipient membership remains
 transient process memory and is neither returned nor stored. The API shape, provider
 boundary, disabled defaults, and $0 infrastructure posture remain unchanged.
+
+S05-D04 extends only the typed media-provider boundary and deterministic fake.
+Receive credential requests make automatic subscription explicitly false. Opaque
+track lookup returns a verified value only when room, publishing participant,
+microphone source, and active state match. Selective subscribe/unsubscribe requests
+accept that verified track plus sorted unique opaque participant references; replay is
+idempotent and injected failures occur before fake state mutation. No route, database
+change, production adapter, provider SDK/call, AWS resource, or recurring cost is
+introduced.
 
 ## Local setup
 
