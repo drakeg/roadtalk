@@ -7,7 +7,7 @@
 - [Original RoadTalk Development Plan](reference/RoadTalk_Development_Plan.docx)
 - [Agile Workflow](AGILE_WORKFLOW.md)
 
-## Sprint 4 — Push-to-Talk (approved; implementation active)
+## Sprint 4 — Push-to-Talk (complete)
 
 - [Sprint 4: Push-to-Talk](sprints/sprint-4-push-to-talk.md) — APPROVED
 - [Sprint 4 readiness](sprints/sprint-4-readiness.md) — READY
@@ -19,12 +19,14 @@
 - Current and incremental local/CI implementation cost: $0 AWS + $0 LiveKit
 - Cloud activation, paid plans, and recurring spend above $10/month remain unauthorized
 
-## Sprint 5 planning
+## Sprint 5 — Proximity Engine (approved; implementation active)
 
-- [Sprint 5: Proximity Engine](sprints/sprint-5-proximity.md) — PROPOSED
-- [Sprint 5 readiness](sprints/sprint-5-readiness.md) — NOT READY; approval pending
-- Planning/current/incremental cost: $0 AWS + $0 LiveKit
-- Coding, provider/cloud activation, paid plans, and new recurring spend are unauthorized
+- [Sprint 5: Proximity Engine](sprints/sprint-5-proximity.md) — APPROVED
+- [Sprint 5 readiness](sprints/sprint-5-readiness.md) — READY
+- Completed approval issue [#109](https://github.com/drakeg/roadtalk/issues/109)
+- Implementation tracker [#119](https://github.com/drakeg/roadtalk/issues/119)
+- Current/incremental local/CI implementation cost: $0 AWS + $0 LiveKit
+- Provider/cloud activation, paid plans, and recurring spend remain unauthorized
 
 ## Sprint 3 — Location (complete)
 
