@@ -155,8 +155,10 @@ jobs:
         run: python scripts/ci/check-ptt-operations.py
       - name: Check Sprint 4 final review and traceability
         run: python scripts/ci/check-sprint-4-review.py
-      - name: Check proposed Sprint 5 planning boundaries
+      - name: Check approved Sprint 5 planning boundaries
         run: python scripts/ci/check-sprint-5-planning.py
+      - name: Check Sprint 5 proximity privacy and scope
+        run: python scripts/ci/check-proximity-privacy.py
       - name: Validate and lint Terraform
         id: terraform
         run: |
