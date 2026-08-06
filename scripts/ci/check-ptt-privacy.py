@@ -138,12 +138,14 @@ for path in (
             "latitude",
             "longitude",
             "nearby_radius",
-            "proximity",
+            "distance",
+            "bearing",
+            "recipient_refs",
         ),
     )
 
-# Sprint 5 authorizes server-only proximity decisions inside the service while the
-# retained Sprint 4 API/schema boundary must remain entirely non-disclosing.
+# Sprint 5 authorizes server-only proximity decisions and a non-sensitive policy
+# version in the response while the retained API/schema boundary remains non-disclosing.
 forbid_tokens(
     "backend/app/ptt/service.py",
     (
@@ -195,6 +197,7 @@ for column in media_columns:
 for migration_path in (
     "backend/migrations/versions/0005_media_grant.py",
     "backend/migrations/versions/0006_receive_grant_idempotency.py",
+    "backend/migrations/versions/0007_publication_metadata.py",
 ):
     migration_tree = ast.parse(read(migration_path))
     for node in ast.walk(migration_tree):

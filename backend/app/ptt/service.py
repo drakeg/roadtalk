@@ -5,7 +5,7 @@ import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Protocol
+from typing import Literal, Protocol
 
 from sqlalchemy import and_, or_, select, update
 from sqlalchemy.exc import IntegrityError
@@ -16,9 +16,12 @@ from app.db.models import Account, MediaGrant
 from app.ptt.provider import (
     MediaProvider,
     MediaProviderError,
+    MediaProviderTrackVerificationError,
     MicrophonePublishRequest,
+    MicrophoneTrackLookupRequest,
     ParticipantRequest,
     ReceiveCredentialRequest,
+    SelectiveSubscriptionRequest,
 )
 from app.ptt.proximity import (
     EligibleReceiveGrant,
@@ -75,6 +78,16 @@ class TransmitGrantReceipt:
     issued_at: datetime
     expires_at: datetime
     policy_version: str
+    replayed: bool
+
+
+@dataclass(frozen=True)
+class PublicationReceipt:
+    transmit_grant_id: uuid.UUID
+    delivery_state: Literal["ready", "no_nearby_listeners", "reconciling", "ended"]
+    proximity_policy_version: str
+    evaluated_at: datetime
+    expires_at: datetime
     replayed: bool
 
 
@@ -141,6 +154,32 @@ def _transmit_receipt(grant: MediaGrant, *, replayed: bool) -> TransmitGrantRece
         issued_at=grant.issued_at,
         expires_at=grant.expires_at,
         policy_version=grant.policy_version,
+        replayed=replayed,
+    )
+
+
+def _publication_receipt(
+    grant: MediaGrant,
+    *,
+    replayed: bool,
+    now: datetime,
+) -> PublicationReceipt:
+    if grant.proximity_policy_version is None or grant.eligibility_evaluated_at is None:
+        raise GrantError("PTT_PUBLICATION_INVALID", "The publication state is invalid.")
+    if grant.revoked_at is not None or grant.expires_at <= now:
+        delivery_state: Literal["ready", "no_nearby_listeners", "reconciling", "ended"] = "ended"
+    elif grant.outcome_code == "delivery_ready":
+        delivery_state = "ready"
+    elif grant.outcome_code == "no_nearby_listeners":
+        delivery_state = "no_nearby_listeners"
+    else:
+        delivery_state = "reconciling"
+    return PublicationReceipt(
+        transmit_grant_id=grant.id,
+        delivery_state=delivery_state,
+        proximity_policy_version=grant.proximity_policy_version,
+        evaluated_at=grant.eligibility_evaluated_at,
+        expires_at=grant.expires_at,
         replayed=replayed,
     )
 
@@ -426,6 +465,135 @@ async def create_transmit_grant(
         ) from exc
     await db.refresh(grant)
     return _transmit_receipt(grant, replayed=False)
+
+
+async def publish_transmit_track(
+    db: AsyncSession,
+    *,
+    account_id: uuid.UUID,
+    device_id: uuid.UUID,
+    transmit_grant_id: uuid.UUID,
+    track_ref: str,
+    settings: Settings,
+    provider: MediaProvider,
+    eligibility_finder: ProximityEligibilityFinder = find_eligible_receive_grants,
+    now: datetime | None = None,
+) -> PublicationReceipt:
+    resolved_now = now or utcnow()
+    await db.scalar(select(Account.id).where(Account.id == account_id).with_for_update())
+    grant = await db.scalar(
+        select(MediaGrant)
+        .where(
+            MediaGrant.id == transmit_grant_id,
+            MediaGrant.account_id == account_id,
+            MediaGrant.device_id == device_id,
+            MediaGrant.grant_kind == "transmit",
+        )
+        .with_for_update()
+    )
+    if grant is None:
+        raise GrantError("PTT_TRANSMIT_NOT_FOUND", "The transmit grant was not found.")
+
+    if grant.provider_track_ref is not None:
+        if grant.provider_track_ref != track_ref:
+            raise GrantError(
+                "PTT_PUBLICATION_CONFLICT",
+                "A different track was already submitted for this transmission.",
+            )
+        return _publication_receipt(grant, replayed=True, now=resolved_now)
+
+    if grant.revoked_at is not None or grant.expires_at <= resolved_now:
+        raise GrantError("PTT_TRANSMIT_NOT_ACTIVE", "An active transmit grant is required.")
+
+    try:
+        verified_track = await provider.verify_microphone_track(
+            MicrophoneTrackLookupRequest(
+                room_ref=grant.provider_room_ref,
+                participant_ref=grant.provider_participant_ref,
+                track_ref=track_ref,
+            )
+        )
+    except MediaProviderTrackVerificationError as exc:
+        raise GrantError(
+            "PTT_TRACK_INVALID",
+            "The microphone publication could not be verified.",
+        ) from exc
+    except MediaProviderError as exc:
+        raise GrantError(
+            "PTT_PROVIDER_UNAVAILABLE",
+            "Publication verification is unavailable.",
+        ) from exc
+
+    policy = proximity_policy_from_settings(settings)
+    try:
+        eligible_receivers = await eligibility_finder(
+            db,
+            sender_account_id=account_id,
+            sender_device_id=device_id,
+            policy=policy,
+            now=resolved_now,
+        )
+    except ProximityEligibilityError as exc:
+        raise GrantError("PTT_LOCATION_UNAVAILABLE", exc.detail) from exc
+
+    grant.provider_track_ref = verified_track.track_ref
+    grant.proximity_policy_version = policy.version
+    grant.eligibility_evaluated_at = resolved_now
+    if not eligible_receivers:
+        grant.outcome_code = "no_nearby_listeners"
+        await db.commit()
+        await db.refresh(grant)
+        return _publication_receipt(grant, replayed=False, now=resolved_now)
+
+    participant_refs = tuple(sorted({receiver.participant_ref for receiver in eligible_receivers}))
+    subscribe_request = SelectiveSubscriptionRequest(
+        track=verified_track,
+        participant_refs=participant_refs,
+        action="subscribe",
+    )
+    unsubscribe_request = SelectiveSubscriptionRequest(
+        track=verified_track,
+        participant_refs=participant_refs,
+        action="unsubscribe",
+    )
+    try:
+        await provider.update_track_subscriptions(subscribe_request)
+        grant.outcome_code = "delivery_ready"
+        await db.commit()
+    except MediaProviderError as exc:
+        try:
+            await provider.update_track_subscriptions(unsubscribe_request)
+        except MediaProviderError:
+            pass
+        grant.outcome_code = "delivery_reconciling"
+        await db.commit()
+        raise GrantError(
+            "PTT_PROVIDER_UNAVAILABLE",
+            "Nearby delivery could not be confirmed.",
+        ) from exc
+    except IntegrityError as exc:
+        await db.rollback()
+        try:
+            await provider.update_track_subscriptions(unsubscribe_request)
+        except MediaProviderError:
+            pass
+        await db.execute(
+            update(MediaGrant)
+            .where(MediaGrant.id == transmit_grant_id)
+            .values(
+                provider_track_ref=verified_track.track_ref,
+                proximity_policy_version=policy.version,
+                eligibility_evaluated_at=resolved_now,
+                outcome_code="delivery_reconciling",
+            )
+        )
+        await db.commit()
+        raise GrantError(
+            "PTT_PROVIDER_UNAVAILABLE",
+            "Nearby delivery could not be confirmed.",
+        ) from exc
+    await db.refresh(grant)
+    return _publication_receipt(grant, replayed=False, now=resolved_now)
 
 
 async def release_receive_grant(

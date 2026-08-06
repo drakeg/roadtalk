@@ -1,6 +1,6 @@
 # Backend
 
-Sprint 5 active owner: S05-D04 Selective-subscription provider boundary.
+Sprint 5 active owner: S05-D05 Publication handshake and nearby delivery.
 
 The backend is a Python/FastAPI modular-monolith control API.
 
@@ -106,6 +106,16 @@ idempotent and injected failures occur before fake state mutation. No route, dat
 change, production adapter, provider SDK/call, AWS resource, or recurring cost is
 introduced.
 
+S05-D05 adds the authenticated nested publication handshake. Its request accepts only
+one opaque track reference. The service binds that reference to the caller-owned
+active transmit room and participant, requires an active microphone publication,
+recomputes current proximity eligibility, and sends only a sorted unique opaque
+participant set to the selective-subscription boundary. Replay is metadata-only;
+conflicting tracks fail closed. Storage adds only the verified track reference,
+proximity policy version, evaluation timestamp, and semantic delivery outcome. No
+audience membership, coordinate, distance, count, provider payload, live adapter,
+cloud resource, or recurring cost is added.
+
 ## Local setup
 
 From the repository root:
@@ -147,6 +157,7 @@ The API listens on `127.0.0.1:8000` by default.
 | `GET /api/v1/nearby/summary` | Return only caller-relative availability, coarse bucket, freshness, and caller expiry. |
 | `POST /api/v1/ptt/grants` | Create a receive-only grant for the server-controlled opaque room. |
 | `POST /api/v1/ptt/grants/{receive_grant_id}/transmit` | Promote an owned active participant to microphone-only publication for at most 30 seconds. |
+| `POST /api/v1/ptt/grants/{transmit_grant_id}/publication` | Verify one opaque microphone track and apply the current server-derived nearby audience. |
 | `DELETE /api/v1/ptt/grants/{grant_id}` | Idempotently release an owned receive or transmit grant. |
 
 ## Checks

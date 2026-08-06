@@ -43,6 +43,21 @@ class TransmitGrantResponse(BaseModel):
     replayed: bool
 
 
+class PublicationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    track_ref: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9._~-]+$")
+
+
+class PublicationResponse(BaseModel):
+    transmit_grant_id: uuid.UUID
+    delivery_state: Literal["ready", "no_nearby_listeners", "reconciling", "ended"]
+    proximity_policy_version: str
+    evaluated_at: datetime
+    expires_at: datetime
+    replayed: bool
+
+
 class GrantReleaseResponse(BaseModel):
     grant_id: uuid.UUID
     state: Literal["released"] = "released"

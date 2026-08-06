@@ -9,6 +9,8 @@ from app.ptt.limiter import PttLimiter, PttRateLimitError
 from app.ptt.provider import MediaProvider
 from app.ptt.schemas import (
     GrantReleaseResponse,
+    PublicationRequest,
+    PublicationResponse,
     ReceiveGrantRequest,
     ReceiveGrantResponse,
     TransmitGrantRequest,
@@ -18,6 +20,7 @@ from app.ptt.service import (
     GrantError,
     create_receive_grant,
     create_transmit_grant,
+    publish_transmit_track,
 )
 from app.ptt.service import (
     release_grant as release_owned_grant,
@@ -79,7 +82,7 @@ def _check_transmit_limit(request: Request, current: CurrentSession) -> None:
 
 def _grant_error(exc: GrantError) -> HTTPException:
     status_code = status.HTTP_409_CONFLICT
-    if exc.code == "PTT_GRANT_NOT_FOUND":
+    if exc.code in {"PTT_GRANT_NOT_FOUND", "PTT_TRANSMIT_NOT_FOUND"}:
         status_code = status.HTTP_404_NOT_FOUND
     elif exc.code == "PTT_PROVIDER_UNAVAILABLE":
         status_code = status.HTTP_503_SERVICE_UNAVAILABLE
@@ -150,6 +153,32 @@ async def create_transmit(
     if receipt.replayed:
         response.status_code = status.HTTP_200_OK
     return TransmitGrantResponse(**receipt.__dict__)
+
+
+@router.post(
+    "/{transmit_grant_id}/publication",
+    response_model=PublicationResponse,
+)
+async def publish_transmission(
+    transmit_grant_id: uuid.UUID,
+    request: Request,
+    payload: PublicationRequest,
+    db: DatabaseSession,
+    current: CurrentSession,
+) -> PublicationResponse:
+    try:
+        receipt = await publish_transmit_track(
+            db,
+            account_id=current.account.id,
+            device_id=current.device.id,
+            transmit_grant_id=transmit_grant_id,
+            track_ref=payload.track_ref,
+            settings=request.app.state.settings,
+            provider=cast(MediaProvider, request.app.state.media_provider),
+        )
+    except GrantError as exc:
+        raise _grant_error(exc) from exc
+    return PublicationResponse(**receipt.__dict__)
 
 
 @router.delete("/{grant_id}", response_model=GrantReleaseResponse)

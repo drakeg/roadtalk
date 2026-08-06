@@ -76,6 +76,9 @@ def test_media_grant_constraints_and_indexes_fail_closed() -> None:
         "ck_media_grant_room_ref_present",
         "ck_media_grant_participant_ref_present",
         "ck_media_grant_policy_version_present",
+        "ck_media_grant_track_ref_present",
+        "ck_media_grant_proximity_policy_present",
+        "ck_media_grant_publication_metadata_consistent",
         "ck_media_grant_idempotency_hash_valid",
         "ck_media_grant_request_fingerprint_valid",
         "ck_media_grant_expiry_after_issue",
@@ -112,3 +115,30 @@ def test_transmit_grant_references_receive_grant_without_media_content() -> None
 
     assert grant.parent_grant_id == parent_id
     assert grant.action_scope == "microphone_publish"
+
+
+def test_publication_metadata_contains_no_audience_or_location_state() -> None:
+    table = cast(Table, MediaGrant.__table__)
+    publication_columns = {
+        "provider_track_ref",
+        "proximity_policy_version",
+        "eligibility_evaluated_at",
+        "outcome_code",
+    }
+    assert publication_columns <= set(table.c.keys())
+    assert not any(
+        fragment in column
+        for column in publication_columns
+        for fragment in (
+            "recipient",
+            "listener",
+            "account",
+            "device",
+            "grant_list",
+            "latitude",
+            "longitude",
+            "distance",
+            "radius",
+            "count",
+        )
+    )

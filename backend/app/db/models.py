@@ -249,6 +249,22 @@ class MediaGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             name="participant_ref_present",
         ),
         CheckConstraint("length(policy_version) > 0", name="policy_version_present"),
+        CheckConstraint(
+            "provider_track_ref IS NULL OR length(provider_track_ref) > 0",
+            name="track_ref_present",
+        ),
+        CheckConstraint(
+            "proximity_policy_version IS NULL OR length(proximity_policy_version) > 0",
+            name="proximity_policy_present",
+        ),
+        CheckConstraint(
+            "(provider_track_ref IS NULL AND proximity_policy_version IS NULL "
+            "AND eligibility_evaluated_at IS NULL) OR "
+            "(grant_kind = 'transmit' AND provider_track_ref IS NOT NULL "
+            "AND proximity_policy_version IS NOT NULL "
+            "AND eligibility_evaluated_at IS NOT NULL)",
+            name="publication_metadata_consistent",
+        ),
         CheckConstraint("length(idempotency_key_hash) = 64", name="idempotency_hash_valid"),
         CheckConstraint("length(request_fingerprint) = 64", name="request_fingerprint_valid"),
         CheckConstraint("expires_at > issued_at", name="expiry_after_issue"),
@@ -287,8 +303,11 @@ class MediaGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     provider: Mapped[str] = mapped_column(String(16), default="livekit", server_default="livekit")
     provider_room_ref: Mapped[str] = mapped_column(String(128))
     provider_participant_ref: Mapped[str] = mapped_column(String(128))
+    provider_track_ref: Mapped[str | None] = mapped_column(String(128))
     action_scope: Mapped[str] = mapped_column(String(32))
     policy_version: Mapped[str] = mapped_column(String(32))
+    proximity_policy_version: Mapped[str | None] = mapped_column(String(32))
+    eligibility_evaluated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     idempotency_key_hash: Mapped[str] = mapped_column(String(64))
     request_fingerprint: Mapped[str] = mapped_column(String(64))
     issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

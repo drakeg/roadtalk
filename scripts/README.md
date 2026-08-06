@@ -35,7 +35,8 @@ Scripts must:
 - `scripts/ci/check-proximity-privacy.py` locks the Sprint 5 server-owned policy,
   usable-through-expiry receiver join, indexed `ST_DWithin` operation, exact transient
   opaque result shape, default-deny selective-subscription provider contracts,
-  provider-disabled defaults, and no-new-service boundary.
+  exact publication API/metadata shape, provider-disabled defaults, and no-new-service
+  boundary.
 
 Run all seven locally before opening a pull request; GitHub CI runs them again in the
 security job.
