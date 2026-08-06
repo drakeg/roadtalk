@@ -243,6 +243,22 @@ promotion must succeed before the row is committed. Release and authentication
 revocation mark local authorization denied before provider cleanup, so uncertain
 provider outcomes never restore local permission.
 
+### Sprint 5 indexed proximity authorization
+
+S05-D02 implements the private authorization form of the durable proximity query
+without adding a table or migration. It resolves the sender's current same-device
+location, requires usability through the complete transmit window, and joins candidate
+current locations to active receive grants, active accounts, device ownership, active
+sessions, and latest granted consent. Candidate location, session, and receive-grant
+expiry must each cover the delivery expiry. The inclusive geography `ST_DWithin`
+predicate retains the existing `ix_current_location_position` GiST path.
+
+The query result is held only in process memory and contains opaque receive-grant,
+account, device, and provider-participant references. Coordinates, radius, distance,
+direction, counts, and recipient membership are not returned to an API or persisted.
+S05-D03 owns integration with transmit creation; selective subscription remains in
+later locked Sprint 5 deliverables.
+
 ## Retention baseline
 
 | Data | Initial rule |
