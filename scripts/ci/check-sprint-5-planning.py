@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail CI when proposed Sprint 5 planning loses an approved safety boundary."""
+"""Fail CI when approved Sprint 5 planning loses a locked safety boundary."""
 
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ for identifier in (
 
 require(
     specification,
-    "proposed — awaiting product-owner approval",
+    "approved for local/github ci implementation",
     "automatic subscription disabled",
     "post /api/v1/ptt/grants/{transmit_grant_id}/publication",
     "no eligible-recipient list is returned",
@@ -56,9 +56,9 @@ require(
 readiness = "docs/sprints/sprint-5-readiness.md"
 require(
     readiness,
-    "status: not ready — awaiting product-owner approval",
+    "status: ready — approved for local/github ci implementation",
     "current and incremental cost: **$0 aws + $0 livekit per month**",
-    "coding remains blocked until explicit approval",
+    "product owner approved the specification",
     "auto-subscription is on by default",
     "updateSubscriptions".lower(),
     "no recipient-membership persistence is needed",
