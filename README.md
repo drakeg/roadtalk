@@ -8,12 +8,13 @@ Sprint 0 — Planning & Architecture, Sprint 1 — Project Foundation, Sprint 2 
 Identity, and Sprint 3 — Location are complete. Sprint 1 is conditionally accepted
 with named exceptions that must close before the first field test.
 
-Sprint 4 — Push-to-Talk is approved for local/GitHub CI implementation through
-[tracker #100](https://github.com/drakeg/roadtalk/issues/100). Its
-[specification](docs/sprints/sprint-4-push-to-talk.md),
-[readiness gate](docs/sprints/sprint-4-readiness.md), and zero-revenue cost policy were
-approved on 2026-07-23. Cloud provider activation, AWS activation, paid plans, and
-projected recurring spend above $10/month remain unauthorized.
+Sprint 4 — Push-to-Talk is complete and accepted. Sprint 5 — Proximity Engine is
+approved for local/GitHub CI implementation through
+[tracker #119](https://github.com/drakeg/roadtalk/issues/119). Its
+[specification](docs/sprints/sprint-5-proximity.md),
+[readiness gate](docs/sprints/sprint-5-readiness.md), $0 implementation policy, and
+named evidence exceptions were approved on 2026-08-06. AWS or LiveKit activation,
+paid plans, and recurring spend remain unauthorized.
 
 ## Repository layout
 
@@ -35,7 +36,7 @@ projected recurring spend above $10/month remain unauthorized.
 5. Implement only the linked requirement/deliverable.
 6. Record tests, privacy impact, cost impact, and evidence in the pull request.
 
-Sprint 4 planning and local/CI implementation remain at $0 AWS and $0 LiveKit cost.
+Sprint 5 local/CI implementation remains at $0 AWS and $0 LiveKit cost.
 While RoadTalk earns $0, the operating target is $0 and the initial hard ceiling
 is $10/month. LiveKit Build is free within hard limits. AWS is used only in separately
 approved scheduled test windows, projected around $4–$6 in an active testing month,
@@ -49,8 +50,9 @@ and $10 incremental monthly cost. Crossing any stop pauses testing; budgets and
 provider quotas never authorize automatic upgrade or continued spend.
 
 Sprint 4 is complete and product-owner accepted by merged PR #108. Sprint 5 proximity
-planning is proposed for review; coding and cloud/provider activation remain blocked
-until its specification and readiness gate receive explicit approval.
+implementation is active through tracker #119, beginning with S05-D02 (#111). Only
+local/GitHub CI implementation is authorized; cloud/provider activation and spend
+remain blocked.
 
 ## Source of truth
 
