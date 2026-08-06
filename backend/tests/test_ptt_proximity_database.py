@@ -160,7 +160,9 @@ async def _geodesic_boundaries() -> None:
                 sender_device_id=sender_device,
                 policy=replace(
                     proximity_policy_from_settings(settings),
-                    radius_m=float(distance),
+                    # Preserve the inclusive boundary after the database distance
+                    # makes a binary-float round trip through the test process.
+                    radius_m=float(distance) + 1e-6,
                 ),
                 now=now,
             )
