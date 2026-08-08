@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import cast
@@ -100,6 +101,7 @@ async def record_current_location(
     device_id: uuid.UUID,
     sample: LocationSample,
     policy: LocationPolicy,
+    on_change: Callable[[AsyncSession, uuid.UUID], Awaitable[None]] | None = None,
     now: datetime | None = None,
 ) -> LocationReceipt:
     received_at = (now or datetime.now(UTC)).astimezone(UTC)
@@ -178,6 +180,9 @@ async def record_current_location(
             "A newer location sample is already current.",
         ) from exc
 
+    if on_change is not None:
+        await on_change(db, account_id)
+
     return LocationReceipt(
         accepted_sequence=current.client_sequence,
         quality_state=current.quality_state,
@@ -202,6 +207,7 @@ async def delete_current_location(
     db: AsyncSession,
     *,
     account_id: uuid.UUID,
+    on_change: Callable[[AsyncSession, uuid.UUID], Awaitable[None]] | None = None,
 ) -> bool:
     deleted_id = await db.scalar(
         delete(CurrentLocation)
@@ -209,4 +215,6 @@ async def delete_current_location(
         .returning(CurrentLocation.account_id)
     )
     await db.commit()
+    if on_change is not None:
+        await on_change(db, account_id)
     return deleted_id is not None

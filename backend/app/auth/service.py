@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any, cast
@@ -92,7 +93,13 @@ async def create_anonymous_session(
     )
 
 
-async def rotate_refresh_token(db: AsyncSession, raw_token: str, settings: Settings) -> TokenPair:
+async def rotate_refresh_token(
+    db: AsyncSession,
+    raw_token: str,
+    settings: Settings,
+    *,
+    on_change: Callable[[AsyncSession, uuid.UUID], Awaitable[None]] | None = None,
+) -> TokenPair:
     digest = hash_refresh_token(raw_token, settings.refresh_token_pepper.get_secret_value())
     current = await db.scalar(
         select(Session).where(Session.refresh_token_hash == digest).with_for_update()
@@ -118,6 +125,8 @@ async def rotate_refresh_token(db: AsyncSession, raw_token: str, settings: Setti
             now=now,
         )
         await db.commit()
+        if on_change is not None:
+            await on_change(db, current.account_id)
         raise AuthenticationError(
             "REFRESH_REPLAY_DETECTED",
             "Refresh credential replay was detected; the credential family is revoked.",
@@ -125,7 +134,16 @@ async def rotate_refresh_token(db: AsyncSession, raw_token: str, settings: Setti
     if current.expires_at <= now:
         current.revoked_at = now
         current.revoke_reason = "expired"
+        await revoke_device_media_grants(
+            db,
+            account_id=current.account_id,
+            device_id=current.device_id,
+            reason="session_revoked",
+            now=now,
+        )
         await db.commit()
+        if on_change is not None:
+            await on_change(db, current.account_id)
         raise AuthenticationError("REFRESH_TOKEN_EXPIRED", "Refresh token has expired.")
 
     current.revoked_at = now
@@ -172,7 +190,13 @@ async def authenticate_session(
     return AuthenticatedSession(account=account, device=device, session=session)
 
 
-async def revoke_session(db: AsyncSession, session: Session, reason: str) -> None:
+async def revoke_session(
+    db: AsyncSession,
+    session: Session,
+    reason: str,
+    *,
+    on_change: Callable[[AsyncSession, uuid.UUID], Awaitable[None]] | None = None,
+) -> None:
     if session.revoked_at is None:
         session.revoked_at = utcnow()
         session.revoke_reason = reason
@@ -184,10 +208,16 @@ async def revoke_session(db: AsyncSession, session: Session, reason: str) -> Non
             now=session.revoked_at,
         )
         await db.commit()
+        if on_change is not None:
+            await on_change(db, session.account_id)
 
 
 async def revoke_device_sessions(
-    db: AsyncSession, *, account_id: uuid.UUID, device_id: uuid.UUID
+    db: AsyncSession,
+    *,
+    account_id: uuid.UUID,
+    device_id: uuid.UUID,
+    on_change: Callable[[AsyncSession, uuid.UUID], Awaitable[None]] | None = None,
 ) -> int:
     device = await db.scalar(
         select(Device).where(Device.id == device_id, Device.account_id == account_id)
@@ -209,4 +239,6 @@ async def revoke_device_sessions(
         reason="device_revoked",
     )
     await db.commit()
+    if on_change is not None:
+        await on_change(db, account_id)
     return cast(int, cast(Any, result).rowcount or 0)

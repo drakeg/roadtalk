@@ -1,4 +1,5 @@
 import time
+import uuid
 from typing import Literal, cast
 
 from fastapi import APIRouter, HTTPException, Request, status
@@ -17,9 +18,23 @@ from app.location.schemas import (
     NearbySummaryResponse,
 )
 from app.location.service import delete_current_location, record_current_location
+from app.ptt.provider import MediaProvider
+from app.ptt.service import reconcile_proximity_delivery
 
 router = APIRouter(prefix="/api/v1/me", tags=["location"])
 nearby_router = APIRouter(prefix="/api/v1/nearby", tags=["location"])
+
+
+async def _reconcile_location_change(
+    request: Request,
+    db: DatabaseSession,
+    account_id: uuid.UUID,
+) -> None:
+    await reconcile_proximity_delivery(
+        db,
+        provider=cast(MediaProvider, request.app.state.media_provider),
+        settings=request.app.state.settings,
+    )
 
 
 def _check_mutation_limit(
@@ -106,6 +121,9 @@ async def _set_consent_decision(
             ),
             current_policy_version=settings.location_policy_version,
             current_disclosure_version=settings.location_disclosure_version,
+            on_change=lambda session, account_id: _reconcile_location_change(
+                request, session, account_id
+            ),
         )
     except LocationConsentError as exc:
         raise HTTPException(
@@ -149,6 +167,9 @@ async def put_current_location(
             device_id=current.device.id,
             sample=LocationSample(**payload.model_dump()),
             policy=policy_from_settings(request.app.state.settings),
+            on_change=lambda session, account_id: _reconcile_location_change(
+                request, session, account_id
+            ),
         )
     except LocationPolicyError as exc:
         raise _policy_error(exc) from exc
@@ -162,7 +183,13 @@ async def pause_current_location(
     current: CurrentSession,
 ) -> CurrentLocationPauseResponse:
     _check_mutation_limit(request, current)
-    await delete_current_location(db, account_id=current.account.id)
+    await delete_current_location(
+        db,
+        account_id=current.account.id,
+        on_change=lambda session, account_id: _reconcile_location_change(
+            request, session, account_id
+        ),
+    )
     return CurrentLocationPauseResponse()
 
 

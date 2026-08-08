@@ -1,10 +1,13 @@
 import hashlib
 import time
+import uuid
 from typing import cast
 
 from fastapi import APIRouter, HTTPException, Request, status
 
 from app.api.auth import CurrentSession, DatabaseSession
+from app.ptt.provider import MediaProvider
+from app.ptt.service import reconcile_media_grants, reconcile_proximity_delivery
 from app.recovery.limiter import RecoveryLimiter, RecoveryRateLimitError
 from app.recovery.schemas import (
     RecoveryKeyResponse,
@@ -19,6 +22,23 @@ from app.recovery.service import (
 )
 
 router = APIRouter(tags=["recovery"])
+
+
+async def _reconcile_recovery_change(
+    request: Request,
+    db: DatabaseSession,
+    account_id: uuid.UUID,
+) -> None:
+    del account_id
+    await reconcile_proximity_delivery(
+        db,
+        provider=cast(MediaProvider, request.app.state.media_provider),
+        settings=request.app.state.settings,
+    )
+    await reconcile_media_grants(
+        db,
+        provider=cast(MediaProvider, request.app.state.media_provider),
+    )
 
 
 def rate_limit_error(exc: RecoveryRateLimitError) -> HTTPException:
@@ -97,6 +117,9 @@ async def recover_session(
             installation_id=payload.installation_id,
             platform=payload.platform,
             settings=request.app.state.settings,
+            on_change=lambda session, account_id: _reconcile_recovery_change(
+                request, session, account_id
+            ),
         )
     except RecoveryError as exc:
         raise HTTPException(

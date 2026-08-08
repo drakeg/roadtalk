@@ -1,5 +1,5 @@
 import uuid
-from typing import Annotated
+from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -26,10 +26,28 @@ from app.auth.service import (
 )
 from app.config import Settings
 from app.db.session import get_session
+from app.ptt.provider import MediaProvider
+from app.ptt.service import reconcile_media_grants, reconcile_proximity_delivery
 
 router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
 bearer = HTTPBearer(auto_error=False)
 DatabaseSession = Annotated[AsyncSession, Depends(get_session)]
+
+
+async def _reconcile_auth_change(
+    request: Request,
+    db: AsyncSession,
+    account_id: uuid.UUID,
+) -> None:
+    await reconcile_proximity_delivery(
+        db,
+        provider=cast(MediaProvider, request.app.state.media_provider),
+        settings=request.app.state.settings,
+    )
+    await reconcile_media_grants(
+        db,
+        provider=cast(MediaProvider, request.app.state.media_provider),
+    )
 
 
 def auth_error(exc: AuthenticationError, status_code: int = 401) -> HTTPException:
@@ -86,7 +104,14 @@ async def register_anonymous(
 @router.post("/refresh", response_model=TokenPair)
 async def refresh(request: Request, payload: RefreshRequest, db: DatabaseSession) -> TokenPair:
     try:
-        return await rotate_refresh_token(db, payload.refresh_token, request.app.state.settings)
+        return await rotate_refresh_token(
+            db,
+            payload.refresh_token,
+            request.app.state.settings,
+            on_change=lambda session, account_id: _reconcile_auth_change(
+                request, session, account_id
+            ),
+        )
     except AuthenticationError as exc:
         raise auth_error(exc) from exc
 
@@ -102,17 +127,32 @@ async def session_identity(current: CurrentSession) -> SessionIdentity:
 
 
 @router.post("/logout", response_model=LogoutResponse)
-async def logout(db: DatabaseSession, current: CurrentSession) -> LogoutResponse:
-    await revoke_session(db, current.session, "logout")
+async def logout(request: Request, db: DatabaseSession, current: CurrentSession) -> LogoutResponse:
+    await revoke_session(
+        db,
+        current.session,
+        "logout",
+        on_change=lambda session, account_id: _reconcile_auth_change(request, session, account_id),
+    )
     return LogoutResponse()
 
 
 @router.delete("/devices/{device_id}", response_model=DeviceRevocationResponse)
 async def revoke_device(
-    device_id: uuid.UUID, db: DatabaseSession, current: CurrentSession
+    device_id: uuid.UUID,
+    request: Request,
+    db: DatabaseSession,
+    current: CurrentSession,
 ) -> DeviceRevocationResponse:
     try:
-        count = await revoke_device_sessions(db, account_id=current.account.id, device_id=device_id)
+        count = await revoke_device_sessions(
+            db,
+            account_id=current.account.id,
+            device_id=device_id,
+            on_change=lambda session, account_id: _reconcile_auth_change(
+                request, session, account_id
+            ),
+        )
     except AuthenticationError as exc:
         raise auth_error(exc, status.HTTP_404_NOT_FOUND) from exc
     return DeviceRevocationResponse(device_id=device_id, revoked_sessions=count)
