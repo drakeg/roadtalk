@@ -1,6 +1,6 @@
 # Backend
 
-Sprint 5 active owner: S05-D05 Publication handshake and nearby delivery.
+Sprint 5 active owner: S05-D06 Revocation and lifecycle reconciliation.
 
 The backend is a Python/FastAPI modular-monolith control API.
 
@@ -115,6 +115,17 @@ conflicting tracks fail closed. Storage adds only the verified track reference,
 proximity policy version, evaluation timestamp, and semantic delivery outcome. No
 audience membership, coordinate, distance, count, provider payload, live adapter,
 cloud resource, or recurring cost is added.
+
+S05-D06 adds bounded synchronous fail-closed reconciliation after location
+replacement/withdrawal, consent withdrawal, logout, refresh/session/device
+revocation, account recovery, receive/transmit release, expiry, and injected provider
+failure. Each active published transmit is marked reconciling before provider work;
+eligibility is recomputed from current source-of-truth rows, newly ineligible opaque
+participants are unsubscribed, and empty or uncertain audiences disable publication.
+Release unsubscribes the verified track before revoking microphone authority.
+Recipient references remain bounded process-local values only. No membership table,
+scheduler, worker, queue, Redis, WebSocket, live provider call, AWS resource, or
+recurring cost is added.
 
 ## Local setup
 

@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Literal, cast
@@ -44,6 +45,7 @@ async def set_foreground_location_consent(
     requested_disclosure_version: str | None,
     current_policy_version: str,
     current_disclosure_version: str,
+    on_change: Callable[[AsyncSession, uuid.UUID], Awaitable[None]] | None = None,
     now: datetime | None = None,
 ) -> LocationConsentReceipt:
     if decision == "granted" and requested_policy_version != current_policy_version:
@@ -87,6 +89,8 @@ async def set_foreground_location_consent(
                 delete(CurrentLocation).where(CurrentLocation.account_id == account_id)
             )
         await db.commit()
+        if decision == "revoked" and on_change is not None:
+            await on_change(db, account_id)
         return _receipt(current)
 
     event_policy_version = current_policy_version
@@ -108,4 +112,6 @@ async def set_foreground_location_consent(
     if decision == "revoked":
         await db.execute(delete(CurrentLocation).where(CurrentLocation.account_id == account_id))
     await db.commit()
+    if decision == "revoked" and on_change is not None:
+        await on_change(db, account_id)
     return _receipt(event)

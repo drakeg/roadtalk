@@ -1,5 +1,6 @@
 import asyncio
 import uuid
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 
 from sqlalchemy import delete, select, update
@@ -10,6 +11,7 @@ from app.auth.security import hash_refresh_token, new_refresh_token
 from app.auth.service import token_pair, utcnow
 from app.config import Settings
 from app.db.models import Account, Device, Profile, RecoveryCredential, Session
+from app.ptt.service import revoke_account_media_grants
 from app.recovery.schemas import RecoveryKeyResponse, RecoverySessionResponse
 from app.recovery.security import (
     DUMMY_RECOVERY_HASH,
@@ -83,6 +85,7 @@ async def recover_account(
     installation_id: str,
     platform: str,
     settings: Settings,
+    on_change: Callable[[AsyncSession, uuid.UUID], Awaitable[None]] | None = None,
     now: datetime | None = None,
 ) -> RecoverySessionResponse:
     pepper = settings.recovery_key_pepper.get_secret_value()
@@ -141,6 +144,12 @@ async def recover_account(
         )
         .values(revoked_at=changed_at, revoke_reason="account_recovered")
     )
+    await revoke_account_media_grants(
+        db,
+        account_id=account.id,
+        reason="account_revoked",
+        now=changed_at,
+    )
     if source_account_id is not None:
         await db.execute(
             update(Session)
@@ -182,6 +191,8 @@ async def recover_account(
         await db.rollback()
         raise recovery_failed() from exc
     await db.refresh(session)
+    if on_change is not None:
+        await on_change(db, account.id)
     pair = token_pair(session, refresh_token, settings)
     return RecoverySessionResponse(
         **pair.model_dump(),

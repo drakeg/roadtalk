@@ -22,6 +22,7 @@ from app.ptt.provider import (
     ParticipantRequest,
     ReceiveCredentialRequest,
     SelectiveSubscriptionRequest,
+    VerifiedMicrophoneTrack,
 )
 from app.ptt.proximity import (
     EligibleReceiveGrant,
@@ -49,6 +50,16 @@ class ProximityEligibilityFinder(Protocol):
         policy: ProximityPolicy,
         now: datetime | None = None,
     ) -> tuple[EligibleReceiveGrant, ...]: ...
+
+
+class ReconciliationParticipantFinder(Protocol):
+    async def __call__(
+        self,
+        db: AsyncSession,
+        *,
+        room_ref: str,
+        limit: int,
+    ) -> tuple[str, ...]: ...
 
 
 @dataclass(frozen=True)
@@ -99,8 +110,17 @@ class MediaReconciliationReceipt:
     participants_pending: int
 
 
+@dataclass(frozen=True)
+class ProximityReconciliationReceipt:
+    transmissions_examined: int
+    transmissions_ready: int
+    transmissions_ended: int
+    transmissions_pending: int
+
+
 _PROVIDER_CLEANUP_OUTCOMES = {
     "provider_cleanup_pending",
+    "delivery_reconciling",
     "session_revoked",
     "device_revoked",
     "account_revoked",
@@ -109,6 +129,33 @@ _PROVIDER_CLEANUP_OUTCOMES = {
 
 def utcnow() -> datetime:
     return datetime.now(UTC)
+
+
+async def find_reconciliation_participants(
+    db: AsyncSession,
+    *,
+    room_ref: str,
+    limit: int,
+) -> tuple[str, ...]:
+    """Return a bounded, transient cleanup set without persisting membership."""
+    refs = (
+        await db.scalars(
+            select(MediaGrant.provider_participant_ref)
+            .where(
+                MediaGrant.grant_kind == "receive",
+                MediaGrant.provider_room_ref == room_ref,
+            )
+            .order_by(MediaGrant.id)
+            .limit(limit + 1)
+        )
+    ).all()
+    unique_refs = tuple(sorted(set(refs)))
+    if len(refs) > limit or len(unique_refs) > limit:
+        raise GrantError(
+            "PTT_RECONCILIATION_BOUNDED",
+            "Nearby delivery cleanup exceeded its safe synchronous bound.",
+        )
+    return unique_refs
 
 
 def _digest(value: str) -> str:
@@ -603,6 +650,8 @@ async def release_receive_grant(
     device_id: uuid.UUID,
     grant_id: uuid.UUID,
     provider: MediaProvider,
+    participant_finder: ReconciliationParticipantFinder = find_reconciliation_participants,
+    reconciliation_limit: int = 100,
     now: datetime | None = None,
 ) -> GrantReleaseReceipt:
     resolved_now = now or utcnow()
@@ -641,6 +690,30 @@ async def release_receive_grant(
     grant.outcome_code = "released"
     await db.commit()
     cleanup_error: MediaProviderError | None = None
+    for transmit in active_transmits:
+        if transmit.provider_track_ref is None:
+            continue
+        try:
+            participant_refs = await participant_finder(
+                db,
+                room_ref=transmit.provider_room_ref,
+                limit=reconciliation_limit,
+            )
+            if participant_refs:
+                await provider.update_track_subscriptions(
+                    SelectiveSubscriptionRequest(
+                        track=VerifiedMicrophoneTrack(
+                            room_ref=transmit.provider_room_ref,
+                            participant_ref=transmit.provider_participant_ref,
+                            track_ref=transmit.provider_track_ref,
+                        ),
+                        participant_refs=participant_refs,
+                        action="unsubscribe",
+                    )
+                )
+        except (GrantError, MediaProviderError) as exc:
+            cleanup_error = MediaProviderError("bounded track cleanup is pending")
+            cleanup_error.__cause__ = exc
     if active_transmits:
         try:
             await provider.set_microphone_publish(
@@ -682,6 +755,8 @@ async def release_transmit_grant(
     device_id: uuid.UUID,
     grant_id: uuid.UUID,
     provider: MediaProvider,
+    participant_finder: ReconciliationParticipantFinder = find_reconciliation_participants,
+    reconciliation_limit: int = 100,
     now: datetime | None = None,
 ) -> GrantReleaseReceipt:
     resolved_now = now or utcnow()
@@ -704,6 +779,24 @@ async def release_transmit_grant(
     grant.outcome_code = "expired" if grant.expires_at <= resolved_now else "released"
     await db.commit()
     try:
+        if grant.provider_track_ref is not None:
+            participant_refs = await participant_finder(
+                db,
+                room_ref=grant.provider_room_ref,
+                limit=reconciliation_limit,
+            )
+            if participant_refs:
+                await provider.update_track_subscriptions(
+                    SelectiveSubscriptionRequest(
+                        track=VerifiedMicrophoneTrack(
+                            room_ref=grant.provider_room_ref,
+                            participant_ref=grant.provider_participant_ref,
+                            track_ref=grant.provider_track_ref,
+                        ),
+                        participant_refs=participant_refs,
+                        action="unsubscribe",
+                    )
+                )
         await provider.set_microphone_publish(
             MicrophonePublishRequest(
                 room_ref=grant.provider_room_ref,
@@ -711,7 +804,7 @@ async def release_transmit_grant(
                 enabled=False,
             )
         )
-    except MediaProviderError as exc:
+    except (GrantError, MediaProviderError) as exc:
         grant.outcome_code = "provider_cleanup_pending"
         if grant.parent_grant_id is not None:
             await db.execute(
@@ -749,6 +842,8 @@ async def release_grant(
     device_id: uuid.UUID,
     grant_id: uuid.UUID,
     provider: MediaProvider,
+    participant_finder: ReconciliationParticipantFinder = find_reconciliation_participants,
+    reconciliation_limit: int = 100,
     now: datetime | None = None,
 ) -> GrantReleaseReceipt:
     grant_kind = await db.scalar(
@@ -765,6 +860,8 @@ async def release_grant(
             device_id=device_id,
             grant_id=grant_id,
             provider=provider,
+            participant_finder=participant_finder,
+            reconciliation_limit=reconciliation_limit,
             now=now,
         )
     if grant_kind == "transmit":
@@ -774,6 +871,8 @@ async def release_grant(
             device_id=device_id,
             grant_id=grant_id,
             provider=provider,
+            participant_finder=participant_finder,
+            reconciliation_limit=reconciliation_limit,
             now=now,
         )
     raise GrantError("PTT_GRANT_NOT_FOUND", "The grant was not found.")
@@ -796,6 +895,142 @@ async def revoke_device_media_grants(
             MediaGrant.revoked_at.is_(None),
         )
         .values(revoked_at=resolved_now, outcome_code=reason)
+    )
+
+
+async def revoke_account_media_grants(
+    db: AsyncSession,
+    *,
+    account_id: uuid.UUID,
+    reason: str,
+    now: datetime | None = None,
+) -> None:
+    resolved_now = now or utcnow()
+    await db.execute(
+        update(MediaGrant)
+        .where(
+            MediaGrant.account_id == account_id,
+            MediaGrant.revoked_at.is_(None),
+        )
+        .values(revoked_at=resolved_now, outcome_code=reason)
+    )
+
+
+async def reconcile_proximity_delivery(
+    db: AsyncSession,
+    *,
+    provider: MediaProvider,
+    settings: Settings,
+    eligibility_finder: ProximityEligibilityFinder = find_eligible_receive_grants,
+    participant_finder: ReconciliationParticipantFinder = find_reconciliation_participants,
+    now: datetime | None = None,
+    limit: int = 100,
+) -> ProximityReconciliationReceipt:
+    """Recompute active synthetic delivery after an authoritative state mutation.
+
+    Local delivery is denied before provider work. Recipient references exist only in
+    the bounded process-local cleanup set and are never returned or persisted.
+    """
+    if limit < 1 or limit > 1_000:
+        raise ValueError("proximity reconciliation limit must be between 1 and 1000")
+
+    resolved_now = now or utcnow()
+    grants = (
+        await db.scalars(
+            select(MediaGrant)
+            .where(
+                MediaGrant.grant_kind == "transmit",
+                MediaGrant.provider_track_ref.is_not(None),
+                MediaGrant.revoked_at.is_(None),
+                MediaGrant.expires_at > resolved_now,
+            )
+            .order_by(MediaGrant.expires_at, MediaGrant.id)
+            .limit(limit)
+            .with_for_update(skip_locked=True)
+        )
+    ).all()
+
+    for grant in grants:
+        grant.outcome_code = "delivery_reconciling"
+        grant.eligibility_evaluated_at = resolved_now
+    await db.commit()
+
+    ready = 0
+    ended = 0
+    pending = 0
+    policy = proximity_policy_from_settings(settings)
+    for grant in grants:
+        if grant.provider_track_ref is None:
+            pending += 1
+            continue
+        track = VerifiedMicrophoneTrack(
+            room_ref=grant.provider_room_ref,
+            participant_ref=grant.provider_participant_ref,
+            track_ref=grant.provider_track_ref,
+        )
+        try:
+            candidates = await participant_finder(
+                db,
+                room_ref=grant.provider_room_ref,
+                limit=limit,
+            )
+            eligible_receivers = await eligibility_finder(
+                db,
+                sender_account_id=grant.account_id,
+                sender_device_id=grant.device_id,
+                policy=policy,
+                now=resolved_now,
+            )
+            eligible = tuple(sorted({receiver.participant_ref for receiver in eligible_receivers}))
+            ineligible = tuple(sorted(set(candidates).difference(eligible)))
+            if ineligible:
+                await provider.update_track_subscriptions(
+                    SelectiveSubscriptionRequest(
+                        track=track,
+                        participant_refs=ineligible,
+                        action="unsubscribe",
+                    )
+                )
+            if not eligible:
+                grant.revoked_at = resolved_now
+                grant.outcome_code = "no_nearby_listeners"
+                await provider.set_microphone_publish(
+                    MicrophonePublishRequest(
+                        room_ref=grant.provider_room_ref,
+                        participant_ref=grant.provider_participant_ref,
+                        enabled=False,
+                    )
+                )
+                ended += 1
+            else:
+                await provider.update_track_subscriptions(
+                    SelectiveSubscriptionRequest(
+                        track=track,
+                        participant_refs=eligible,
+                        action="subscribe",
+                    )
+                )
+                grant.outcome_code = "delivery_ready"
+                ready += 1
+        except (GrantError, ProximityEligibilityError, MediaProviderError):
+            grant.outcome_code = "delivery_reconciling"
+            pending += 1
+            try:
+                await provider.set_microphone_publish(
+                    MicrophonePublishRequest(
+                        room_ref=grant.provider_room_ref,
+                        participant_ref=grant.provider_participant_ref,
+                        enabled=False,
+                    )
+                )
+            except MediaProviderError:
+                pass
+    await db.commit()
+    return ProximityReconciliationReceipt(
+        transmissions_examined=len(grants),
+        transmissions_ready=ready,
+        transmissions_ended=ended,
+        transmissions_pending=pending,
     )
 
 
