@@ -4,6 +4,7 @@ import type { SessionClient } from "../session/SessionClient";
 import type {
   ReceiveGrant,
   ReceiveGrantTransport,
+  PublicationDelivery,
   TransmitGrant,
 } from "./types";
 
@@ -23,6 +24,15 @@ type TransmitGrantResponse = {
   allowed_actions: readonly string[];
   allowed_track_sources: readonly string[];
   expires_at: string;
+};
+
+type PublicationResponse = {
+  transmit_grant_id: string;
+  delivery_state: "ready" | "no_nearby_listeners" | "reconciling" | "ended";
+  proximity_policy_version: string;
+  evaluated_at: string;
+  expires_at: string;
+  replayed: boolean;
 };
 
 type Problem = {
@@ -119,6 +129,63 @@ export class MediaGrantApi implements ReceiveGrantTransport {
     return {
       grantId: body.grant_id,
       receiveGrantId: body.receive_grant_id,
+      expiresAt: body.expires_at,
+    };
+  }
+
+  async publishTransmitTrack(
+    transmitGrantId: string,
+    trackRef: string,
+  ): Promise<PublicationDelivery> {
+    const response = await this.session.authenticatedFetch(
+      `${this.baseUrl}/ptt/grants/${encodeURIComponent(transmitGrantId)}/publication`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ track_ref: trackRef }),
+      },
+    );
+    if (!response.ok) {
+      const problem = (await response.json().catch(() => ({}))) as Problem;
+      const nested =
+        typeof problem.detail === "object" ? problem.detail : undefined;
+      const code = nested?.code ?? problem.code ?? "PTT_PUBLICATION_FAILED";
+      throw new MediaGrantError(
+        code === "PTT_PROVIDER_UNAVAILABLE"
+          ? "PTT_DELIVERY_RECONCILING"
+          : code,
+      );
+    }
+    const body = (await response.json()) as PublicationResponse;
+    const allowedStates = new Set([
+      "ready",
+      "no_nearby_listeners",
+      "reconciling",
+      "ended",
+    ]);
+    const exactKeys = [
+      "delivery_state",
+      "evaluated_at",
+      "expires_at",
+      "proximity_policy_version",
+      "replayed",
+      "transmit_grant_id",
+    ];
+    if (
+      Object.keys(body).sort().join("|") !== exactKeys.join("|") ||
+      body.transmit_grant_id !== transmitGrantId ||
+      !allowedStates.has(body.delivery_state) ||
+      typeof body.proximity_policy_version !== "string" ||
+      body.proximity_policy_version.length === 0 ||
+      !Number.isFinite(Date.parse(body.evaluated_at)) ||
+      !Number.isFinite(Date.parse(body.expires_at)) ||
+      typeof body.replayed !== "boolean"
+    ) {
+      throw new MediaGrantError("PTT_PUBLICATION_SCOPE_INVALID");
+    }
+    return {
+      transmitGrantId: body.transmit_grant_id,
+      deliveryState: body.delivery_state,
       expiresAt: body.expires_at,
     };
   }

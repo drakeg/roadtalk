@@ -1,6 +1,6 @@
 # Mobile
 
-Current owner: S04-D06 mobile hold-to-talk experience. The retained identity,
+Current owner: S05-D07 mobile selective receive experience. The retained identity,
 recovery, and foreground-location flows were delivered by S02-D05–D08 and S03-D05–D07.
 
 This directory contains the Expo/React Native/TypeScript development-build application.
@@ -37,13 +37,15 @@ The current application provides:
 - purpose-before-permission microphone onboarding with denied, blocked, unavailable,
   retry, and settings guidance
 - pinned LiveKit Expo development-build dependencies behind a fakeable room adapter
-- receive-only room join and remote-audio subscription with microphone capture off
+- receive-only room join with automatic subscription disabled and microphone capture off
 - accessible press-and-hold authorization, transmission, receiving, busy, degraded,
   reconnecting, permission-denied, and error states
 - server-authorized microphone-only publication with a deterministic 30-second maximum
 - capture-off-first release, background, screen-exit, logout, reconnect, and failure
   ordering, including rapid press/release and cancellation races
 - deterministic room, audio-session, and grant cleanup on every lifecycle exit
+- opaque local microphone publication reporting and provider-authorized receive only
+- accessible nearby-unavailable and delivery-reconciling states without audience details
 
 ## Microphone and hold-to-talk media
 
@@ -55,14 +57,19 @@ request.
 
 The controller joins only after the app, screen, and authenticated session are active.
 It accepts only a server response scoped to `join` and `subscribe` with no allowed
-track sources. The LiveKit adapter starts a foreground audio session, subscribes to
-remote audio, reports whether a remote participant is speaking, and explicitly keeps
-the local microphone disabled while receive-ready.
+track sources. The LiveKit adapter starts a foreground audio session with automatic
+subscription explicitly disabled. Only provider-subscribed remote microphone tracks
+drive the authorized-receive state, and the local microphone remains disabled while
+receive-ready. The client never selects a remote track or participant.
 
 Pressing and continuing to hold the large push-to-talk control requests a nested
 transmit grant for the active receive grant. The client rejects any response that is
 not exactly `publish` plus `microphone`; capture starts only after this authorization
-returns. Release disables capture before revoking the transmit grant. The same
+returns. The adapter returns only the opaque local microphone track reference, which
+the client submits to the nested publication endpoint. `ready` begins only after the
+server verifies that publication and its current nearby audience. Empty or uncertain
+delivery stops capture and exposes non-disclosing nearby-unavailable or reconciling
+state. Release disables capture before revoking the transmit grant. The same
 capture-off-first ordering applies to the 30-second maximum, backgrounding, screen
 exit, logout or revocation, reconnect, connection failure, and unmount. Microphone
 operations are serialized so a release cannot be overtaken by an in-flight native
@@ -255,8 +262,8 @@ development logs must never print request bodies, authorization headers, or stor
 
 ## Scope boundary
 
-S04-D06 adds the accessible foreground hold-to-talk experience and deterministic
-client safety tests only. It does not add proximity, channel selection, user channels,
+S05-D07 adds the accessible foreground selective-receive and publication-handshake
+experience with deterministic client safety tests. It does not add channel selection, user channels,
 background transmission, hands-free/toggle behavior, recording, transcription,
 provider deployment, or any cloud resource. Operations/evidence and final review
 remain assigned to S04-D08–D09. Real-device audio route, interruption,

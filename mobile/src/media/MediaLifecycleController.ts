@@ -44,7 +44,7 @@ export class MediaLifecycleController implements MediaLifecycleControl {
   private remoteReceiving = false;
   private generation = 0;
   private transmitGeneration = 0;
-  private microphoneOperation: Promise<void> = Promise.resolve();
+  private microphoneOperation: Promise<unknown> = Promise.resolve();
 
   constructor(
     private readonly permission: MicrophonePermissionGateway,
@@ -109,6 +109,8 @@ export class MediaLifecycleController implements MediaLifecycleControl {
         "receiving",
         "busy",
         "degraded",
+        "nearby_unavailable",
+        "delivery_reconciling",
         "transmit_error",
       ].includes(this.snapshot.status)
     ) {
@@ -125,9 +127,31 @@ export class MediaLifecycleController implements MediaLifecycleControl {
         return;
       }
       this.transmitGrantId = transmit.grantId;
-      await this.setMicrophoneEnabled(true);
+      const trackRef = await this.publishMicrophone();
       if (!this.canStartTransmission(generation, receiveGrantId)) {
         await this.stopTransmission();
+        return;
+      }
+      this.publish({ status: "publishing" });
+      const delivery = await this.transport.publishTransmitTrack(
+        transmit.grantId,
+        trackRef,
+      );
+      if (!this.canStartTransmission(generation, receiveGrantId)) {
+        await this.stopTransmission();
+        return;
+      }
+      if (delivery.deliveryState !== "ready") {
+        this.held = false;
+        await this.stopTransmission();
+        this.publish({
+          status:
+            delivery.deliveryState === "no_nearby_listeners"
+              ? "nearby_unavailable"
+              : delivery.deliveryState === "reconciling"
+                ? "delivery_reconciling"
+                : "transmit_error",
+        });
         return;
       }
       this.transmitTimer = this.scheduler.setTimeout(() => {
@@ -255,7 +279,7 @@ export class MediaLifecycleController implements MediaLifecycleControl {
             void this.failAndStop();
           }
         },
-        receivingChanged: (receiving) => {
+        authorizedReceiveChanged: (receiving) => {
           if (this.isCurrent(generation)) {
             this.remoteReceiving = receiving;
             if (
@@ -371,6 +395,14 @@ export class MediaLifecycleController implements MediaLifecycleControl {
         this.publish({ status: "busy" });
         return;
       }
+      if (error.code === "PTT_NO_NEARBY_LISTENERS") {
+        this.publish({ status: "nearby_unavailable" });
+        return;
+      }
+      if (error.code === "PTT_DELIVERY_RECONCILING") {
+        this.publish({ status: "delivery_reconciling" });
+        return;
+      }
       if (
         error.code === "PTT_PROVIDER_UNAVAILABLE" ||
         error.code === "PTT_RATE_LIMITED"
@@ -404,7 +436,7 @@ export class MediaLifecycleController implements MediaLifecycleControl {
     this.transmitGrantId = null;
     try {
       // Capture is always disabled before any remote cleanup attempt.
-      await this.setMicrophoneEnabled(false);
+      await this.stopMicrophone();
     } catch {
       // Continue server-side revocation even if native capture cleanup reports.
     }
@@ -427,10 +459,18 @@ export class MediaLifecycleController implements MediaLifecycleControl {
     }
   }
 
-  private setMicrophoneEnabled(enabled: boolean): Promise<void> {
+  private publishMicrophone(): Promise<string> {
     const operation = this.microphoneOperation
       .catch(() => undefined)
-      .then(() => this.room.setMicrophoneEnabled(enabled));
+      .then(() => this.room.publishMicrophone());
+    this.microphoneOperation = operation.catch(() => undefined);
+    return operation;
+  }
+
+  private stopMicrophone(): Promise<void> {
+    const operation = this.microphoneOperation
+      .catch(() => undefined)
+      .then(() => this.room.stopMicrophone());
     this.microphoneOperation = operation.catch(() => undefined);
     return operation;
   }

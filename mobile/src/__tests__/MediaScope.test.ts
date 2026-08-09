@@ -57,15 +57,17 @@ describe("audio-only foreground media scope", () => {
     }));
     const source = files.map(({ source: contents }) => contents).join("\n");
     const captureEnablers = files.filter(({ source: contents }) =>
-      /setMicrophoneEnabled\(true\)/.test(contents),
+      /setMicrophoneEnabled\(\s*true/.test(contents),
     );
 
     expect(source).toMatch(/setMicrophoneEnabled\(false\)/);
     expect(source).toMatch(/createTransmitGrant\(receiveGrantId\)/);
+    expect(source).toMatch(/publishTransmitTrack/);
+    expect(source).toMatch(/autoSubscribe:\s*false/);
     expect(captureEnablers.map(({ path }) => path)).toEqual([
-      "media/MediaLifecycleController.ts",
+      "media/liveKitRoom.ts",
     ]);
-    expect(source.match(/setMicrophoneEnabled\(true\)/g)).toHaveLength(1);
+    expect(source.match(/setMicrophoneEnabled\(\s*true/g)).toHaveLength(1);
     expect(source).not.toMatch(
       /setCameraEnabled|startRecording|transcri|console\./i,
     );

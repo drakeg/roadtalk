@@ -87,6 +87,12 @@ describe("accessible hold-to-talk screen", () => {
       "KEEP HOLDING",
     ],
     [
+      { status: "publishing" } as const,
+      "Transmitting. Release to stop",
+      "● LIVE",
+      "RELEASE TO STOP",
+    ],
+    [
       { status: "transmitting" } as const,
       "Transmitting. Release to stop",
       "● LIVE",
@@ -118,6 +124,8 @@ describe("accessible hold-to-talk screen", () => {
     ["receiving", /another participant is speaking/i],
     ["busy", /nothing was captured/i],
     ["degraded", /temporarily unavailable or rate limited/i],
+    ["nearby_unavailable", /without showing who or how many/i],
+    ["delivery_reconciling", /could not confirm nearby delivery/i],
     ["transmit_error", /stopped capture and released/i],
     ["reconnecting", /restoring receive-only audio/i],
   ] as const)("renders a non-color %s state", async (status, copy) => {

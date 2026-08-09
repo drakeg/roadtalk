@@ -3,6 +3,7 @@ import { MediaGrantError } from "../media/api";
 import type {
   MicrophonePermission,
   MicrophonePermissionGateway,
+  PublicationDelivery,
   ReceiveGrant,
   ReceiveGrantTransport,
   ReceiveRoomAdapter,
@@ -38,6 +39,16 @@ class FakeTransport implements ReceiveGrantTransport {
   readonly createTransmitGrant = jest.fn(
     async (_receiveGrantId: string) => this.transmit,
   );
+  readonly publishTransmitTrack: jest.Mock<
+    Promise<PublicationDelivery>,
+    [string, string]
+  > = jest.fn(
+    async (transmitGrantId: string, _trackRef: string) => ({
+      transmitGrantId,
+      deliveryState: "ready" as const,
+      expiresAt: this.transmit.expiresAt,
+    }),
+  );
   readonly releaseGrant = jest.fn(async (_grantId: string) => undefined);
 }
 
@@ -48,9 +59,8 @@ class FakeRoom implements ReceiveRoomAdapter {
       this.handlers = handlers;
     },
   );
-  readonly setMicrophoneEnabled = jest.fn(
-    async (_enabled: boolean) => undefined,
-  );
+  readonly publishMicrophone = jest.fn(async () => "microphone-track-opaque");
+  readonly stopMicrophone = jest.fn(async () => undefined);
   readonly disconnect = jest.fn(async () => undefined);
 }
 
@@ -120,12 +130,16 @@ describe("server-authorized hold-to-talk", () => {
 
     expect(controller.getSnapshot()).toEqual({ status: "authorizing" });
     expect(transport.createTransmitGrant).toHaveBeenCalledWith("receive-1");
-    expect(room.setMicrophoneEnabled).not.toHaveBeenCalledWith(true);
+    expect(room.publishMicrophone).not.toHaveBeenCalled();
 
     pending.resolve(transport.transmit);
     await press;
 
-    expect(room.setMicrophoneEnabled).toHaveBeenCalledWith(true);
+    expect(room.publishMicrophone).toHaveBeenCalled();
+    expect(transport.publishTransmitTrack).toHaveBeenCalledWith(
+      "transmit-1",
+      "microphone-track-opaque",
+    );
     expect(controller.getSnapshot()).toEqual({ status: "transmitting" });
     await controller.releaseToTalk();
   });
@@ -133,17 +147,66 @@ describe("server-authorized hold-to-talk", () => {
   it("disables capture before revoking the transmit grant on release", async () => {
     const { controller, transport, room } = await ready();
     await controller.pressToTalk();
-    room.setMicrophoneEnabled.mockClear();
+    room.stopMicrophone.mockClear();
     transport.releaseGrant.mockClear();
 
     await controller.releaseToTalk();
 
     expect(controller.getSnapshot()).toEqual({ status: "ready" });
-    expect(room.setMicrophoneEnabled).toHaveBeenCalledWith(false);
+    expect(room.stopMicrophone).toHaveBeenCalled();
     expect(transport.releaseGrant).toHaveBeenCalledWith("transmit-1");
     expect(
-      room.setMicrophoneEnabled.mock.invocationCallOrder[0]!,
+      room.stopMicrophone.mock.invocationCallOrder[0]!,
     ).toBeLessThan(transport.releaseGrant.mock.invocationCallOrder[0]!);
+  });
+
+  it.each([
+    ["no_nearby_listeners", "nearby_unavailable"],
+    ["reconciling", "delivery_reconciling"],
+    ["ended", "transmit_error"],
+  ] as const)(
+    "stops capture for %s publication delivery",
+    async (deliveryState, expectedStatus) => {
+      const transport = new FakeTransport();
+      transport.publishTransmitTrack.mockResolvedValueOnce({
+        transmitGrantId: "transmit-1",
+        deliveryState,
+        expiresAt: transport.transmit.expiresAt,
+      });
+      const { controller, room } = await ready({ transport });
+
+      await controller.pressToTalk();
+
+      expect(controller.getSnapshot().status).toBe(expectedStatus);
+      expect(room.stopMicrophone).toHaveBeenCalled();
+      expect(transport.releaseGrant).toHaveBeenCalledWith("transmit-1");
+    },
+  );
+
+  it("exposes publication verification while capture is live and remains releasable", async () => {
+    const pending = deferred<{
+      transmitGrantId: string;
+      deliveryState: "ready";
+      expiresAt: string;
+    }>();
+    const transport = new FakeTransport();
+    transport.publishTransmitTrack.mockImplementationOnce(() => pending.promise);
+    const { controller, room } = await ready({ transport });
+
+    const press = controller.pressToTalk();
+    await flush();
+    expect(controller.getSnapshot()).toEqual({ status: "publishing" });
+
+    const release = controller.releaseToTalk();
+    pending.resolve({
+      transmitGrantId: "transmit-1",
+      deliveryState: "ready",
+      expiresAt: transport.transmit.expiresAt,
+    });
+    await Promise.all([press, release]);
+
+    expect(room.stopMicrophone).toHaveBeenCalled();
+    expect(controller.getSnapshot()).toEqual({ status: "ready" });
   });
 
   it("cancels a rapid press and release before authorization without capture", async () => {
@@ -157,7 +220,7 @@ describe("server-authorized hold-to-talk", () => {
     pending.resolve(transport.transmit);
     await press;
 
-    expect(room.setMicrophoneEnabled).not.toHaveBeenCalledWith(true);
+    expect(room.publishMicrophone).not.toHaveBeenCalled();
     expect(transport.releaseGrant).toHaveBeenCalledWith("transmit-1");
     expect(controller.getSnapshot()).toEqual({ status: "ready" });
   });
@@ -165,32 +228,27 @@ describe("server-authorized hold-to-talk", () => {
   it("serializes release behind an in-flight native enable before cleanup", async () => {
     const nativeEnable = deferred<void>();
     const room = new FakeRoom();
-    room.setMicrophoneEnabled.mockImplementationOnce(
-      async (enabled: boolean) => {
-        expect(enabled).toBe(true);
-        await nativeEnable.promise;
-      },
-    );
+    room.publishMicrophone.mockImplementationOnce(async () => {
+      await nativeEnable.promise;
+      return "microphone-track-opaque";
+    });
     const { controller, transport } = await ready({ room });
 
     const press = controller.pressToTalk();
     await flush();
     const release = controller.releaseToTalk();
 
-    expect(room.setMicrophoneEnabled).toHaveBeenCalledTimes(1);
+    expect(room.publishMicrophone).toHaveBeenCalledTimes(1);
     expect(transport.releaseGrant).not.toHaveBeenCalledWith("transmit-1");
 
     nativeEnable.resolve();
     await Promise.all([press, release]);
 
-    expect(room.setMicrophoneEnabled.mock.calls).toEqual([
-      [true],
-      [false],
-      [false],
-    ]);
+    expect(room.publishMicrophone).toHaveBeenCalledTimes(1);
+    expect(room.stopMicrophone).toHaveBeenCalledTimes(2);
     expect(transport.releaseGrant).toHaveBeenCalledWith("transmit-1");
     expect(
-      room.setMicrophoneEnabled.mock.invocationCallOrder[1]!,
+      room.stopMicrophone.mock.invocationCallOrder[0]!,
     ).toBeLessThan(transport.releaseGrant.mock.invocationCallOrder[0]!);
     expect(controller.getSnapshot()).toEqual({ status: "ready" });
   });
@@ -206,7 +264,7 @@ describe("server-authorized hold-to-talk", () => {
     };
     const { controller, transport, room } = await ready({ scheduler });
     await controller.pressToTalk();
-    room.setMicrophoneEnabled.mockClear();
+    room.stopMicrophone.mockClear();
     transport.releaseGrant.mockClear();
 
     (maximumCallback as (() => void) | null)?.();
@@ -216,7 +274,7 @@ describe("server-authorized hold-to-talk", () => {
       expect.any(Function),
       30_000,
     );
-    expect(room.setMicrophoneEnabled).toHaveBeenCalledWith(false);
+    expect(room.stopMicrophone).toHaveBeenCalled();
     expect(transport.releaseGrant).toHaveBeenCalledWith("transmit-1");
     expect(controller.getSnapshot()).toEqual({
       status: "ready",
@@ -238,24 +296,22 @@ describe("server-authorized hold-to-talk", () => {
     await controller.pressToTalk();
 
     expect(controller.getSnapshot().status).toBe(expected);
-    expect(room.setMicrophoneEnabled).not.toHaveBeenCalledWith(true);
+    expect(room.publishMicrophone).not.toHaveBeenCalled();
   });
 
   it("disconnects and exposes revoked permission after native enable fails", async () => {
     const permission = new FakePermission();
     const room = new FakeRoom();
-    room.setMicrophoneEnabled.mockImplementationOnce(async (enabled) => {
-      if (enabled) {
-        permission.current = { status: "denied", canAskAgain: false };
-        throw new Error("permission revoked");
-      }
+    room.publishMicrophone.mockImplementationOnce(async () => {
+      permission.current = { status: "denied", canAskAgain: false };
+      throw new Error("permission revoked");
     });
     const { controller, transport } = await ready({ permission, room });
 
     await controller.pressToTalk();
 
     expect(controller.getSnapshot()).toEqual({ status: "blocked" });
-    expect(room.setMicrophoneEnabled).toHaveBeenCalledWith(false);
+    expect(room.stopMicrophone).toHaveBeenCalled();
     expect(room.disconnect).toHaveBeenCalled();
     expect(transport.releaseGrant).toHaveBeenCalledWith("transmit-1");
     expect(transport.releaseGrant).toHaveBeenCalledWith("receive-1");
@@ -264,24 +320,24 @@ describe("server-authorized hold-to-talk", () => {
   it("shows incoming audio without implying local capture", async () => {
     const { controller, room } = await ready();
 
-    room.handlers?.receivingChanged(true);
+    room.handlers?.authorizedReceiveChanged(true);
     expect(controller.getSnapshot()).toEqual({ status: "receiving" });
-    expect(room.setMicrophoneEnabled).not.toHaveBeenCalledWith(true);
+    expect(room.publishMicrophone).not.toHaveBeenCalled();
 
-    room.handlers?.receivingChanged(false);
+    room.handlers?.authorizedReceiveChanged(false);
     expect(controller.getSnapshot()).toEqual({ status: "ready" });
   });
 
   it("stops transmission before reconnecting", async () => {
     const { controller, transport, room } = await ready();
     await controller.pressToTalk();
-    room.setMicrophoneEnabled.mockClear();
+    room.stopMicrophone.mockClear();
     transport.releaseGrant.mockClear();
 
     room.handlers?.reconnecting();
     await flush();
 
-    expect(room.setMicrophoneEnabled).toHaveBeenCalledWith(false);
+    expect(room.stopMicrophone).toHaveBeenCalled();
     expect(transport.releaseGrant).toHaveBeenCalledWith("transmit-1");
     expect(controller.getSnapshot()).toEqual({ status: "reconnecting" });
   });
@@ -304,16 +360,16 @@ describe("server-authorized hold-to-talk", () => {
   ])("turns capture off before cleanup on %s", async (_name, stop) => {
     const { controller, transport, room } = await ready();
     await controller.pressToTalk();
-    room.setMicrophoneEnabled.mockClear();
+    room.stopMicrophone.mockClear();
     transport.releaseGrant.mockClear();
 
     await stop(controller);
 
-    expect(room.setMicrophoneEnabled).toHaveBeenCalledWith(false);
+    expect(room.stopMicrophone).toHaveBeenCalled();
     expect(transport.releaseGrant).toHaveBeenCalledWith("transmit-1");
     expect(transport.releaseGrant).toHaveBeenCalledWith("receive-1");
     expect(
-      room.setMicrophoneEnabled.mock.invocationCallOrder[0]!,
+      room.stopMicrophone.mock.invocationCallOrder[0]!,
     ).toBeLessThan(transport.releaseGrant.mock.invocationCallOrder[0]!);
   });
 
@@ -343,7 +399,7 @@ describe("server-authorized hold-to-talk", () => {
     pending.reject(new MediaGrantError("PTT_TRANSMIT_BUSY"));
     await press;
 
-    expect(room.setMicrophoneEnabled).not.toHaveBeenCalledWith(true);
+    expect(room.publishMicrophone).not.toHaveBeenCalled();
     expect(controller.getSnapshot()).toEqual({ status: "ready" });
   });
 });

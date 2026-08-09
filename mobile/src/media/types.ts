@@ -18,6 +18,10 @@ export type ReceiveGrant = {
 export type ReceiveGrantTransport = {
   createReceiveGrant(): Promise<ReceiveGrant>;
   createTransmitGrant(receiveGrantId: string): Promise<TransmitGrant>;
+  publishTransmitTrack(
+    transmitGrantId: string,
+    trackRef: string,
+  ): Promise<PublicationDelivery>;
   releaseGrant(grantId: string): Promise<void>;
 };
 
@@ -27,11 +31,17 @@ export type TransmitGrant = {
   expiresAt: string;
 };
 
+export type PublicationDelivery = {
+  transmitGrantId: string;
+  deliveryState: "ready" | "no_nearby_listeners" | "reconciling" | "ended";
+  expiresAt: string;
+};
+
 export type RoomConnectionHandlers = {
   reconnecting(): void;
   reconnected(): void;
   disconnected(): void;
-  receivingChanged(receiving: boolean): void;
+  authorizedReceiveChanged(receiving: boolean): void;
 };
 
 export type ReceiveRoomAdapter = {
@@ -39,7 +49,8 @@ export type ReceiveRoomAdapter = {
     grant: ReceiveGrant,
     handlers: RoomConnectionHandlers,
   ): Promise<void>;
-  setMicrophoneEnabled(enabled: boolean): Promise<void>;
+  publishMicrophone(): Promise<string>;
+  stopMicrophone(): Promise<void>;
   disconnect(): Promise<void>;
 };
 
@@ -53,7 +64,10 @@ export type MediaLifecycleSnapshot =
   | { status: "ready"; reason?: "maximum" }
   | { status: "receiving" }
   | { status: "authorizing" }
+  | { status: "publishing" }
   | { status: "transmitting" }
+  | { status: "nearby_unavailable" }
+  | { status: "delivery_reconciling" }
   | { status: "busy" }
   | { status: "degraded" }
   | { status: "transmit_error" }
