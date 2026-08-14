@@ -152,7 +152,8 @@ export function MicrophonePermissionScreen({ lifecycle, navigation }: Props) {
           onPressOut={() => void ownedLifecycle.releaseToTalk()}
           style={({ pressed }) => [
             styles.pushToTalkButton,
-            snapshot.status === "transmitting" &&
+            (snapshot.status === "transmitting" ||
+              snapshot.status === "publishing") &&
               styles.pushToTalkButtonActive,
             pressed && styles.buttonPressed,
           ]}
@@ -160,7 +161,8 @@ export function MicrophonePermissionScreen({ lifecycle, navigation }: Props) {
           <Text
             style={[
               styles.pushToTalkCue,
-              snapshot.status === "transmitting" &&
+              (snapshot.status === "transmitting" ||
+                snapshot.status === "publishing") &&
                 styles.pushToTalkTextActive,
             ]}
           >
@@ -169,7 +171,8 @@ export function MicrophonePermissionScreen({ lifecycle, navigation }: Props) {
           <Text
             style={[
               styles.pushToTalkText,
-              snapshot.status === "transmitting" &&
+              (snapshot.status === "transmitting" ||
+                snapshot.status === "publishing") &&
                 styles.pushToTalkTextActive,
             ]}
           >
@@ -181,7 +184,10 @@ export function MicrophonePermissionScreen({ lifecycle, navigation }: Props) {
       {snapshot.status === "ready" ||
       snapshot.status === "receiving" ||
       snapshot.status === "authorizing" ||
+      snapshot.status === "publishing" ||
       snapshot.status === "transmitting" ||
+      snapshot.status === "nearby_unavailable" ||
+      snapshot.status === "delivery_reconciling" ||
       snapshot.status === "busy" ||
       snapshot.status === "degraded" ||
       snapshot.status === "transmit_error" ||
@@ -226,7 +232,10 @@ function statusTitle(snapshot: MediaLifecycleSnapshot): string {
     ready: "Receive-ready · microphone off",
     receiving: "Receiving remote audio · microphone off",
     authorizing: "Authorizing · microphone off",
+    publishing: "Preparing nearby delivery · microphone live",
     transmitting: "Transmitting · release to stop",
+    nearby_unavailable: "No nearby listeners · microphone off",
+    delivery_reconciling: "Delivery reconciling · microphone off",
     busy: "Channel busy · microphone off",
     degraded: "Transmission temporarily unavailable · microphone off",
     transmit_error: "Transmission failed · microphone off",
@@ -253,11 +262,20 @@ function statusBody(snapshot: MediaLifecycleSnapshot): string {
   if (snapshot.status === "authorizing") {
     return "Keep holding. RoadTalk is requesting a short-lived microphone-only authorization; capture is still off.";
   }
+  if (snapshot.status === "publishing") {
+    return "RoadTalk is verifying the opaque microphone publication and current nearby eligibility. Release to stop.";
+  }
   if (snapshot.status === "transmitting") {
     return "Your microphone is live. Release now to stop; RoadTalk also stops automatically at 30 seconds.";
   }
   if (snapshot.status === "busy") {
     return "Another transmission has priority. Nothing was captured; release and try again.";
+  }
+  if (snapshot.status === "nearby_unavailable") {
+    return "No eligible nearby listener is available right now. RoadTalk stopped microphone capture without showing who or how many people are nearby.";
+  }
+  if (snapshot.status === "delivery_reconciling") {
+    return "RoadTalk could not confirm nearby delivery and stopped microphone capture. Release and try again.";
   }
   if (snapshot.status === "degraded") {
     return "The live-audio provider is temporarily unavailable or rate limited. Nothing was captured.";
@@ -285,7 +303,10 @@ function isPushToTalkVisible(snapshot: MediaLifecycleSnapshot): boolean {
     "ready",
     "receiving",
     "authorizing",
+    "publishing",
     "transmitting",
+    "nearby_unavailable",
+    "delivery_reconciling",
     "busy",
     "degraded",
     "transmit_error",
@@ -293,7 +314,7 @@ function isPushToTalkVisible(snapshot: MediaLifecycleSnapshot): boolean {
 }
 
 function pushToTalkLabel(snapshot: MediaLifecycleSnapshot): string {
-  if (snapshot.status === "transmitting") {
+  if (snapshot.status === "transmitting" || snapshot.status === "publishing") {
     return "Transmitting. Release to stop";
   }
   if (snapshot.status === "authorizing") {
@@ -303,7 +324,7 @@ function pushToTalkLabel(snapshot: MediaLifecycleSnapshot): string {
 }
 
 function pushToTalkCue(snapshot: MediaLifecycleSnapshot): string {
-  if (snapshot.status === "transmitting") {
+  if (snapshot.status === "transmitting" || snapshot.status === "publishing") {
     return "● LIVE";
   }
   if (snapshot.status === "authorizing") {
@@ -313,7 +334,7 @@ function pushToTalkCue(snapshot: MediaLifecycleSnapshot): string {
 }
 
 function pushToTalkText(snapshot: MediaLifecycleSnapshot): string {
-  if (snapshot.status === "transmitting") {
+  if (snapshot.status === "transmitting" || snapshot.status === "publishing") {
     return "RELEASE TO STOP";
   }
   if (snapshot.status === "authorizing") {

@@ -41,6 +41,13 @@ class FakeTransport implements ReceiveGrantTransport {
   readonly createTransmitGrant = jest.fn(async (_receiveGrantId: string) => {
     return this.transmit;
   });
+  readonly publishTransmitTrack = jest.fn(
+    async (transmitGrantId: string, _trackRef: string) => ({
+      transmitGrantId,
+      deliveryState: "ready" as const,
+      expiresAt: this.transmit.expiresAt,
+    }),
+  );
   readonly releaseGrant = jest.fn(async (_grantId: string) => undefined);
 }
 
@@ -51,9 +58,8 @@ class FakeRoom implements ReceiveRoomAdapter {
       this.handlers = handlers;
     },
   );
-  readonly setMicrophoneEnabled = jest.fn(
-    async (_enabled: boolean) => undefined,
-  );
+  readonly publishMicrophone = jest.fn(async () => "microphone-track-opaque");
+  readonly stopMicrophone = jest.fn(async () => undefined);
   readonly disconnect = jest.fn(async () => undefined);
 }
 

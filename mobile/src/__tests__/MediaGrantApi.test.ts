@@ -180,4 +180,86 @@ describe("mobile media-grant transport", () => {
       new MediaGrantError("PTT_TRANSMIT_BUSY"),
     );
   });
+
+  it("reports only the opaque local track and accepts metadata-only delivery", async () => {
+    const authenticatedFetch = jest.fn(async () =>
+      response({
+        transmit_grant_id: "transmit/1",
+        delivery_state: "ready",
+        proximity_policy_version: "proximity-v1",
+        evaluated_at: "2026-08-08T03:00:00Z",
+        expires_at: "2026-08-08T03:00:30Z",
+        replayed: false,
+      }),
+    );
+    const api = new MediaGrantApi(
+      "https://api.synthetic.invalid/api/v1",
+      { authenticatedFetch } as never,
+    );
+
+    await expect(
+      api.publishTransmitTrack("transmit/1", "track_opaque-1"),
+    ).resolves.toEqual({
+      transmitGrantId: "transmit/1",
+      deliveryState: "ready",
+      expiresAt: "2026-08-08T03:00:30Z",
+    });
+    expect(authenticatedFetch).toHaveBeenCalledWith(
+      "https://api.synthetic.invalid/api/v1/ptt/grants/transmit%2F1/publication",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ track_ref: "track_opaque-1" }),
+      },
+    );
+  });
+
+  it.each(["recipient_refs", "nearby_count", "distance_m", "latitude"])(
+    "rejects publication metadata containing private %s",
+    async (privateField) => {
+      const authenticatedFetch = jest.fn(async () =>
+        response({
+          transmit_grant_id: "transmit-1",
+          delivery_state: "ready",
+          proximity_policy_version: "proximity-v1",
+          evaluated_at: "2026-08-08T03:00:00Z",
+          expires_at: "2026-08-08T03:00:30Z",
+          replayed: false,
+          [privateField]: "private-marker",
+        }),
+      );
+      const api = new MediaGrantApi("https://api.synthetic.invalid/api/v1", {
+        authenticatedFetch,
+      } as never);
+
+      await expect(
+        api.publishTransmitTrack("transmit-1", "track-opaque"),
+      ).rejects.toEqual(
+        expect.objectContaining({ code: "PTT_PUBLICATION_SCOPE_INVALID" }),
+      );
+    },
+  );
+
+  it("maps uncertain provider publication cleanup to reconciling", async () => {
+    const authenticatedFetch = jest.fn(async () =>
+      response(
+        {
+          detail: {
+            code: "PTT_PROVIDER_UNAVAILABLE",
+            detail: "Synthetic provider detail is not rendered.",
+          },
+        },
+        503,
+      ),
+    );
+    const api = new MediaGrantApi("https://api.synthetic.invalid/api/v1", {
+      authenticatedFetch,
+    } as never);
+
+    await expect(
+      api.publishTransmitTrack("transmit-1", "track-opaque"),
+    ).rejects.toEqual(
+      expect.objectContaining({ code: "PTT_DELIVERY_RECONCILING" }),
+    );
+  });
 });

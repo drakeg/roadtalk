@@ -141,10 +141,9 @@ jobs:
           python -m pip install --disable-pip-version-check -e backend pip-audit==2.10.1
           pip-audit --local --skip-editable
       - name: Audit mobile production dependencies
-        working-directory: mobile
         run: |
-          npm ci
-          npm audit --omit=dev --audit-level=high
+          npm ci --prefix mobile
+          python scripts/ci/audit-mobile-dependencies.py
       - name: Check Sprint 2 privacy and scope
         run: python scripts/ci/check-identity-privacy.py
       - name: Check Sprint 3 location privacy and scope

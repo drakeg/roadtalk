@@ -3,7 +3,7 @@ import {
   AudioSession,
   registerGlobals,
 } from "@livekit/react-native";
-import { Room, RoomEvent } from "livekit-client";
+import { Room, RoomEvent, Track } from "livekit-client";
 
 import type {
   ReceiveGrant,
@@ -23,6 +23,7 @@ function ensureGlobals(): void {
 export class LiveKitReceiveRoom implements ReceiveRoomAdapter {
   private room: Room | null = null;
   private audioSessionStarted = false;
+  private readonly authorizedAudioTrackRefs = new Set<string>();
 
   async connectReceiveOnly(
     grant: ReceiveGrant,
@@ -46,17 +47,24 @@ export class LiveKitReceiveRoom implements ReceiveRoomAdapter {
       room.on(RoomEvent.Reconnecting, handlers.reconnecting);
       room.on(RoomEvent.Reconnected, handlers.reconnected);
       room.on(RoomEvent.Disconnected, handlers.disconnected);
-      room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
-        handlers.receivingChanged(
-          speakers.some(
-            (participant) =>
-              participant.identity !== room.localParticipant.identity,
-          ),
+      room.on(RoomEvent.TrackSubscribed, (track, publication) => {
+        if (
+          track.kind === Track.Kind.Audio &&
+          track.source === Track.Source.Microphone
+        ) {
+          this.authorizedAudioTrackRefs.add(publication.trackSid);
+          handlers.authorizedReceiveChanged(true);
+        }
+      });
+      room.on(RoomEvent.TrackUnsubscribed, (_track, publication) => {
+        this.authorizedAudioTrackRefs.delete(publication.trackSid);
+        handlers.authorizedReceiveChanged(
+          this.authorizedAudioTrackRefs.size > 0,
         );
       });
       this.room = room;
       await room.connect(grant.serverUrl, grant.participantToken, {
-        autoSubscribe: true,
+        autoSubscribe: false,
       });
       // Receive-ready must never create or enable a local microphone track.
       await room.localParticipant.setMicrophoneEnabled(false);
@@ -66,19 +74,30 @@ export class LiveKitReceiveRoom implements ReceiveRoomAdapter {
     }
   }
 
-  async setMicrophoneEnabled(enabled: boolean): Promise<void> {
+  async publishMicrophone(): Promise<string> {
     if (this.room === null) {
-      if (enabled) {
-        throw new Error("The receive room is not connected.");
-      }
-      return;
+      throw new Error("The receive room is not connected.");
     }
-    await this.room.localParticipant.setMicrophoneEnabled(enabled);
+    const publication = await this.room.localParticipant.setMicrophoneEnabled(
+      true,
+    );
+    if (publication === undefined || publication.trackSid.length === 0) {
+      await this.room.localParticipant.setMicrophoneEnabled(false);
+      throw new Error("The microphone publication has no opaque track reference.");
+    }
+    return publication.trackSid;
+  }
+
+  async stopMicrophone(): Promise<void> {
+    if (this.room !== null) {
+      await this.room.localParticipant.setMicrophoneEnabled(false);
+    }
   }
 
   async disconnect(): Promise<void> {
     const room = this.room;
     this.room = null;
+    this.authorizedAudioTrackRefs.clear();
     const audioSessionStarted = this.audioSessionStarted;
     this.audioSessionStarted = false;
     try {
