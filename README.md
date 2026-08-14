@@ -8,14 +8,15 @@ Sprint 0 — Planning & Architecture, Sprint 1 — Project Foundation, Sprint 2 
 Identity, and Sprint 3 — Location are complete. Sprint 1 is conditionally accepted
 with named exceptions that must close before the first field test.
 
-Sprint 4 — Push-to-Talk is complete and accepted. Sprint 5 — Proximity Engine
-implementation is complete through
+Sprint 4 — Push-to-Talk and Sprint 5 — Proximity Engine are complete and accepted.
+Sprint 5 completed through
 [tracker #119](https://github.com/drakeg/roadtalk/issues/119). Its
 [specification](docs/sprints/sprint-5-proximity.md),
 [readiness gate](docs/sprints/sprint-5-readiness.md), $0 implementation policy, and
-named evidence exceptions were approved on 2026-08-06. Merging the final S05-D09
-review records product-owner acceptance and permits Sprint 6 planning, not coding.
-AWS or LiveKit activation, paid plans, and recurring spend remain unauthorized.
+named evidence exceptions were approved on 2026-08-06, and merged PR #127 recorded
+final acceptance. Sprint 6 channel planning is proposed; coding remains blocked until
+its specification and readiness gate are approved. AWS or LiveKit activation, paid
+plans, and recurring spend remain unauthorized.
 
 ## Repository layout
 
@@ -25,8 +26,8 @@ AWS or LiveKit activation, paid plans, and recurring spend remain unauthorized.
 | `backend/` | FastAPI modular-monolith API, migrations, and backend tests | Sprint 5 proximity authorization and the disabled provider boundary are implemented; no live adapter is active |
 | `infrastructure/` | Terraform bootstrap, environment roots, and reusable modules | Remains disabled by default; Sprint 5 adds no AWS resource |
 | `scripts/` | Cross-project developer and operational helper scripts | Added only with a traced requirement |
-| `docs/` | Architecture, sprint records, ADRs, security, privacy, design, and runbooks | Sprint 4 is approved; documentation tracks implementation and evidence |
-| `.github/` | Pull-request, issue, CI, quality, and security workflows | Existing gates remain; Sprint 4 changes require approved traced work |
+| `docs/` | Architecture, sprint records, ADRs, security, privacy, design, and runbooks | Sprint 5 is accepted; Sprint 6 planning is proposed and not ready |
+| `.github/` | Pull-request, issue, CI, quality, and security workflows | Existing gates remain; Sprint 6 coding requires approved traced work |
 
 ## Start here
 
@@ -50,10 +51,10 @@ S04-D08 operations preserve those boundaries with lower controlled-test stops of
 and $10 incremental monthly cost. Crossing any stop pauses testing; budgets and
 provider quotas never authorize automatic upgrade or continued spend.
 
-Sprint 4 is complete and product-owner accepted by merged PR #108. Sprint 5
-implementation D01–D08 is complete; the D09 review merge records final acceptance and
-permits Sprint 6 planning. Only local/GitHub CI evidence is authorized; field testing,
-cloud/provider activation, and spend remain blocked.
+Sprint 4 is accepted by merged PR #108 and Sprint 5 by merged PR #127. Sprint 6
+planning is proposed; implementation is not authorized. Only local/GitHub CI planning
+evidence is authorized; field testing, cloud/provider activation, and spend remain
+blocked.
 
 ## Source of truth
 

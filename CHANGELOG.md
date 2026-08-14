@@ -2,6 +2,19 @@
 
 All notable RoadTalk changes are recorded here. The repository history and sprint review records remain the detailed source of truth.
 
+## Unreleased — Sprint 6: Channels
+
+### Planning
+
+- Proposed S06-R01–R12, S06-T01–T12, and S06-D01–D09 for server-authoritative
+  General/RV/private channels composed with Sprint 5 proximity delivery.
+- Proposed invite-only private channels with one-time high-entropy secrets, hashed
+  storage, no member directory/counts/roles, and bounded creator rotate/close actions.
+- Proposed revoke-before-switch room reconnection without LiveKit MoveParticipant,
+  provider room listing/metadata, live calls, or new managed services.
+- Sprint 6 remains NOT READY until product-owner approval; coding, AWS/LiveKit
+  activation, paid plans, payment methods, and recurring spend remain unauthorized.
+
 ## Unreleased — Sprint 5: Proximity Engine
 
 ### Planning
