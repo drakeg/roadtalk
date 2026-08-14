@@ -8,21 +8,22 @@ Sprint 0 — Planning & Architecture, Sprint 1 — Project Foundation, Sprint 2 
 Identity, and Sprint 3 — Location are complete. Sprint 1 is conditionally accepted
 with named exceptions that must close before the first field test.
 
-Sprint 4 — Push-to-Talk is complete and accepted. Sprint 5 — Proximity Engine is
-approved for local/GitHub CI implementation through
+Sprint 4 — Push-to-Talk is complete and accepted. Sprint 5 — Proximity Engine
+implementation is complete through
 [tracker #119](https://github.com/drakeg/roadtalk/issues/119). Its
 [specification](docs/sprints/sprint-5-proximity.md),
 [readiness gate](docs/sprints/sprint-5-readiness.md), $0 implementation policy, and
-named evidence exceptions were approved on 2026-08-06. AWS or LiveKit activation,
-paid plans, and recurring spend remain unauthorized.
+named evidence exceptions were approved on 2026-08-06. Merging the final S05-D09
+review records product-owner acceptance and permits Sprint 6 planning, not coding.
+AWS or LiveKit activation, paid plans, and recurring spend remain unauthorized.
 
 ## Repository layout
 
 | Path | Purpose | Current boundary |
 |---|---|---|
-| `mobile/` | React Native, Expo development-build, and TypeScript mobile application | Sprint 4 synthetic receive-ready and hold-to-talk behavior is implemented; live/device evidence remains pending |
-| `backend/` | FastAPI modular-monolith API, migrations, and backend tests | Sprint 4 metadata-only grants and the disabled provider boundary are implemented; no live adapter is active |
-| `infrastructure/` | Terraform bootstrap, environment roots, and reusable modules | Remains disabled by default; Sprint 4 proposes no new AWS resource |
+| `mobile/` | React Native, Expo development-build, and TypeScript mobile application | Sprint 5 synthetic selective receive is implemented; live/device evidence remains pending |
+| `backend/` | FastAPI modular-monolith API, migrations, and backend tests | Sprint 5 proximity authorization and the disabled provider boundary are implemented; no live adapter is active |
+| `infrastructure/` | Terraform bootstrap, environment roots, and reusable modules | Remains disabled by default; Sprint 5 adds no AWS resource |
 | `scripts/` | Cross-project developer and operational helper scripts | Added only with a traced requirement |
 | `docs/` | Architecture, sprint records, ADRs, security, privacy, design, and runbooks | Sprint 4 is approved; documentation tracks implementation and evidence |
 | `.github/` | Pull-request, issue, CI, quality, and security workflows | Existing gates remain; Sprint 4 changes require approved traced work |
@@ -49,11 +50,10 @@ S04-D08 operations preserve those boundaries with lower controlled-test stops of
 and $10 incremental monthly cost. Crossing any stop pauses testing; budgets and
 provider quotas never authorize automatic upgrade or continued spend.
 
-Sprint 4 is complete and product-owner accepted by merged PR #108. Sprint 5 proximity
-implementation is active through tracker #119; S05-D02–D04 (#111–#113) are complete
-and S05-D05 (#114) is active. Only
-local/GitHub CI implementation is authorized; cloud/provider activation and spend
-remain blocked.
+Sprint 4 is complete and product-owner accepted by merged PR #108. Sprint 5
+implementation D01–D08 is complete; the D09 review merge records final acceptance and
+permits Sprint 6 planning. Only local/GitHub CI evidence is authorized; field testing,
+cloud/provider activation, and spend remain blocked.
 
 ## Source of truth
 

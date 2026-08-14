@@ -11,6 +11,7 @@ or personal data.
 | Identity and anonymous recovery | [Identity and recovery operations](identity-recovery-operations.md) | Stable problem codes, route templates, synthetic lifecycle result |
 | Foreground location | [Foreground location operations](location-operations.md) | Stable problem codes, route templates, semantic synthetic result |
 | Push-to-Talk and media cost | [PTT operations](ptt-operations.md) | Aggregate synthetic results, usage ceilings, cost and destroy verification |
+| Proximity authorization | [Proximity operations](proximity-operations.md) | Aggregate p95 values, zero-resource result, and named exceptions |
 | CI failure triage | [CI quality and security](ci-quality-security.md) | Workflow URL, failed gate, corrective commit |
 | Field-test deploy/rollback | [Field-test deployment](field-test-deployment.md) | Commit, image digest, SSM command IDs, health results |
 | Backup/restore | [Database backup and restore](database-backup-restore.md) | Object key/version, checksums, row-count comparison |
