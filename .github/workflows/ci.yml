@@ -83,6 +83,9 @@ jobs:
       - name: Report Sprint 4 synthetic grant scale
         working-directory: backend
         run: pytest -q -s tests/test_ptt_scale.py
+      - name: Report Sprint 5 synthetic proximity scale
+        working-directory: backend
+        run: pytest -q -s tests/test_ptt_proximity_scale.py
       - name: Verify downgrade and forward migration
         working-directory: backend
         run: |
@@ -158,6 +161,8 @@ jobs:
         run: python scripts/ci/check-sprint-5-planning.py
       - name: Check Sprint 5 proximity privacy and scope
         run: python scripts/ci/check-proximity-privacy.py
+      - name: Check Sprint 5 proximity hardening and evidence
+        run: python scripts/ci/check-proximity-hardening.py
       - name: Validate and lint Terraform
         id: terraform
         run: |
