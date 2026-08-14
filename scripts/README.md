@@ -37,6 +37,10 @@ Scripts must:
   opaque result shape, default-deny selective-subscription provider contracts,
   exact publication API/metadata shape, provider-disabled defaults, and no-new-service
   boundary.
+- `scripts/ci/check-sprint-6-planning.py` locks proposed S06-R01–R12, S06-T01–T12,
+  S06-D01–D09, General/RV/private semantics, one-time invite security, channel-bound
+  proximity/media authority, 100/25/10 and 400 ms targets, named exceptions, NOT READY
+  status, and $0/no-new-service boundaries before approval.
 
-Run all seven locally before opening a pull request; GitHub CI runs them again in the
+Run every gate locally before opening a pull request; GitHub CI runs them again in the
 security job.
