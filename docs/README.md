@@ -19,10 +19,13 @@
 - Current and incremental local/CI implementation cost: $0 AWS + $0 LiveKit
 - Cloud activation, paid plans, and recurring spend above $10/month remain unauthorized
 
-## Sprint 5 — Proximity Engine (approved; implementation active)
+## Sprint 5 — Proximity Engine (implementation complete; acceptance upon review merge)
 
 - [Sprint 5: Proximity Engine](sprints/sprint-5-proximity.md) — APPROVED
 - [Sprint 5 readiness](sprints/sprint-5-readiness.md) — READY
+- [Sprint 5 traceability](sprints/sprint-5-traceability.md) — COMPLETE UPON REVIEW MERGE
+- [Sprint 5 review](sprints/sprint-5-review.md) — APPROVAL REQUESTED
+- [Sprint 5 synthetic proximity evidence](evidence/sprint-5/README.md)
 - Completed approval issue [#109](https://github.com/drakeg/roadtalk/issues/109)
 - Implementation tracker [#119](https://github.com/drakeg/roadtalk/issues/119)
 - Current/incremental local/CI implementation cost: $0 AWS + $0 LiveKit
