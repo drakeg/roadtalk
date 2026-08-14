@@ -6,6 +6,10 @@
 - Current and incremental cost: **$0/month**
 - AWS/LiveKit resources created: none
 - Live-provider, physical-device, and cloud status: **not performed**
+- D08 CI: [run 31764257138](https://github.com/drakeg/roadtalk/actions/runs/31764257138)
+- Eligible, denied, empty-audience, and reconciliation p95 values all passed.
+- Migrated-PostGIS scale: eligible 21.28 ms, denied 2.89 ms, empty audience
+  5.79 ms, and reconciliation 60.12 ms p95; all passed the 400 ms target
 
 ## Automated evidence
 
@@ -15,7 +19,7 @@
 | Publication and lifecycle | replay/conflict, empty-audience, race, churn, release, expiry, and provider partial-failure suites | Unknown or divergent state fails closed and remains bounded for reconciliation. |
 | Mobile boundary | exact transport-shape, fake-room event, background/logout/unmount, and accessibility tests | The client cannot select tracks or audience and mandatory paths stop capture. |
 | Privacy and scope | API/schema/migration/config/dependency/source/evidence gates | No coordinate, distance, radius, recipient membership, token, secret, audio, transcript, or provider-payload disclosure is approved. |
-| Synthetic scale | `test_ptt_proximity_scale.py` on migrated PostGIS | Exactly 100 accounts, 25 connected receivers, and 10 publishers; eligible, denied, empty-audience, and reconciliation p95 are emitted by CI and must each be ≤400 ms. |
+| Synthetic scale | `test_ptt_proximity_scale.py` on migrated PostGIS | Exactly 100 accounts, 25 connected receivers, and 10 publishers; eligible 21.28 ms, denied 2.89 ms, empty-audience 5.79 ms, and reconciliation 60.12 ms p95 passed the 400 ms target. |
 | Cost | disabled Terraform plans and prohibited-capability scans | Zero planned resources and no new paid or later-sprint capability. |
 
 The scale output contains aggregate counts and timings only. D09 may link the accepted CI
