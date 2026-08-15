@@ -144,13 +144,12 @@ for path in (
         ),
     )
 
-# Sprint 5 authorizes server-only proximity decisions and a non-sensitive policy
-# version in the response while the retained API/schema boundary remains non-disclosing.
+# Sprint 6 authorizes server-only channel IDs for grant binding and same-channel
+# proximity decisions. They remain forbidden in client request/response schemas.
 forbid_tokens(
     "backend/app/ptt/service.py",
     (
         "callsign",
-        "channel_id",
         "latitude",
         "longitude",
         "nearby_radius",

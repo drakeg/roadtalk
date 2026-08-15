@@ -13,9 +13,11 @@ from geoalchemy2.elements import WKBElement
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
+from app.channels.constants import GENERAL_CHANNEL_ID
 from app.config import Settings
 from app.db.models import (
     Account,
+    ChannelSelection,
     CurrentLocation,
     Device,
     LocationConsentEvent,
@@ -52,7 +54,10 @@ async def _exercise_scale() -> None:
     engine = create_async_engine(settings.database_url.get_secret_value())
     factory = async_sessionmaker(engine, expire_on_commit=False)
     now = datetime(2026, 8, 13, 4, tzinfo=UTC)
-    accounts = [Account() for _ in range(100)]
+    accounts = [
+        Account(channel_selection=ChannelSelection(channel_id=GENERAL_CHANNEL_ID))
+        for _ in range(100)
+    ]
     devices = [
         Device(
             account=account,

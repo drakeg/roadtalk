@@ -7,8 +7,9 @@ import pytest
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from app.channels.constants import RV_CHANNEL_ID
 from app.config import Settings
-from app.db.models import Account, Device, MediaGrant
+from app.db.models import Account, ChannelSelection, Device, MediaGrant
 from app.ptt.provider import (
     FakeMediaProvider,
     MediaProviderError,
@@ -65,7 +66,7 @@ async def _receive_grant_lifecycle() -> None:
     engine = create_async_engine(settings.database_url.get_secret_value())
     factory = async_sessionmaker(engine, expire_on_commit=False)
     now = datetime(2026, 7, 24, 1, tzinfo=UTC)
-    account = Account()
+    account = Account(channel_selection=ChannelSelection(channel_id=RV_CHANNEL_ID))
     device = Device(
         account=account,
         platform="ios",
@@ -106,6 +107,7 @@ async def _receive_grant_lifecycle() -> None:
             )
 
             assert created.replayed is False
+            assert created.room_ref != settings.ptt_controlled_room_ref
             assert created.participant_token is not None
             assert replayed.grant_id == created.grant_id
             assert replayed.replayed is True
@@ -150,7 +152,7 @@ async def _receive_grant_lifecycle() -> None:
                 now=lambda: now,
                 tracks=(
                     ProviderTrackState(
-                        room_ref=settings.ptt_controlled_room_ref,
+                        room_ref=created.room_ref,
                         participant_ref=created.participant_ref,
                         track_ref="database_microphone_track_opaque",
                         source="microphone",
@@ -330,6 +332,8 @@ async def _receive_grant_lifecycle() -> None:
             stored = await db.scalar(select(MediaGrant).where(MediaGrant.id == created.grant_id))
             assert stored is not None
             assert stored.idempotency_key_hash != "database-key-0001"
+            assert stored.channel_id == RV_CHANNEL_ID
+            assert stored.provider_room_ref == created.room_ref
             assert len(stored.idempotency_key_hash) == 64
             assert not any(
                 fragment in column.name

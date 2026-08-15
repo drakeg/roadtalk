@@ -11,8 +11,9 @@ import pytest
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from app.channels.constants import GENERAL_CHANNEL_ID
 from app.config import Settings
-from app.db.models import Account, Device
+from app.db.models import Account, ChannelSelection, Device
 from app.ptt.provider import FakeMediaProvider
 from app.ptt.proximity import EligibleReceiveGrant, ProximityPolicy
 from app.ptt.service import GrantError, create_receive_grant, create_transmit_grant
@@ -61,7 +62,10 @@ async def _grant_service_at_synthetic_field_test_scale() -> None:
     factory = async_sessionmaker(engine, expire_on_commit=False)
     now = datetime(2026, 8, 4, 3, tzinfo=UTC)
     provider = FakeMediaProvider(now=lambda: now)
-    accounts = [Account() for _ in range(100)]
+    accounts = [
+        Account(channel_selection=ChannelSelection(channel_id=GENERAL_CHANNEL_ID))
+        for _ in range(100)
+    ]
     devices = [
         Device(
             account=account,

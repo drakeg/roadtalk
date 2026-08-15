@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail CI when Sprint 5 proximity authorization privacy or scope regresses."""
+"""Fail CI when channel-and-proximity authorization privacy or scope regresses."""
 
 from __future__ import annotations
 
@@ -34,6 +34,10 @@ required_fragments = (
     "MediaGrant.revoked_at.is_(None)",
     "Session.revoked_at.is_(None)",
     'Account.status == "active"',
+    "MediaGrant.channel_id == policy.channel_id",
+    "ChannelSelection.channel_id == MediaGrant.channel_id",
+    'ChannelMembership.state == "active"',
+    "Channel.provider_room_ref == policy.room_ref",
 )
 for fragment in required_fragments:
     if " ".join(fragment.split()) not in normalized:
@@ -71,7 +75,7 @@ service = read("backend/app/ptt/service.py")
 service_normalized = " ".join(service.split())
 for fragment in (
     "eligible_receivers = await eligibility_finder(",
-    "policy=proximity_policy_from_settings(settings)",
+    "policy=proximity_policy_from_settings(",
     '"PTT_NO_NEARBY_LISTENERS"',
     '"PTT_LOCATION_UNAVAILABLE"',
 ):

@@ -31,6 +31,7 @@ def test_proximity_policy_is_versioned_server_configuration() -> None:
     assert policy.ptt_policy_version == "ptt-v1"
     assert policy.max_usable_accuracy_m == 100
     assert policy.room_ref == settings.ptt_controlled_room_ref
+    assert str(policy.channel_id) == "00000000-0000-4000-8000-000000000001"
 
 
 def test_location_ttl_must_support_the_complete_delivery_window() -> None:
@@ -120,6 +121,10 @@ async def _private_eligibility() -> None:
     assert "current_location.source_device_id = media_grant.device_id" in compiled
     assert "media_grant.grant_kind" in compiled
     assert "media_grant.provider_room_ref" in compiled
+    assert "media_grant.channel_id" in compiled
+    assert "channel_selection.channel_id = media_grant.channel_id" in compiled
+    assert "channel_membership.state" in compiled
+    assert "channel.provider_room_ref" in compiled
     assert "session.revoked_at is null" in compiled
     assert "account.status" in compiled
     assert "distance" not in compiled

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 from geoalchemy2.elements import WKBElement
-from sqlalchemy import Select, exists, func, select
+from sqlalchemy import Select, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.elements import ColumnElement
@@ -11,6 +11,9 @@ from sqlalchemy.sql.elements import ColumnElement
 from app.config import Settings
 from app.db.models import (
     Account,
+    Channel,
+    ChannelMembership,
+    ChannelSelection,
     CurrentLocation,
     Device,
     LocationConsentEvent,
@@ -33,6 +36,7 @@ class ProximityPolicy:
     ptt_policy_version: str
     max_usable_accuracy_m: float
     room_ref: str
+    channel_id: uuid.UUID
 
 
 @dataclass(frozen=True)
@@ -43,7 +47,14 @@ class EligibleReceiveGrant:
     participant_ref: str
 
 
-def proximity_policy_from_settings(settings: Settings) -> ProximityPolicy:
+def proximity_policy_from_settings(
+    settings: Settings,
+    *,
+    channel_id: uuid.UUID | None = None,
+    room_ref: str | None = None,
+) -> ProximityPolicy:
+    from app.channels.constants import GENERAL_CHANNEL_ID
+
     return ProximityPolicy(
         version=settings.ptt_proximity_policy_version,
         radius_m=settings.ptt_proximity_radius_m,
@@ -51,7 +62,8 @@ def proximity_policy_from_settings(settings: Settings) -> ProximityPolicy:
         location_policy_version=settings.location_policy_version,
         ptt_policy_version=settings.ptt_policy_version,
         max_usable_accuracy_m=settings.location_max_usable_accuracy_m,
-        room_ref=settings.ptt_controlled_room_ref,
+        room_ref=room_ref or settings.ptt_controlled_room_ref,
+        channel_id=channel_id or GENERAL_CHANNEL_ID,
     )
 
 
@@ -96,6 +108,13 @@ def eligible_receive_grants_statement(
     policy: ProximityPolicy,
 ) -> Select[tuple[uuid.UUID, uuid.UUID, uuid.UUID, str]]:
     active_consent = _active_consent_for_location(policy_version=policy.location_policy_version)
+    active_private_membership = exists(
+        select(ChannelMembership.account_id).where(
+            ChannelMembership.account_id == MediaGrant.account_id,
+            ChannelMembership.channel_id == MediaGrant.channel_id,
+            ChannelMembership.state == "active",
+        )
+    )
     return (
         select(
             MediaGrant.id,
@@ -104,6 +123,12 @@ def eligible_receive_grants_statement(
             MediaGrant.provider_participant_ref,
         )
         .join(Account, Account.id == MediaGrant.account_id)
+        .join(
+            ChannelSelection,
+            (ChannelSelection.account_id == MediaGrant.account_id)
+            & (ChannelSelection.channel_id == MediaGrant.channel_id),
+        )
+        .join(Channel, Channel.id == MediaGrant.channel_id)
         .join(
             Device,
             (Device.id == MediaGrant.device_id) & (Device.account_id == MediaGrant.account_id),
@@ -118,10 +143,15 @@ def eligible_receive_grants_statement(
             MediaGrant.grant_kind == "receive",
             MediaGrant.action_scope == "subscribe",
             MediaGrant.policy_version == policy.ptt_policy_version,
+            MediaGrant.channel_id == policy.channel_id,
             MediaGrant.provider_room_ref == policy.room_ref,
             MediaGrant.revoked_at.is_(None),
             MediaGrant.expires_at >= delivery_expires_at,
             Account.status == "active",
+            Channel.enabled.is_(True),
+            Channel.closed_at.is_(None),
+            Channel.provider_room_ref == policy.room_ref,
+            or_(Channel.channel_type == "public", active_private_membership),
             CurrentLocation.quality_state == "usable",
             CurrentLocation.expires_at >= delivery_expires_at,
             CurrentLocation.horizontal_accuracy_m <= policy.max_usable_accuracy_m,
@@ -145,14 +175,29 @@ async def find_eligible_receive_grants(
     evaluated_at = (now or datetime.now(UTC)).astimezone(UTC)
     delivery_expires_at = evaluated_at + timedelta(seconds=policy.delivery_window_seconds)
     active_consent = _active_consent_for_location(policy_version=policy.location_policy_version)
+    active_private_membership = exists(
+        select(ChannelMembership.account_id).where(
+            ChannelMembership.account_id == sender_account_id,
+            ChannelMembership.channel_id == policy.channel_id,
+            ChannelMembership.state == "active",
+        )
+    )
     sender = await db.scalar(
-        select(CurrentLocation).where(
+        select(CurrentLocation)
+        .join(ChannelSelection, ChannelSelection.account_id == CurrentLocation.account_id)
+        .join(Channel, Channel.id == ChannelSelection.channel_id)
+        .where(
             CurrentLocation.account_id == sender_account_id,
             CurrentLocation.source_device_id == sender_device_id,
             CurrentLocation.quality_state == "usable",
             CurrentLocation.expires_at >= delivery_expires_at,
             CurrentLocation.horizontal_accuracy_m <= policy.max_usable_accuracy_m,
             CurrentLocation.consent_policy_version == policy.location_policy_version,
+            ChannelSelection.channel_id == policy.channel_id,
+            Channel.enabled.is_(True),
+            Channel.closed_at.is_(None),
+            Channel.provider_room_ref == policy.room_ref,
+            or_(Channel.channel_type == "public", active_private_membership),
             active_consent,
         )
     )
