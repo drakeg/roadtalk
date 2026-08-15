@@ -17,6 +17,18 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
   only. AWS/LiveKit activation, paid plans, payment methods, and spend remain
   unauthorized.
 
+### Added
+
+- Added S06-D02 channel, private-membership, and one-per-account selection persistence;
+  deterministic General/RV seeds; and required General-backfilled channel binding on
+  metadata-only media grants.
+- Added authenticated caller-scoped `GET /api/v1/channels`, `GET /api/v1/me/channel`,
+  and `POST /api/v1/channels/{channel_id}/select` contracts with no membership,
+  identity, invite, provider-room, token, participant, presence, or proximity detail.
+- Added account-row serialized, replay-safe selection with General default/fallback and
+  temporary fail-closed switching while media authority is active. Private lifecycle
+  and revoke-before-switch reconciliation remain locked to S06-D03/S06-D05.
+
 ## Unreleased — Sprint 5: Proximity Engine
 
 ### Planning

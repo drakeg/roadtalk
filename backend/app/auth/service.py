@@ -10,8 +10,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.schemas import AnonymousSessionRequest, AnonymousSessionResponse, TokenPair
 from app.auth.security import hash_refresh_token, issue_access_token, new_refresh_token
+from app.channels.constants import GENERAL_CHANNEL_ID
 from app.config import Settings
-from app.db.models import Account, Device, Session
+from app.db.models import Account, ChannelSelection, Device, Session
 from app.ptt.service import revoke_device_media_grants
 
 
@@ -74,6 +75,7 @@ async def create_anonymous_session(
         ),
         expires_at=utcnow() + timedelta(seconds=settings.refresh_token_ttl_seconds),
     )
+    account.channel_selection = ChannelSelection(channel_id=GENERAL_CHANNEL_ID)
     db.add(account)
     try:
         await db.commit()

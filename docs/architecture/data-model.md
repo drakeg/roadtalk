@@ -124,19 +124,37 @@ The fast path may live in Redis with TTL. Durable representation must never be u
 
 ### channel
 
-- `id`, stable slug, display name
-- type: general or RV for MVP
-- enabled and policy fields
+- `id`, optional stable public slug, member-visible display label
+- type: public or private
+- enabled/closed state, creator account for private lifecycle authorization
+- opaque server-owned provider room reference and policy version
 - timestamps/version
+
+Sprint 6 seeds General and RV with deterministic IDs/slugs and opaque room references.
+Only those enabled public rows are browseable; private rows require an active caller
+membership and never expose their creator or room reference through the catalog.
 
 ### channel_membership
 
 - `account_id`, `channel_id`
-- membership/selection state
+- active/left membership state
 - joined and left times
 - timestamps/version
 
-Unique active membership constraints follow the approved channel model.
+The composite account/channel primary key permits only one durable membership record.
+Membership is authorization state, not presence, and public channels require no row.
+
+### channel_selection
+
+- `account_id` as the primary key
+- current `channel_id`
+- selected timestamp and optimistic version
+- timestamps
+
+Every migrated and newly created account receives exactly one General selection.
+Account-row locking serializes changes. An unavailable selection falls back to General;
+selection changes fail closed while media authority remains active until S06-D05 adds
+revoke-before-switch reconciliation.
 
 ### media_grant
 
@@ -258,6 +276,22 @@ account, device, and provider-participant references. Coordinates, radius, dista
 direction, counts, and recipient membership are not returned to an API or persisted.
 S05-D03 owns integration with transmit creation; selective subscription remains in
 later locked Sprint 5 deliverables.
+
+### Sprint 6 channel catalog and selection
+
+S06-D02 implements the minimum durable channel authority:
+
+- `channel` stores deterministic General/RV rows and private-capable metadata without
+  exposing provider room references through the API.
+- `channel_membership` stores caller authorization for private channels without member
+  arrays, counts, identity snapshots, or presence state.
+- `channel_selection` enforces exactly one account-wide current channel and defaults or
+  falls back to General.
+- `media_grant.channel_id` is required; migration backfills prior grants to General.
+- Catalog queries return enabled public channels plus only the caller's active private
+  memberships. Selection uses an account row lock and rejects unauthorized targets.
+- No invite table/lifecycle, provider-room authorization change, Redis, worker, AWS
+  resource, LiveKit call, or paid service is introduced in this deliverable.
 
 ## Retention baseline
 

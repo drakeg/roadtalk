@@ -86,6 +86,7 @@ def test_media_grant_constraints_and_indexes_fail_closed() -> None:
     } <= checks
     assert set(indexes) == {
         "ix_media_grant_account_kind_expires",
+        "ix_media_grant_channel_id",
         "ix_media_grant_device_id",
         "ix_media_grant_parent_grant_id",
         "ix_media_grant_provider_participant",

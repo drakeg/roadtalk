@@ -14,8 +14,9 @@ from app.auth.service import (
     revoke_device_sessions,
     rotate_refresh_token,
 )
+from app.channels.constants import GENERAL_CHANNEL_ID
 from app.config import Settings
-from app.db.models import MediaGrant
+from app.db.models import ChannelSelection, MediaGrant
 
 
 @pytest.mark.skipif(
@@ -49,6 +50,10 @@ async def _lifecycle() -> None:
                 session_id=created.session_id,
             )
             assert identity.account.account_type == "anonymous"
+            selection = await db.get(ChannelSelection, created.account_id)
+            assert selection is not None
+            assert selection.channel_id == GENERAL_CHANNEL_ID
+            assert selection.version == 1
 
             issued_at = datetime.now(UTC)
             session_grant = MediaGrant(
