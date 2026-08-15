@@ -29,7 +29,10 @@ make up
 make verify-database
 ```
 
-This creates no AWS resources. Application services and migrations are added by their assigned Sprint 1 deliverables.
+This builds the backend, migrates PostgreSQL/PostGIS, and starts the API at
+`http://localhost:8000` without creating AWS resources. You may also run the same
+stack directly with `docker compose up --build`; local-safe defaults make `.env`
+optional for that command.
 
 ## Component guides
 

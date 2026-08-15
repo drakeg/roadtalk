@@ -23,8 +23,8 @@ config: ## Validate the resolved Docker Compose configuration.
 	@test -f "$(ENV_FILE)" || { echo "Missing $(ENV_FILE). Run 'make setup'."; exit 1; }
 	@$(COMPOSE) --env-file "$(ENV_FILE)" config --quiet
 
-up: setup ## Start PostgreSQL/PostGIS and wait until healthy.
-	@$(COMPOSE) --env-file "$(ENV_FILE)" up -d --wait database
+up: setup ## Build and start the local API and PostgreSQL/PostGIS stack.
+	@$(COMPOSE) --env-file "$(ENV_FILE)" up -d --build --wait database backend
 
 up-redis: setup ## Start PostgreSQL/PostGIS plus optional Redis and wait until healthy.
 	@$(COMPOSE) --env-file "$(ENV_FILE)" --profile redis up -d --wait

@@ -8,11 +8,21 @@ from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.channels.constants import GENERAL_CHANNEL_ID, RV_CHANNEL_ID
-from app.channels.service import ChannelError, list_channels, select_channel
+from app.channels.service import (
+    ChannelError,
+    close_private_channel,
+    create_private_channel,
+    join_private_channel,
+    leave_private_channel,
+    list_channels,
+    rotate_private_invite,
+    select_channel,
+)
 from app.config import Settings
 from app.db.models import (
     Account,
     Channel,
+    ChannelInvite,
     ChannelMembership,
     ChannelSelection,
     Device,
@@ -26,6 +36,115 @@ from app.db.models import (
 )
 def test_channel_catalog_selection_concurrency_and_grant_binding() -> None:
     asyncio.run(_channel_catalog_selection())
+
+
+@pytest.mark.skipif(
+    os.getenv("ROADTALK_RUN_DATABASE_TESTS") != "1",
+    reason="Set ROADTALK_RUN_DATABASE_TESTS=1 against a migrated disposable database.",
+)
+def test_private_channel_invite_lifecycle() -> None:
+    asyncio.run(_private_channel_invite_lifecycle())
+
+
+async def _private_channel_invite_lifecycle() -> None:
+    settings = Settings(environment="test", channel_invite_pepper="test-channel-pepper")
+    engine = create_async_engine(settings.database_url.get_secret_value())
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    owner = Account(channel_selection=ChannelSelection(channel_id=GENERAL_CHANNEL_ID))
+    member = Account(channel_selection=ChannelSelection(channel_id=GENERAL_CHANNEL_ID))
+    cleanup_account_ids: tuple[uuid.UUID, ...] = ()
+    try:
+        async with factory() as db:
+            db.add_all([owner, member])
+            await db.commit()
+            cleanup_account_ids = (owner.id, member.id)
+
+            created = await create_private_channel(
+                db,
+                account_id=owner.id,
+                display_label="  Camp   Friends  ",
+                idempotency_key="create-private-database-0001",
+                settings=settings,
+            )
+            assert created.display_label == "Camp Friends"
+            assert created.invite is not None
+            first_invite = created.invite
+            create_replay = await create_private_channel(
+                db,
+                account_id=owner.id,
+                display_label="Camp Friends",
+                idempotency_key="create-private-database-0001",
+                settings=settings,
+            )
+            assert create_replay.id == created.id
+            assert create_replay.replayed is True
+            assert create_replay.invite is None
+            stored = await db.get(ChannelInvite, created.id)
+            assert stored is not None
+            assert first_invite not in stored.secret_hash
+            assert len(stored.fingerprint) == 12
+
+            joined = await join_private_channel(
+                db, account_id=member.id, raw_invite=first_invite, settings=settings
+            )
+            replayed = await join_private_channel(
+                db, account_id=member.id, raw_invite=first_invite, settings=settings
+            )
+            assert joined.replayed is False
+            assert replayed.replayed is True
+
+            rotated = await rotate_private_invite(
+                db,
+                account_id=owner.id,
+                channel_id=created.id,
+                idempotency_key="rotate-private-database-0001",
+                settings=settings,
+            )
+            assert rotated.invite is not None and rotated.invite != first_invite
+            rotation_replay = await rotate_private_invite(
+                db,
+                account_id=owner.id,
+                channel_id=created.id,
+                idempotency_key="rotate-private-database-0001",
+                settings=settings,
+            )
+            assert rotation_replay.replayed is True
+            assert rotation_replay.invite is None
+            with pytest.raises(ChannelError) as old_invite:
+                await join_private_channel(
+                    db, account_id=uuid.uuid4(), raw_invite=first_invite, settings=settings
+                )
+            assert old_invite.value.code == "CHANNEL_INVITE_INVALID"
+
+            left = await leave_private_channel(db, account_id=member.id, channel_id=created.id)
+            left_replay = await leave_private_channel(
+                db, account_id=member.id, channel_id=created.id
+            )
+            assert left.replayed is False
+            assert left_replay.replayed is True
+
+            closed = await close_private_channel(db, account_id=owner.id, channel_id=created.id)
+            closed_replay = await close_private_channel(
+                db, account_id=owner.id, channel_id=created.id
+            )
+            assert closed.replayed is False
+            assert closed_replay.replayed is True
+            assert (
+                await db.scalar(
+                    select(ChannelSelection.channel_id).where(
+                        ChannelSelection.account_id == owner.id
+                    )
+                )
+                == GENERAL_CHANNEL_ID
+            )
+    finally:
+        async with factory() as db:
+            for account_id in cleanup_account_ids:
+                stored_account = await db.get(Account, account_id)
+                if stored_account is not None:
+                    await db.delete(stored_account)
+            await db.commit()
+        await engine.dispose()
 
 
 async def _channel_catalog_selection() -> None:

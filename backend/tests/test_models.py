@@ -9,6 +9,7 @@ def test_active_sprint_tables_are_registered() -> None:
     assert set(Base.metadata.tables) == {
         "account",
         "channel",
+        "channel_invite",
         "channel_membership",
         "channel_selection",
         "current_location",

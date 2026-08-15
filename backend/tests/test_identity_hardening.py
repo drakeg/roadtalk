@@ -19,7 +19,7 @@ def settings(*, recovery_attempt_limit: int = 10) -> Settings:
     )
 
 
-def test_openapi_exposes_only_approved_through_s06_d02_contracts() -> None:
+def test_openapi_exposes_only_approved_through_s06_d03_contracts() -> None:
     schema = create_app(settings()).openapi()
 
     assert set(schema["paths"]) == {
@@ -31,6 +31,11 @@ def test_openapi_exposes_only_approved_through_s06_d02_contracts() -> None:
         "/api/v1/avatars",
         "/api/v1/callsigns/availability",
         "/api/v1/channels",
+        "/api/v1/channels/private",
+        "/api/v1/channels/private/join",
+        "/api/v1/channels/{channel_id}",
+        "/api/v1/channels/{channel_id}/invite/rotation",
+        "/api/v1/channels/{channel_id}/membership",
         "/api/v1/channels/{channel_id}/select",
         "/api/v1/me/channel",
         "/api/v1/me/profile",

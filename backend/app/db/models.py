@@ -262,6 +262,12 @@ class Channel(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("uq_channel_stable_slug", "stable_slug", unique=True),
         Index("uq_channel_provider_room_ref", "provider_room_ref", unique=True),
         Index("ix_channel_creator_account_id", "creator_account_id"),
+        Index(
+            "uq_channel_creator_create_idempotency",
+            "creator_account_id",
+            "create_idempotency_hash",
+            unique=True,
+        ),
     )
 
     stable_slug: Mapped[str | None] = mapped_column(String(32))
@@ -275,10 +281,15 @@ class Channel(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     policy_version: Mapped[str] = mapped_column(String(32))
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    create_idempotency_hash: Mapped[str | None] = mapped_column(String(64))
+    create_request_fingerprint: Mapped[str | None] = mapped_column(String(64))
 
     creator: Mapped[Account | None] = relationship(back_populates="created_channels")
     memberships: Mapped[list["ChannelMembership"]] = relationship(
         back_populates="channel", cascade="all, delete-orphan"
+    )
+    invite: Mapped["ChannelInvite | None"] = relationship(
+        back_populates="channel", cascade="all, delete-orphan", uselist=False
     )
     selections: Mapped[list["ChannelSelection"]] = relationship(
         back_populates="channel", passive_deletes=True
@@ -314,6 +325,29 @@ class ChannelMembership(TimestampMixin, Base):
 
     account: Mapped[Account] = relationship(back_populates="channel_memberships")
     channel: Mapped[Channel] = relationship(back_populates="memberships")
+
+
+class ChannelInvite(TimestampMixin, Base):
+    __tablename__ = "channel_invite"
+    __table_args__ = (
+        CheckConstraint("length(secret_hash) >= 64", name="secret_hash_present"),
+        CheckConstraint("length(fingerprint) = 12", name="fingerprint_valid"),
+        CheckConstraint("version >= 1", name="version_positive"),
+        Index("ix_channel_invite_fingerprint", "fingerprint"),
+    )
+
+    channel_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("channel.id", ondelete="CASCADE"), primary_key=True
+    )
+    secret_hash: Mapped[str] = mapped_column(String(255))
+    fingerprint: Mapped[str] = mapped_column(String(12))
+    rotated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    rotation_idempotency_hash: Mapped[str | None] = mapped_column(String(64))
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+
+    channel: Mapped[Channel] = relationship(back_populates="invite")
 
 
 class ChannelSelection(TimestampMixin, Base):

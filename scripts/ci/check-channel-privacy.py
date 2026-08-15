@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail CI when the S06-D02 channel catalog or selection boundary drifts."""
+"""Fail CI when the S06-D03 channel and invite boundary drifts."""
 
 from __future__ import annotations
 
@@ -46,11 +46,26 @@ for phrase in (
     if phrase not in migration:
         fail(f"channel migration is missing {phrase!r}")
 
+invite_migration = read("backend/migrations/versions/0009_private_channel_invites.py")
+for phrase in (
+    '"channel_invite"',
+    'sa.column("secret_hash"',
+    'sa.column("fingerprint"',
+    'sa.column("rotation_idempotency_hash"',
+):
+    if phrase not in invite_migration:
+        fail(f"invite migration is missing {phrase!r}")
+
 api = read("backend/app/api/channels.py")
 for phrase in (
     '@router.get("/channels"',
     '@router.get("/me/channel"',
     '@router.post("/channels/{channel_id}/select"',
+    '"/channels/private"',
+    '@router.post("/channels/private/join"',
+    '@router.delete("/channels/{channel_id}/membership"',
+    '"/channels/{channel_id}/invite/rotation"',
+    '@router.delete("/channels/{channel_id}"',
     "account_id=current.account.id",
 ):
     if phrase not in api:
@@ -64,10 +79,14 @@ for forbidden in (
     "creator_account_id",
     "provider_room_ref",
     "participant_ref",
-    "invite",
 ):
     if forbidden in schemas:
         fail(f"channel response schema exposes forbidden field {forbidden!r}")
+if schemas.count("invite: str | none") != 1:
+    fail("one-time invite disclosure is not isolated to one response schema")
+for forbidden in ("invite_hash", "secret_hash", "fingerprint"):
+    if forbidden in schemas:
+        fail(f"channel response schema exposes invite storage field {forbidden!r}")
 
 service = read("backend/app/channels/service.py")
 for phrase in (
@@ -77,6 +96,10 @@ for phrase in (
     "selection.channel_id = general_channel_id",
     '"channel_not_available"',
     '"channel_media_active"',
+    "hash_invite(",
+    "verify_invite(",
+    '"channel_invite_invalid"',
+    "rotation_idempotency_hash",
 ):
     if phrase not in service:
         fail(f"channel authorization is missing {phrase!r}")

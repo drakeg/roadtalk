@@ -1,13 +1,32 @@
+import hashlib
+import re
+import secrets
+import unicodedata
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import cast
 
-from sqlalchemy import case, exists, or_, select
+from sqlalchemy import case, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.channels.constants import GENERAL_CHANNEL_ID
-from app.db.models import Account, Channel, ChannelMembership, ChannelSelection, MediaGrant
+from app.channels.security import (
+    DUMMY_INVITE_HASH,
+    hash_invite,
+    invite_fingerprint,
+    new_invite,
+    verify_invite,
+)
+from app.config import Settings
+from app.db.models import (
+    Account,
+    Channel,
+    ChannelInvite,
+    ChannelMembership,
+    ChannelSelection,
+    MediaGrant,
+)
 
 
 class ChannelError(ValueError):
@@ -32,6 +51,305 @@ class ChannelSummary:
 class ChannelSelectionReceipt(ChannelSummary):
     selected_at: datetime
     selection_version: int
+
+
+@dataclass(frozen=True)
+class PrivateChannelReceipt(ChannelSummary):
+    created_at: datetime
+    invite: str | None = None
+    replayed: bool = False
+
+
+@dataclass(frozen=True)
+class ChannelLifecycleReceipt:
+    channel_id: uuid.UUID
+    state: str
+    changed_at: datetime
+    replayed: bool
+
+
+def _normalize_label(value: str) -> str:
+    normalized = unicodedata.normalize("NFKC", value)
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    if not normalized or len(normalized) > 64 or any(ord(char) < 32 for char in normalized):
+        raise ChannelError("CHANNEL_LABEL_INVALID", "The channel label is invalid.")
+    return normalized
+
+
+def _private_receipt(
+    channel: Channel, *, invite: str | None = None, replayed: bool = False
+) -> PrivateChannelReceipt:
+    return PrivateChannelReceipt(
+        id=channel.id,
+        slug=None,
+        display_label=channel.display_label,
+        type="private",
+        selected=False,
+        enabled=channel.enabled,
+        version=channel.version,
+        created_at=channel.created_at,
+        invite=invite,
+        replayed=replayed,
+    )
+
+
+async def create_private_channel(
+    db: AsyncSession,
+    *,
+    account_id: uuid.UUID,
+    display_label: str,
+    idempotency_key: str,
+    settings: Settings,
+) -> PrivateChannelReceipt:  # pragma: no cover - exercised by opt-in PostgreSQL suite
+    label = _normalize_label(display_label)
+    account = await db.scalar(select(Account).where(Account.id == account_id).with_for_update())
+    if account is None or account.status != "active":
+        raise ChannelError("CHANNEL_ACCOUNT_INVALID", "The private channel is unavailable.")
+    key_hash = hashlib.sha256(idempotency_key.encode()).hexdigest()
+    request_fingerprint = hashlib.sha256(label.encode()).hexdigest()
+    replay = await db.scalar(
+        select(Channel).where(
+            Channel.creator_account_id == account_id,
+            Channel.create_idempotency_hash == key_hash,
+        )
+    )
+    if replay is not None:
+        if replay.create_request_fingerprint != request_fingerprint:
+            raise ChannelError("CHANNEL_IDEMPOTENCY_CONFLICT", "The idempotency key conflicts.")
+        return _private_receipt(replay, replayed=True)
+    count = await db.scalar(
+        select(Channel)
+        .where(
+            Channel.creator_account_id == account_id,
+            Channel.channel_type == "private",
+            Channel.closed_at.is_(None),
+        )
+        .with_only_columns(func.count())
+    )
+    if int(count or 0) >= settings.channel_private_limit:
+        raise ChannelError("CHANNEL_PRIVATE_LIMIT", "The private channel limit was reached.")
+    raw_invite = new_invite()
+    channel = Channel(
+        display_label=label,
+        channel_type="private",
+        enabled=True,
+        creator_account_id=account_id,
+        provider_room_ref=f"rm_v1_{secrets.token_urlsafe(18)}",
+        policy_version="channel-v1",
+        version=1,
+        create_idempotency_hash=key_hash,
+        create_request_fingerprint=request_fingerprint,
+    )
+    db.add(channel)
+    await db.flush()
+    db.add_all(
+        [
+            ChannelMembership(account_id=account_id, channel_id=channel.id),
+            ChannelInvite(
+                channel_id=channel.id,
+                secret_hash=hash_invite(
+                    raw_invite, settings.channel_invite_pepper.get_secret_value()
+                ),
+                fingerprint=invite_fingerprint(raw_invite),
+            ),
+        ]
+    )
+    await db.commit()
+    await db.refresh(channel)
+    return _private_receipt(channel, invite=raw_invite)
+
+
+async def join_private_channel(
+    db: AsyncSession,
+    *,
+    account_id: uuid.UUID,
+    raw_invite: str,
+    settings: Settings,
+    now: datetime | None = None,
+) -> ChannelLifecycleReceipt:  # pragma: no cover - exercised by opt-in PostgreSQL suite
+    resolved_now = now or datetime.now(UTC)
+    fingerprint = invite_fingerprint(raw_invite)
+    candidates = (
+        await db.scalars(
+            select(ChannelInvite)
+            .join(Channel)
+            .where(
+                ChannelInvite.fingerprint == fingerprint,
+                ChannelInvite.revoked_at.is_(None),
+                Channel.enabled.is_(True),
+                Channel.closed_at.is_(None),
+                Channel.channel_type == "private",
+            )
+        )
+    ).all()
+    invite = next(
+        (
+            item
+            for item in candidates
+            if verify_invite(
+                raw_invite, item.secret_hash, settings.channel_invite_pepper.get_secret_value()
+            )
+        ),
+        None,
+    )
+    if invite is None:
+        verify_invite(raw_invite, DUMMY_INVITE_HASH, "")
+        raise ChannelError("CHANNEL_INVITE_INVALID", "The channel invite is invalid.")
+    membership = await db.scalar(
+        select(ChannelMembership).where(
+            ChannelMembership.account_id == account_id,
+            ChannelMembership.channel_id == invite.channel_id,
+        )
+    )
+    replayed = membership is not None and membership.state == "active"
+    if membership is None:
+        db.add(
+            ChannelMembership(
+                account_id=account_id, channel_id=invite.channel_id, joined_at=resolved_now
+            )
+        )
+    elif not replayed:
+        membership.state = "active"
+        membership.joined_at = resolved_now
+        membership.left_at = None
+        membership.version += 1
+    invite.last_used_at = resolved_now
+    await db.commit()
+    return ChannelLifecycleReceipt(invite.channel_id, "joined", resolved_now, replayed)
+
+
+async def leave_private_channel(
+    db: AsyncSession,
+    *,
+    account_id: uuid.UUID,
+    channel_id: uuid.UUID,
+    now: datetime | None = None,
+) -> ChannelLifecycleReceipt:  # pragma: no cover - exercised by opt-in PostgreSQL suite
+    resolved_now = now or datetime.now(UTC)
+    membership = await db.scalar(
+        select(ChannelMembership)
+        .join(Channel)
+        .where(
+            ChannelMembership.account_id == account_id,
+            ChannelMembership.channel_id == channel_id,
+            Channel.channel_type == "private",
+            Channel.closed_at.is_(None),
+        )
+        .with_for_update()
+    )
+    if membership is None:
+        raise ChannelError("CHANNEL_NOT_AVAILABLE", "The channel is not available.")
+    replayed = membership.state == "left"
+    if not replayed:
+        membership.state = "left"
+        membership.left_at = resolved_now
+        membership.version += 1
+        selection = await db.scalar(
+            select(ChannelSelection).where(ChannelSelection.account_id == account_id)
+        )
+        if selection is not None and selection.channel_id == channel_id:
+            selection.channel_id = GENERAL_CHANNEL_ID
+            selection.selected_at = resolved_now
+            selection.version += 1
+    await db.commit()
+    return ChannelLifecycleReceipt(channel_id, "left", membership.left_at or resolved_now, replayed)
+
+
+async def rotate_private_invite(
+    db: AsyncSession,
+    *,
+    account_id: uuid.UUID,
+    channel_id: uuid.UUID,
+    idempotency_key: str,
+    settings: Settings,
+    now: datetime | None = None,
+) -> PrivateChannelReceipt:  # pragma: no cover - exercised by opt-in PostgreSQL suite
+    resolved_now = now or datetime.now(UTC)
+    channel = await db.scalar(
+        select(Channel).where(
+            Channel.id == channel_id,
+            Channel.creator_account_id == account_id,
+            Channel.channel_type == "private",
+            Channel.closed_at.is_(None),
+            Channel.enabled.is_(True),
+        )
+    )
+    if channel is None:
+        raise ChannelError("CHANNEL_NOT_AVAILABLE", "The channel is not available.")
+    invite = await db.scalar(
+        select(ChannelInvite).where(ChannelInvite.channel_id == channel_id).with_for_update()
+    )
+    if invite is None:
+        raise ChannelError("CHANNEL_NOT_AVAILABLE", "The channel is not available.")
+    key_hash = hashlib.sha256(idempotency_key.encode()).hexdigest()
+    if invite.rotation_idempotency_hash == key_hash:
+        return _private_receipt(channel, replayed=True)
+    raw_invite = new_invite()
+    invite.secret_hash = hash_invite(raw_invite, settings.channel_invite_pepper.get_secret_value())
+    invite.fingerprint = invite_fingerprint(raw_invite)
+    invite.rotated_at = resolved_now
+    invite.last_used_at = None
+    invite.version += 1
+    invite.rotation_idempotency_hash = key_hash
+    channel.version += 1
+    await db.commit()
+    return _private_receipt(channel, invite=raw_invite)
+
+
+async def close_private_channel(
+    db: AsyncSession,
+    *,
+    account_id: uuid.UUID,
+    channel_id: uuid.UUID,
+    now: datetime | None = None,
+) -> ChannelLifecycleReceipt:  # pragma: no cover - exercised by opt-in PostgreSQL suite
+    resolved_now = now or datetime.now(UTC)
+    channel = await db.scalar(
+        select(Channel)
+        .where(
+            Channel.id == channel_id,
+            Channel.creator_account_id == account_id,
+            Channel.channel_type == "private",
+        )
+        .with_for_update()
+    )
+    if channel is None:
+        raise ChannelError("CHANNEL_NOT_AVAILABLE", "The channel is not available.")
+    replayed = channel.closed_at is not None
+    if not replayed:
+        selections = (
+            await db.scalars(
+                select(ChannelSelection).where(ChannelSelection.channel_id == channel_id)
+            )
+        ).all()
+        for selection in selections:
+            selection.channel_id = GENERAL_CHANNEL_ID
+            selection.selected_at = resolved_now
+            selection.version += 1
+        memberships = (
+            await db.scalars(
+                select(ChannelMembership).where(
+                    ChannelMembership.channel_id == channel_id, ChannelMembership.state == "active"
+                )
+            )
+        ).all()
+        for membership in memberships:
+            membership.state = "left"
+            membership.left_at = resolved_now
+            membership.version += 1
+        invite = await db.scalar(
+            select(ChannelInvite).where(ChannelInvite.channel_id == channel_id)
+        )
+        if invite is not None:
+            invite.revoked_at = resolved_now
+            invite.version += 1
+        channel.enabled = False
+        channel.closed_at = resolved_now
+        channel.version += 1
+    await db.commit()
+    return ChannelLifecycleReceipt(
+        channel_id, "closed", channel.closed_at or resolved_now, replayed
+    )
 
 
 async def _authorized_channel(

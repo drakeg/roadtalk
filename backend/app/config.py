@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     token_signing_key: SecretStr = SecretStr("local-only-signing-key-change-me")
     refresh_token_pepper: SecretStr = SecretStr("local-only-refresh-pepper-change-me")
     recovery_key_pepper: SecretStr = SecretStr("local-only-recovery-pepper-change-me")
+    channel_invite_pepper: SecretStr = SecretStr("local-only-channel-pepper-change-me")
+    channel_invite_attempt_limit: int = Field(default=10, ge=1, le=100)
+    channel_invite_attempt_window_seconds: int = Field(default=300, ge=1, le=3_600)
+    channel_private_limit: int = Field(default=20, ge=1, le=100)
     token_issuer: str = "roadtalk-api"
     token_audience: str = "roadtalk-mobile"
     access_token_ttl_seconds: int = Field(default=900, ge=60, le=3600)

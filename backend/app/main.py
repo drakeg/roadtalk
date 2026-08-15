@@ -11,6 +11,7 @@ from app.api.location import router as location_router
 from app.api.ptt import router as ptt_router
 from app.api.recovery import router as recovery_router
 from app.api.system import router as system_router
+from app.channels.limiter import ChannelInviteLimiter
 from app.config import Settings, get_settings
 from app.db.session import check_database, dispose_database
 from app.health import ReadinessRegistry
@@ -58,6 +59,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         mutation_window_seconds=resolved.location_mutation_window_seconds,
         nearby_read_limit=resolved.location_nearby_read_limit,
         nearby_read_window_seconds=resolved.location_nearby_read_window_seconds,
+    )
+    app.state.channel_invite_limiter = ChannelInviteLimiter(
+        limit=resolved.channel_invite_attempt_limit,
+        window_seconds=resolved.channel_invite_attempt_window_seconds,
     )
     app.state.ptt_limiter = PttLimiter(
         receive_limit=resolved.ptt_receive_grant_limit,
