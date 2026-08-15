@@ -3,11 +3,13 @@ name: roadtalk
 services:
   database:
     image: postgis/postgis:17-3.5
+    # The pinned upstream image is amd64-only; Docker Desktop emulates it on Apple Silicon.
+    platform: linux/amd64
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-roadtalk}
       POSTGRES_USER: ${POSTGRES_USER:-roadtalk}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-roadtalk_local_only_change_me}
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -48,6 +50,44 @@ services:
       timeout: 3s
       retries: 12
       start_period: 5s
+    networks:
+      - roadtalk
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://roadtalk:${POSTGRES_PASSWORD:-roadtalk_local_only_change_me}@database:5432/${POSTGRES_DB:-roadtalk}
+      ROADTALK_ENVIRONMENT: local
+      ROADTALK_DOCS_ENABLED: "true"
+      ROADTALK_DATABASE_CHECK_ENABLED: "true"
+      ROADTALK_TOKEN_SIGNING_KEY: ${ROADTALK_TOKEN_SIGNING_KEY:-local-only-signing-key-change-me}
+      ROADTALK_REFRESH_TOKEN_PEPPER: ${ROADTALK_REFRESH_TOKEN_PEPPER:-local-only-refresh-pepper-change-me}
+      ROADTALK_RECOVERY_KEY_PEPPER: ${ROADTALK_RECOVERY_KEY_PEPPER:-local-only-recovery-pepper-change-me}
+      ROADTALK_CHANNEL_INVITE_PEPPER: ${ROADTALK_CHANNEL_INVITE_PEPPER:-local-only-channel-pepper-change-me}
+      ROADTALK_PTT_MEDIA_PROVIDER_ENABLED: "false"
+      ROADTALK_PTT_MEDIA_PROVIDER: disabled
+    command:
+      - /bin/sh
+      - -c
+      - alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=2)
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
     networks:
       - roadtalk
 

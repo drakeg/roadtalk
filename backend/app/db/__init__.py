@@ -2,6 +2,7 @@ from app.db.base import Base
 from app.db.models import (
     Account,
     Channel,
+    ChannelInvite,
     ChannelMembership,
     ChannelSelection,
     CurrentLocation,
@@ -17,6 +18,7 @@ __all__ = [
     "Account",
     "Base",
     "Channel",
+    "ChannelInvite",
     "ChannelMembership",
     "ChannelSelection",
     "CurrentLocation",

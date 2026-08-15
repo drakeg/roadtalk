@@ -143,6 +143,16 @@ managed service, worker, cache, or recurring cost is introduced.
 From the repository root:
 
 ```sh
+docker compose up --build
+```
+
+This one command builds the backend container, waits for PostgreSQL/PostGIS, applies
+all migrations, and serves the API and OpenAPI UI on `http://localhost:8000`. A local
+`.env` file is optional; the committed defaults are for developer machines only.
+
+For host-based development instead:
+
+```sh
 python3.12 -m venv backend/.venv
 backend/.venv/bin/pip install -e 'backend[dev]'
 make up
@@ -180,6 +190,11 @@ The API listens on `127.0.0.1:8000` by default.
 | `GET /api/v1/channels` | Return enabled General/RV plus only caller-authorized private channels. |
 | `GET /api/v1/me/channel` | Return the caller's semantic current selection. |
 | `POST /api/v1/channels/{channel_id}/select` | Idempotently select an available public or caller-member channel. |
+| `POST /api/v1/channels/private` | Create a private channel and disclose its invite once. |
+| `POST /api/v1/channels/private/join` | Join a private channel using an invite without membership disclosure. |
+| `DELETE /api/v1/channels/{channel_id}/membership` | Leave a private channel and fall back to General when selected. |
+| `POST /api/v1/channels/{channel_id}/invite/rotation` | Rotate a creator-held invite and disclose the replacement once. |
+| `DELETE /api/v1/channels/{channel_id}` | Close a creator-held private channel and revoke memberships. |
 | `POST /api/v1/ptt/grants` | Create a receive-only grant for the server-controlled opaque room. |
 | `POST /api/v1/ptt/grants/{receive_grant_id}/transmit` | Promote an owned active participant to microphone-only publication for at most 30 seconds. |
 | `POST /api/v1/ptt/grants/{transmit_grant_id}/publication` | Verify one opaque microphone track and apply the current server-derived nearby audience. |

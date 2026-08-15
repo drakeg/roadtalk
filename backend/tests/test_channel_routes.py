@@ -13,7 +13,13 @@ from app.api import channels as channels_api
 from app.api.auth import current_session
 from app.auth.service import AuthenticatedSession
 from app.channels.constants import GENERAL_CHANNEL_ID, RV_CHANNEL_ID
-from app.channels.service import ChannelError, ChannelSelectionReceipt, ChannelSummary
+from app.channels.service import (
+    ChannelError,
+    ChannelLifecycleReceipt,
+    ChannelSelectionReceipt,
+    ChannelSummary,
+    PrivateChannelReceipt,
+)
 from app.config import Settings
 from app.db.models import Account, Device, Session
 from app.db.session import get_session
@@ -234,3 +240,70 @@ def test_channel_failures_are_stable_and_non_disclosing(
     assert response.json()["code"] == code
     for forbidden in ("member", "owner", "creator", "room", "participant", "invite"):
         assert forbidden not in response.text
+
+
+def test_private_lifecycle_routes_return_only_approved_data(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    channel_id = uuid.uuid4()
+    changed_at = datetime(2026, 8, 15, 12, tzinfo=UTC)
+    invite = "rtc1." + "a" * 43
+
+    async def private_receipt(*args: object, **kwargs: object) -> PrivateChannelReceipt:
+        del args, kwargs
+        return PrivateChannelReceipt(
+            id=channel_id,
+            slug=None,
+            display_label="Camp Friends",
+            type="private",
+            selected=False,
+            enabled=True,
+            version=1,
+            created_at=changed_at,
+            invite=invite,
+        )
+
+    async def lifecycle(*args: object, **kwargs: object) -> ChannelLifecycleReceipt:
+        del args, kwargs
+        return ChannelLifecycleReceipt(channel_id, "joined", changed_at, False)
+
+    async def left(*args: object, **kwargs: object) -> ChannelLifecycleReceipt:
+        del args, kwargs
+        return ChannelLifecycleReceipt(channel_id, "left", changed_at, False)
+
+    async def closed(*args: object, **kwargs: object) -> ChannelLifecycleReceipt:
+        del args, kwargs
+        return ChannelLifecycleReceipt(channel_id, "closed", changed_at, True)
+
+    monkeypatch.setattr(channels_api, "create_private_channel", private_receipt)
+    monkeypatch.setattr(channels_api, "join_private_channel", lifecycle)
+    monkeypatch.setattr(channels_api, "leave_private_channel", left)
+    monkeypatch.setattr(channels_api, "rotate_private_invite", private_receipt)
+    monkeypatch.setattr(channels_api, "close_private_channel", closed)
+    application = authenticated_application()
+
+    with TestClient(application) as client:
+        created = client.post(
+            "/api/v1/channels/private",
+            json={"display_label": "Camp Friends"},
+            headers={"Idempotency-Key": "create-private-0001"},
+        )
+        joined = client.post("/api/v1/channels/private/join", json={"invite": invite})
+        left_response = client.delete(f"/api/v1/channels/{channel_id}/membership")
+        rotated = client.post(
+            f"/api/v1/channels/{channel_id}/invite/rotation",
+            headers={"Idempotency-Key": "rotate-private-0001"},
+        )
+        closed_response = client.delete(f"/api/v1/channels/{channel_id}")
+
+    assert created.status_code == 201
+    assert created.json()["invite"] == invite
+    assert joined.json()["state"] == "joined"
+    assert left_response.json()["state"] == "left"
+    assert rotated.json()["invite"] == invite
+    assert closed_response.json() == {
+        "channel_id": str(channel_id),
+        "state": "closed",
+        "changed_at": changed_at.isoformat().replace("+00:00", "Z"),
+        "replayed": True,
+    }
