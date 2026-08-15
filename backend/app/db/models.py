@@ -18,6 +18,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.channels.constants import GENERAL_CHANNEL_ID
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 
@@ -63,6 +64,18 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     media_grants: Mapped[list["MediaGrant"]] = relationship(
         back_populates="account", cascade="all, delete-orphan"
+    )
+    channel_memberships: Mapped[list["ChannelMembership"]] = relationship(
+        back_populates="account", cascade="all, delete-orphan"
+    )
+    channel_selection: Mapped["ChannelSelection | None"] = relationship(
+        back_populates="account",
+        cascade="all, delete-orphan",
+        single_parent=True,
+        uselist=False,
+    )
+    created_channels: Mapped[list["Channel"]] = relationship(
+        back_populates="creator", cascade="all, delete-orphan"
     )
 
 
@@ -225,6 +238,104 @@ class CurrentLocation(TimestampMixin, Base):
     source_device: Mapped[Device] = relationship(back_populates="current_locations")
 
 
+class Channel(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "channel"
+    __table_args__ = (
+        CheckConstraint("channel_type IN ('public', 'private')", name="type_allowed"),
+        CheckConstraint("length(display_label) > 0", name="display_label_present"),
+        CheckConstraint("length(provider_room_ref) > 0", name="room_ref_present"),
+        CheckConstraint("length(policy_version) > 0", name="policy_version_present"),
+        CheckConstraint("version >= 1", name="version_positive"),
+        CheckConstraint(
+            "(channel_type = 'public' AND "
+            "((stable_slug = 'general' AND display_label = 'General') OR "
+            "(stable_slug = 'rv' AND display_label = 'RV')) "
+            "AND creator_account_id IS NULL AND closed_at IS NULL) OR "
+            "(channel_type = 'private' AND stable_slug IS NULL "
+            "AND creator_account_id IS NOT NULL)",
+            name="type_fields_consistent",
+        ),
+        CheckConstraint(
+            "(enabled AND closed_at IS NULL) OR (NOT enabled)",
+            name="enabled_not_closed",
+        ),
+        Index("uq_channel_stable_slug", "stable_slug", unique=True),
+        Index("uq_channel_provider_room_ref", "provider_room_ref", unique=True),
+        Index("ix_channel_creator_account_id", "creator_account_id"),
+    )
+
+    stable_slug: Mapped[str | None] = mapped_column(String(32))
+    display_label: Mapped[str] = mapped_column(String(64))
+    channel_type: Mapped[str] = mapped_column(String(16))
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    creator_account_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE")
+    )
+    provider_room_ref: Mapped[str] = mapped_column(String(128))
+    policy_version: Mapped[str] = mapped_column(String(32))
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+
+    creator: Mapped[Account | None] = relationship(back_populates="created_channels")
+    memberships: Mapped[list["ChannelMembership"]] = relationship(
+        back_populates="channel", cascade="all, delete-orphan"
+    )
+    selections: Mapped[list["ChannelSelection"]] = relationship(
+        back_populates="channel", passive_deletes=True
+    )
+    media_grants: Mapped[list["MediaGrant"]] = relationship(
+        back_populates="channel", passive_deletes=True
+    )
+
+
+class ChannelMembership(TimestampMixin, Base):
+    __tablename__ = "channel_membership"
+    __table_args__ = (
+        CheckConstraint("state IN ('active', 'left')", name="state_allowed"),
+        CheckConstraint(
+            "(state = 'active' AND left_at IS NULL) OR (state = 'left' AND left_at IS NOT NULL)",
+            name="state_timestamp_consistent",
+        ),
+        CheckConstraint("version >= 1", name="version_positive"),
+        Index("ix_channel_membership_channel_state", "channel_id", "state"),
+        Index("ix_channel_membership_account_state", "account_id", "state"),
+    )
+
+    account_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE"), primary_key=True
+    )
+    channel_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("channel.id", ondelete="CASCADE"), primary_key=True
+    )
+    state: Mapped[str] = mapped_column(String(16), default="active", server_default="active")
+    joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    left_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+
+    account: Mapped[Account] = relationship(back_populates="channel_memberships")
+    channel: Mapped[Channel] = relationship(back_populates="memberships")
+
+
+class ChannelSelection(TimestampMixin, Base):
+    __tablename__ = "channel_selection"
+    __table_args__ = (
+        CheckConstraint("version >= 1", name="version_positive"),
+        Index("ix_channel_selection_channel_id", "channel_id"),
+    )
+
+    account_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE"), primary_key=True
+    )
+    channel_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("channel.id", ondelete="RESTRICT"))
+    selected_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+
+    account: Mapped[Account] = relationship(back_populates="channel_selection")
+    channel: Mapped[Channel] = relationship(back_populates="selections")
+
+
 class MediaGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "media_grant"
     __table_args__ = (
@@ -279,6 +390,7 @@ class MediaGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             "expires_at",
         ),
         Index("ix_media_grant_device_id", "device_id"),
+        Index("ix_media_grant_channel_id", "channel_id"),
         Index("ix_media_grant_parent_grant_id", "parent_grant_id"),
         Index(
             "uq_media_grant_account_kind_idempotency",
@@ -295,6 +407,10 @@ class MediaGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
 
     account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("account.id", ondelete="CASCADE"))
+    channel_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("channel.id", ondelete="RESTRICT"),
+        default=GENERAL_CHANNEL_ID,
+    )
     device_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("device.id", ondelete="CASCADE"))
     parent_grant_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("media_grant.id", ondelete="CASCADE")
@@ -316,4 +432,5 @@ class MediaGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     outcome_code: Mapped[str | None] = mapped_column(String(64))
 
     account: Mapped[Account] = relationship(back_populates="media_grants")
+    channel: Mapped[Channel] = relationship(back_populates="media_grants")
     device: Mapped[Device] = relationship(back_populates="media_grants")

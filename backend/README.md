@@ -1,6 +1,6 @@
 # Backend
 
-Sprint 5 active owner: S05-D06 Revocation and lifecycle reconciliation.
+Sprint 6 active owner: S06-D02 Channel schema and public catalog.
 
 The backend is a Python/FastAPI modular-monolith control API.
 
@@ -127,6 +127,17 @@ Recipient references remain bounded process-local values only. No membership tab
 scheduler, worker, queue, Redis, WebSocket, live provider call, AWS resource, or
 recurring cost is added.
 
+S06-D02 adds durable server-authoritative channels, private membership authorization,
+and exactly one account-wide selection. Migrations seed deterministic General/RV
+public rows, give every existing and new account a General selection, and bind every
+metadata-only media grant to a channel with prior grants backfilled to General. The
+catalog returns enabled public rows plus only caller-member private rows; current
+selection defaults/falls back to General and changes are serialized on the account
+row. Until S06-D05 adds revoke-before-switch, active media causes switching to fail
+closed. Responses expose no membership/owner identity or count, invite, provider room,
+participant, presence, or proximity detail. No live provider call, AWS resource,
+managed service, worker, cache, or recurring cost is introduced.
+
 ## Local setup
 
 From the repository root:
@@ -166,6 +177,9 @@ The API listens on `127.0.0.1:8000` by default.
 | `PUT /api/v1/me/location` | Submit one validated current foreground sample; response omits coordinates. |
 | `DELETE /api/v1/me/location` | Idempotently pause/remove the authenticated account's current sample. |
 | `GET /api/v1/nearby/summary` | Return only caller-relative availability, coarse bucket, freshness, and caller expiry. |
+| `GET /api/v1/channels` | Return enabled General/RV plus only caller-authorized private channels. |
+| `GET /api/v1/me/channel` | Return the caller's semantic current selection. |
+| `POST /api/v1/channels/{channel_id}/select` | Idempotently select an available public or caller-member channel. |
 | `POST /api/v1/ptt/grants` | Create a receive-only grant for the server-controlled opaque room. |
 | `POST /api/v1/ptt/grants/{receive_grant_id}/transmit` | Promote an owned active participant to microphone-only publication for at most 30 seconds. |
 | `POST /api/v1/ptt/grants/{transmit_grant_id}/publication` | Verify one opaque microphone track and apply the current server-derived nearby audience. |

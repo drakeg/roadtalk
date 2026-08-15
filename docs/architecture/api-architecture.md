@@ -104,12 +104,15 @@ Server validation covers range, freshness, accuracy, sequence, plausible movemen
 
 | Endpoint | Methods | Notes |
 |---|---|---|
-| `/channels` | GET | Available approved channels. |
-| `/channels/{channel_id}/join` | POST | Idempotent membership/selection. |
-| `/channels/{channel_id}/leave` | POST | Idempotent leave. |
-| `/me/channel` | GET | Current selection. |
+| `/channels` | GET | Enabled General/RV plus caller-member private channels. |
+| `/channels/{channel_id}/select` | POST | Idempotently select an authorized channel. |
+| `/me/channel` | GET | Current semantic selection, defaulting/falling back to General. |
 
-Private channels are not implemented until Sprint 6.
+S06-D02 implements the catalog and selection boundary. Responses contain only channel
+ID, public slug where applicable, member-visible label, type, enabled/selected state,
+and semantic version/timestamp fields. They contain no member/owner identity or count,
+invite data, provider room/token, participant, presence, or proximity detail. Private
+create/join/leave/rotate/close lifecycle remains assigned to S06-D03.
 
 ### Push-to-talk and media authorization
 
@@ -174,8 +177,9 @@ Events are at-least-once where replay is supported. Clients deduplicate by `even
 6. media service availability
 7. microphone-only participant permission update
 
-Location, proximity, channels, presence, and moderation are intentionally deferred to
-later approved sprints. Transmit uses
+Presence and moderation remain deferred. Location and proximity are implemented;
+S06-D02 adds channel persistence/catalog/selection but intentionally defers binding
+provider authorization and proximity delivery to current channel until S06-D04. Transmit uses
 `POST /api/v1/ptt/grants/{receive_grant_id}/transmit` with an empty, extra-forbidden
 body; clients cannot select provider identifiers, sources, permissions, or TTL.
 
