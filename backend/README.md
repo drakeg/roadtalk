@@ -138,6 +138,16 @@ closed. Responses expose no membership/owner identity or count, invite, provider
 participant, presence, or proximity detail. No live provider call, AWS resource,
 managed service, worker, cache, or recurring cost is introduced.
 
+S06-D04 derives every new receive grant's opaque provider room from the caller's
+current enabled, authorized channel and copies that exact channel/room binding to
+transmit and publication authority. Proximity eligibility now requires both sender
+and receiver to remain selected into that channel; private-channel receivers also
+require active membership. Cross-channel grants, stale selections, closed channels,
+room mismatches, and client room selectors fail closed. Provider tokens retain
+receive-only join, automatic subscription remains off, and microphone publication
+and selective delivery remain the only later capabilities. No live provider call,
+AWS resource, managed service, or recurring cost is introduced.
+
 ## Local setup
 
 From the repository root:
@@ -195,7 +205,7 @@ The API listens on `127.0.0.1:8000` by default.
 | `DELETE /api/v1/channels/{channel_id}/membership` | Leave a private channel and fall back to General when selected. |
 | `POST /api/v1/channels/{channel_id}/invite/rotation` | Rotate a creator-held invite and disclose the replacement once. |
 | `DELETE /api/v1/channels/{channel_id}` | Close a creator-held private channel and revoke memberships. |
-| `POST /api/v1/ptt/grants` | Create a receive-only grant for the server-controlled opaque room. |
+| `POST /api/v1/ptt/grants` | Create a receive-only grant for the selected channel's server-derived opaque room. |
 | `POST /api/v1/ptt/grants/{receive_grant_id}/transmit` | Promote an owned active participant to microphone-only publication for at most 30 seconds. |
 | `POST /api/v1/ptt/grants/{transmit_grant_id}/publication` | Verify one opaque microphone track and apply the current server-derived nearby audience. |
 | `DELETE /api/v1/ptt/grants/{grant_id}` | Idempotently release an owned receive or transmit grant. |

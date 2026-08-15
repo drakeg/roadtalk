@@ -48,7 +48,7 @@ def receive_grant(*, now: datetime) -> MediaGrant:
         parent_grant_id=None,
         grant_kind="receive",
         provider="livekit",
-        provider_room_ref="rm_7f3d2c9a1b6e4d08",
+        provider_room_ref="rm_v1_7WmN4qZ2pL8cH5sT",
         provider_participant_ref="participant_sender_opaque",
         action_scope="subscribe",
         policy_version="ptt-v1",
@@ -230,6 +230,7 @@ def test_transmit_uses_transient_audience_only_as_authorization_decision() -> No
         assert receipt.receive_grant_id == receive.id
         stored = db.add.call_args.args[0]
         assert isinstance(stored, MediaGrant)
+        assert stored.channel_id == receive.channel_id
         assert not any(
             fragment in column.name
             for column in stored.__table__.c

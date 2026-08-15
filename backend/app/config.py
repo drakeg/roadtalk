@@ -75,7 +75,7 @@ class Settings(BaseSettings):
     ptt_proximity_policy_version: str = Field(default="proximity-v1", min_length=1, max_length=32)
     ptt_proximity_radius_m: float = Field(default=5_000, gt=0, le=100_000)
     ptt_controlled_room_ref: str = Field(
-        default="rm_7f3d2c9a1b6e4d08",
+        default="rm_v1_7WmN4qZ2pL8cH5sT",
         min_length=16,
         max_length=128,
         pattern=r"^[A-Za-z0-9_-]+$",

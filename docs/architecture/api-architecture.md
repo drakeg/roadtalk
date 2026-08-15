@@ -177,9 +177,11 @@ Events are at-least-once where replay is supported. Clients deduplicate by `even
 6. media service availability
 7. microphone-only participant permission update
 
-Presence and moderation remain deferred. Location and proximity are implemented;
-S06-D02 adds channel persistence/catalog/selection but intentionally defers binding
-provider authorization and proximity delivery to current channel until S06-D04. Transmit uses
+Presence and moderation remain deferred. Location and proximity are implemented.
+S06-D04 binds receive credentials, transmit promotion, publication verification, and
+selective delivery to the caller's current authorized channel and its server-owned
+opaque room. Eligibility requires the sender and receiver to remain selected into the
+same channel, with active private membership where applicable. Transmit uses
 `POST /api/v1/ptt/grants/{receive_grant_id}/transmit` with an empty, extra-forbidden
 body; clients cannot select provider identifiers, sources, permissions, or TTL.
 

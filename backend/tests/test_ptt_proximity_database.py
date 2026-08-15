@@ -11,9 +11,11 @@ from geoalchemy2.elements import WKBElement
 from sqlalchemy import delete, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from app.channels.constants import GENERAL_CHANNEL_ID, RV_CHANNEL_ID
 from app.config import Settings
 from app.db.models import (
     Account,
+    ChannelSelection,
     CurrentLocation,
     Device,
     LocationConsentEvent,
@@ -71,6 +73,7 @@ async def _receiver_matrix() -> None:
                 {"longitude": 0.002, "account_status": "disabled"},
                 {"longitude": 0.002, "session_revoked": True},
                 {"longitude": 0.002, "cross_device_location": True},
+                {"longitude": 0.002, "selected_channel_id": RV_CHANNEL_ID},
             )
             for variant in variants:
                 account_id, _, _ = await _add_participant(
@@ -267,12 +270,16 @@ async def _add_participant(
     quality: str = "usable",
     consent: str = "granted",
     grant_expires_at: datetime | None = None,
-    room_ref: str = "rm_7f3d2c9a1b6e4d08",
+    room_ref: str = "rm_v1_7WmN4qZ2pL8cH5sT",
     account_status: str = "active",
     session_revoked: bool = False,
     cross_device_location: bool = False,
+    selected_channel_id: uuid.UUID = GENERAL_CHANNEL_ID,
 ) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID | None]:
-    account = Account(status=account_status)
+    account = Account(
+        status=account_status,
+        channel_selection=ChannelSelection(channel_id=selected_channel_id),
+    )
     device = Device(
         account=account,
         platform="ios",

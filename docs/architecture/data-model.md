@@ -277,9 +277,9 @@ direction, counts, and recipient membership are not returned to an API or persis
 S05-D03 owns integration with transmit creation; selective subscription remains in
 later locked Sprint 5 deliverables.
 
-### Sprint 6 channel catalog and selection
+### Sprint 6 channel and media authority
 
-S06-D02 implements the minimum durable channel authority:
+S06-D02 through D04 implement the durable channel authority:
 
 - `channel` stores deterministic General/RV rows and private-capable metadata without
   exposing provider room references through the API.
@@ -288,10 +288,14 @@ S06-D02 implements the minimum durable channel authority:
 - `channel_selection` enforces exactly one account-wide current channel and defaults or
   falls back to General.
 - `media_grant.channel_id` is required; migration backfills prior grants to General.
+- `channel_invite` stores only a slow hash, short fingerprint, lifecycle timestamps,
+  and idempotency metadata; plaintext is never durable.
 - Catalog queries return enabled public channels plus only the caller's active private
   memberships. Selection uses an account row lock and rejects unauthorized targets.
-- No invite table/lifecycle, provider-room authorization change, Redis, worker, AWS
-  resource, LiveKit call, or paid service is introduced in this deliverable.
+- Receive grants derive their channel and opaque room from that selection. Transmit,
+  publication, and proximity eligibility preserve the same binding and require exact
+  same-channel selection plus private membership when applicable.
+- No Redis, worker, AWS resource, live provider call, or paid service is introduced.
 
 ## Retention baseline
 

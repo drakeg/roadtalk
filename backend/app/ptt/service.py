@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings
-from app.db.models import Account, MediaGrant
+from app.db.models import Account, Channel, ChannelMembership, ChannelSelection, MediaGrant
 from app.ptt.provider import (
     MediaProvider,
     MediaProviderError,
@@ -247,6 +247,28 @@ async def create_receive_grant(
     fingerprint = _receive_fingerprint()
     await db.scalar(select(Account.id).where(Account.id == account_id).with_for_update())
 
+    active_membership = (
+        select(ChannelMembership.account_id)
+        .where(
+            ChannelMembership.account_id == account_id,
+            ChannelMembership.channel_id == Channel.id,
+            ChannelMembership.state == "active",
+        )
+        .exists()
+    )
+    channel = await db.scalar(
+        select(Channel)
+        .join(ChannelSelection, ChannelSelection.channel_id == Channel.id)
+        .where(
+            ChannelSelection.account_id == account_id,
+            Channel.enabled.is_(True),
+            Channel.closed_at.is_(None),
+            or_(Channel.channel_type == "public", active_membership),
+        )
+    )
+    if channel is None:
+        raise GrantError("PTT_CHANNEL_UNAVAILABLE", "The selected channel is unavailable.")
+
     existing = await db.scalar(
         select(MediaGrant).where(
             MediaGrant.account_id == account_id,
@@ -255,7 +277,12 @@ async def create_receive_grant(
         )
     )
     if existing is not None:
-        if existing.device_id != device_id or existing.request_fingerprint != fingerprint:
+        if (
+            existing.device_id != device_id
+            or existing.request_fingerprint != fingerprint
+            or existing.channel_id != channel.id
+            or existing.provider_room_ref != channel.provider_room_ref
+        ):
             raise GrantError(
                 "PTT_IDEMPOTENCY_CONFLICT",
                 "The idempotency key was already used for a different request.",
@@ -283,7 +310,7 @@ async def create_receive_grant(
     try:
         credential = await provider.issue_receive_credential(
             ReceiveCredentialRequest(
-                room_ref=settings.ptt_controlled_room_ref,
+                room_ref=channel.provider_room_ref,
                 participant_ref=participant_ref,
                 ttl_seconds=settings.ptt_receive_grant_ttl_seconds,
             )
@@ -296,10 +323,11 @@ async def create_receive_grant(
 
     grant = MediaGrant(
         account_id=account_id,
+        channel_id=channel.id,
         device_id=device_id,
         grant_kind="receive",
         provider="livekit",
-        provider_room_ref=settings.ptt_controlled_room_ref,
+        provider_room_ref=channel.provider_room_ref,
         provider_participant_ref=participant_ref,
         action_scope="subscribe",
         policy_version=settings.ptt_policy_version,
@@ -321,7 +349,12 @@ async def create_receive_grant(
                 MediaGrant.idempotency_key_hash == key_hash,
             )
         )
-        if replay is not None and replay.device_id == device_id:
+        if (
+            replay is not None
+            and replay.device_id == device_id
+            and replay.channel_id == channel.id
+            and replay.provider_room_ref == channel.provider_room_ref
+        ):
             return _receipt(replay, replayed=True)
         raise GrantError(
             "PTT_GRANT_CONFLICT",
@@ -430,7 +463,11 @@ async def create_transmit_grant(
             db,
             sender_account_id=account_id,
             sender_device_id=device_id,
-            policy=proximity_policy_from_settings(settings),
+            policy=proximity_policy_from_settings(
+                settings,
+                channel_id=receive.channel_id,
+                room_ref=receive.provider_room_ref,
+            ),
             now=resolved_now,
         )
     except ProximityEligibilityError as exc:
@@ -443,6 +480,7 @@ async def create_transmit_grant(
 
     grant = MediaGrant(
         account_id=account_id,
+        channel_id=receive.channel_id,
         device_id=device_id,
         parent_grant_id=receive.id,
         grant_kind="transmit",
@@ -571,7 +609,11 @@ async def publish_transmit_track(
             "Publication verification is unavailable.",
         ) from exc
 
-    policy = proximity_policy_from_settings(settings)
+    policy = proximity_policy_from_settings(
+        settings,
+        channel_id=grant.channel_id,
+        room_ref=grant.provider_room_ref,
+    )
     try:
         eligible_receivers = await eligibility_finder(
             db,
@@ -958,7 +1000,6 @@ async def reconcile_proximity_delivery(
     ready = 0
     ended = 0
     pending = 0
-    policy = proximity_policy_from_settings(settings)
     for grant in grants:
         if grant.provider_track_ref is None:
             pending += 1
@@ -967,6 +1008,11 @@ async def reconcile_proximity_delivery(
             room_ref=grant.provider_room_ref,
             participant_ref=grant.provider_participant_ref,
             track_ref=grant.provider_track_ref,
+        )
+        policy = proximity_policy_from_settings(
+            settings,
+            channel_id=grant.channel_id,
+            room_ref=grant.provider_room_ref,
         )
         try:
             candidates = await participant_finder(
