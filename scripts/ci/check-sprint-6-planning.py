@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail CI when proposed Sprint 6 planning loses a locked safety boundary."""
+"""Fail CI when approved Sprint 6 planning loses a locked safety boundary."""
 
 from __future__ import annotations
 
@@ -32,7 +32,9 @@ for identifier in (
         fail(f"{specification} does not define {identifier.upper()}")
 
 for phrase in (
-    "proposed — awaiting product-owner approval",
+    "approved for local/github ci implementation — product-owner approved on 2026-08-14",
+    "through issue #129",
+    "locked tracker #139",
     "general and rv are server-seeded",
     "high-entropy invite secret",
     "exactly one selected active channel",
@@ -49,14 +51,16 @@ for phrase in (
 readiness_path = "docs/sprints/sprint-6-readiness.md"
 readiness = read(readiness_path)
 for phrase in (
-    "status: not ready — awaiting product-owner approval",
-    "merged sprint 5 review pr #127 authorizes this planning record only",
+    "status: ready — approved for local/github ci implementation",
+    "product owner approved the specification",
+    "through issue #129",
+    "tracker #139",
     "plaintext is returned once and never stored",
     "room metadata is visible to participants",
     "s01-e01 through s01-e03 remain field-test blockers",
     "terraform | disabled; zero resources",
     "alerts, budgets, and quotas are not automatic shutdown controls",
-    "**not ready.**",
+    "**ready.**",
 ):
     if phrase not in readiness:
         fail(f"{readiness_path} is missing {phrase!r}")
@@ -64,5 +68,7 @@ for phrase in (
 workflow = read(".github/workflows/ci.yml")
 if "python scripts/ci/check-sprint-6-planning.py" not in workflow:
     fail("CI does not enforce the Sprint 6 planning gate")
+if "check approved sprint 6 planning boundaries" not in workflow:
+    fail("CI does not describe Sprint 6 planning as approved")
 
 print("Sprint 6 planning gate: passed")

@@ -14,9 +14,9 @@ Sprint 5 completed through
 [specification](docs/sprints/sprint-5-proximity.md),
 [readiness gate](docs/sprints/sprint-5-readiness.md), $0 implementation policy, and
 named evidence exceptions were approved on 2026-08-06, and merged PR #127 recorded
-final acceptance. Sprint 6 channel planning is proposed; coding remains blocked until
-its specification and readiness gate are approved. AWS or LiveKit activation, paid
-plans, and recurring spend remain unauthorized.
+final acceptance. Sprint 6 Channels is approved and ready for local/GitHub CI
+implementation through [tracker #139](https://github.com/drakeg/roadtalk/issues/139).
+AWS or LiveKit activation, paid plans, and recurring spend remain unauthorized.
 
 ## Repository layout
 
@@ -26,8 +26,8 @@ plans, and recurring spend remain unauthorized.
 | `backend/` | FastAPI modular-monolith API, migrations, and backend tests | Sprint 5 proximity authorization and the disabled provider boundary are implemented; no live adapter is active |
 | `infrastructure/` | Terraform bootstrap, environment roots, and reusable modules | Remains disabled by default; Sprint 5 adds no AWS resource |
 | `scripts/` | Cross-project developer and operational helper scripts | Added only with a traced requirement |
-| `docs/` | Architecture, sprint records, ADRs, security, privacy, design, and runbooks | Sprint 5 is accepted; Sprint 6 planning is proposed and not ready |
-| `.github/` | Pull-request, issue, CI, quality, and security workflows | Existing gates remain; Sprint 6 coding requires approved traced work |
+| `docs/` | Architecture, sprint records, ADRs, security, privacy, design, and runbooks | Sprint 5 is accepted; Sprint 6 is approved and ready |
+| `.github/` | Pull-request, issue, CI, quality, and security workflows | Existing gates remain; Sprint 6 work follows locked tracker #139 |
 
 ## Start here
 
@@ -51,10 +51,10 @@ S04-D08 operations preserve those boundaries with lower controlled-test stops of
 and $10 incremental monthly cost. Crossing any stop pauses testing; budgets and
 provider quotas never authorize automatic upgrade or continued spend.
 
-Sprint 4 is accepted by merged PR #108 and Sprint 5 by merged PR #127. Sprint 6
-planning is proposed; implementation is not authorized. Only local/GitHub CI planning
-evidence is authorized; field testing, cloud/provider activation, and spend remain
-blocked.
+Sprint 4 is accepted by merged PR #108 and Sprint 5 by merged PR #127. Sprint 6 was
+approved on 2026-08-14 through issue #129. Only local/GitHub CI implementation and
+synthetic evidence in locked tracker #139 are authorized; field testing,
+cloud/provider activation, and spend remain blocked.
 
 ## Source of truth
 
