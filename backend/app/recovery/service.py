@@ -10,7 +10,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.security import hash_refresh_token, new_refresh_token
 from app.auth.service import token_pair, utcnow
 from app.config import Settings
-from app.db.models import Account, Device, Profile, RecoveryCredential, Session
+from app.db.models import (
+    Account,
+    Channel,
+    ChannelMembership,
+    Device,
+    MediaGrant,
+    Profile,
+    RecoveryCredential,
+    Session,
+)
 from app.ptt.service import revoke_account_media_grants
 from app.recovery.schemas import RecoveryKeyResponse, RecoverySessionResponse
 from app.recovery.security import (
@@ -219,4 +228,14 @@ async def _temporary_account_is_transferable(
     other_device = await db.scalar(
         select(Device.id).where(Device.account_id == account_id, Device.id != device_id)
     )
-    return profile is None and recovery is None and other_device is None
+    created_channel = await db.scalar(
+        select(Channel.id).where(Channel.creator_account_id == account_id)
+    )
+    membership = await db.scalar(
+        select(ChannelMembership.account_id).where(ChannelMembership.account_id == account_id)
+    )
+    media_grant = await db.scalar(select(MediaGrant.id).where(MediaGrant.account_id == account_id))
+    return all(
+        item is None
+        for item in (profile, recovery, other_device, created_channel, membership, media_grant)
+    )

@@ -27,6 +27,7 @@ from app.db.models import (
     ChannelSelection,
     MediaGrant,
 )
+from app.ptt.service import revoke_channel_media_grants
 
 
 class ChannelError(ValueError):
@@ -241,6 +242,13 @@ async def leave_private_channel(
         raise ChannelError("CHANNEL_NOT_AVAILABLE", "The channel is not available.")
     replayed = membership.state == "left"
     if not replayed:
+        await revoke_channel_media_grants(
+            db,
+            account_id=account_id,
+            channel_id=channel_id,
+            reason="channel_left",
+            now=resolved_now,
+        )
         membership.state = "left"
         membership.left_at = resolved_now
         membership.version += 1
@@ -317,6 +325,12 @@ async def close_private_channel(
         raise ChannelError("CHANNEL_NOT_AVAILABLE", "The channel is not available.")
     replayed = channel.closed_at is not None
     if not replayed:
+        await revoke_channel_media_grants(
+            db,
+            channel_id=channel_id,
+            reason="channel_closed",
+            now=resolved_now,
+        )
         selections = (
             await db.scalars(
                 select(ChannelSelection).where(ChannelSelection.channel_id == channel_id)
@@ -505,19 +519,28 @@ async def select_channel(
         raise ChannelError("CHANNEL_NOT_AVAILABLE", "The channel is not available.")
 
     if selection.channel_id != channel_id:
-        active_grant = await db.scalar(
+        active_transmit = await db.scalar(
             select(MediaGrant.id).where(
                 MediaGrant.account_id == account_id,
+                MediaGrant.channel_id == selection.channel_id,
+                MediaGrant.grant_kind == "transmit",
                 MediaGrant.revoked_at.is_(None),
                 MediaGrant.expires_at > resolved_now,
             )
         )
-        if active_grant is not None:
+        if active_transmit is not None:
             await db.rollback()
             raise ChannelError(
                 "CHANNEL_MEDIA_ACTIVE",
-                "Release active media before changing channels.",
+                "End the active transmission before changing channels.",
             )
+        await revoke_channel_media_grants(
+            db,
+            account_id=account_id,
+            channel_id=selection.channel_id,
+            reason="channel_switched",
+            now=resolved_now,
+        )
         selection.channel_id = target.id
         selection.selected_at = resolved_now
         selection.version += 1

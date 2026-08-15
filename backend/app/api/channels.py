@@ -1,6 +1,6 @@
 import time
 import uuid
-from typing import Annotated
+from typing import Annotated, cast
 
 from fastapi import APIRouter, Header, HTTPException, Request, Response, status
 
@@ -26,6 +26,8 @@ from app.channels.service import (
     rotate_private_invite,
     select_channel,
 )
+from app.ptt.provider import MediaProvider
+from app.ptt.service import reconcile_media_grants
 
 router = APIRouter(prefix="/api/v1", tags=["channels"])
 IdempotencyKey = Annotated[
@@ -92,6 +94,7 @@ async def read_current_channel(
 @router.post("/channels/{channel_id}/select", response_model=ChannelSelectionResponse)
 async def select_current_channel(
     channel_id: uuid.UUID,
+    request: Request,
     db: DatabaseSession,
     current: CurrentSession,
 ) -> ChannelSelectionResponse:
@@ -100,6 +103,10 @@ async def select_current_channel(
             db,
             account_id=current.account.id,
             channel_id=channel_id,
+        )
+        await reconcile_media_grants(
+            db,
+            provider=cast(MediaProvider, request.app.state.media_provider),
         )
     except ChannelError as exc:
         raise _channel_error(exc) from exc
@@ -156,11 +163,15 @@ async def join_private(
 
 @router.delete("/channels/{channel_id}/membership", response_model=ChannelLifecycleResponse)
 async def leave_private(
-    channel_id: uuid.UUID, db: DatabaseSession, current: CurrentSession
+    channel_id: uuid.UUID, request: Request, db: DatabaseSession, current: CurrentSession
 ) -> ChannelLifecycleResponse:
     try:
         receipt = await leave_private_channel(
             db, account_id=current.account.id, channel_id=channel_id
+        )
+        await reconcile_media_grants(
+            db,
+            provider=cast(MediaProvider, request.app.state.media_provider),
         )
     except ChannelError as exc:
         raise _channel_error(exc) from exc
@@ -193,11 +204,15 @@ async def rotate_invite(
 
 @router.delete("/channels/{channel_id}", response_model=ChannelLifecycleResponse)
 async def close_private(
-    channel_id: uuid.UUID, db: DatabaseSession, current: CurrentSession
+    channel_id: uuid.UUID, request: Request, db: DatabaseSession, current: CurrentSession
 ) -> ChannelLifecycleResponse:
     try:
         receipt = await close_private_channel(
             db, account_id=current.account.id, channel_id=channel_id
+        )
+        await reconcile_media_grants(
+            db,
+            provider=cast(MediaProvider, request.app.state.media_provider),
         )
     except ChannelError as exc:
         raise _channel_error(exc) from exc

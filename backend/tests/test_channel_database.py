@@ -28,6 +28,8 @@ from app.db.models import (
     Device,
     MediaGrant,
 )
+from app.ptt.provider import FakeMediaProvider
+from app.ptt.service import create_receive_grant
 
 
 @pytest.mark.skipif(
@@ -52,10 +54,14 @@ async def _private_channel_invite_lifecycle() -> None:
     factory = async_sessionmaker(engine, expire_on_commit=False)
     owner = Account(channel_selection=ChannelSelection(channel_id=GENERAL_CHANNEL_ID))
     member = Account(channel_selection=ChannelSelection(channel_id=GENERAL_CHANNEL_ID))
+    owner_device = Device(account=owner, platform="ios", installation_id=f"owner-{uuid.uuid4()}")
+    member_device = Device(
+        account=member, platform="android", installation_id=f"member-{uuid.uuid4()}"
+    )
     cleanup_account_ids: tuple[uuid.UUID, ...] = ()
     try:
         async with factory() as db:
-            db.add_all([owner, member])
+            db.add_all([owner, member, owner_device, member_device])
             await db.commit()
             cleanup_account_ids = (owner.id, member.id)
 
@@ -116,12 +122,39 @@ async def _private_channel_invite_lifecycle() -> None:
                 )
             assert old_invite.value.code == "CHANNEL_INVITE_INVALID"
 
+            now = datetime.now(UTC)
+            await select_channel(db, account_id=owner.id, channel_id=created.id, now=now)
+            await select_channel(db, account_id=member.id, channel_id=created.id, now=now)
+            provider = FakeMediaProvider(now=lambda: now)
+            owner_receive = await create_receive_grant(
+                db,
+                account_id=owner.id,
+                device_id=owner_device.id,
+                idempotency_key="owner-private-receive",
+                settings=settings,
+                provider=provider,
+                now=now,
+            )
+            member_receive = await create_receive_grant(
+                db,
+                account_id=member.id,
+                device_id=member_device.id,
+                idempotency_key="member-private-receive",
+                settings=settings,
+                provider=provider,
+                now=now,
+            )
+
             left = await leave_private_channel(db, account_id=member.id, channel_id=created.id)
             left_replay = await leave_private_channel(
                 db, account_id=member.id, channel_id=created.id
             )
             assert left.replayed is False
             assert left_replay.replayed is True
+            stored_member_receive = await db.get(MediaGrant, member_receive.grant_id)
+            assert stored_member_receive is not None
+            await db.refresh(stored_member_receive)
+            assert stored_member_receive.outcome_code == "channel_left"
 
             closed = await close_private_channel(db, account_id=owner.id, channel_id=created.id)
             closed_replay = await close_private_channel(
@@ -129,6 +162,10 @@ async def _private_channel_invite_lifecycle() -> None:
             )
             assert closed.replayed is False
             assert closed_replay.replayed is True
+            stored_owner_receive = await db.get(MediaGrant, owner_receive.grant_id)
+            assert stored_owner_receive is not None
+            await db.refresh(stored_owner_receive)
+            assert stored_owner_receive.outcome_code == "channel_closed"
             assert (
                 await db.scalar(
                     select(ChannelSelection.channel_id).where(
@@ -139,6 +176,10 @@ async def _private_channel_invite_lifecycle() -> None:
             )
     finally:
         async with factory() as db:
+            await db.execute(
+                delete(MediaGrant).where(MediaGrant.account_id.in_(cleanup_account_ids))
+            )
+            await db.commit()
             for account_id in cleanup_account_ids:
                 stored_account = await db.get(Account, account_id)
                 if stored_account is not None:
@@ -259,17 +300,65 @@ async def _channel_catalog_selection() -> None:
             db.add(grant)
             await db.commit()
             grant_id = grant.id
+            switched_private = await select_channel(
+                db,
+                account_id=account_id,
+                channel_id=private_id,
+                now=now,
+            )
+            assert switched_private.selection_version == 3
+            stored_receive = await db.get(MediaGrant, grant_id)
+            assert stored_receive is not None
+            await db.refresh(stored_receive)
+            assert stored_receive.revoked_at == now
+            assert stored_receive.outcome_code == "channel_switched"
+
+            provider = FakeMediaProvider(now=lambda: now)
+            fresh_receive = await create_receive_grant(
+                db,
+                account_id=account_id,
+                device_id=device_id,
+                idempotency_key="channel-switch-fresh-authority",
+                settings=settings,
+                provider=provider,
+                now=now,
+                random_ref=lambda: "channel-switch-fresh",
+            )
+            assert fresh_receive.grant_id != grant_id
+            assert fresh_receive.room_ref == private.provider_room_ref
+            assert provider.receive_requests[-1].room_ref == private.provider_room_ref
+
+            transmit = MediaGrant(
+                account_id=account_id,
+                device_id=device_id,
+                channel_id=private_id,
+                parent_grant_id=fresh_receive.grant_id,
+                grant_kind="transmit",
+                provider="livekit",
+                provider_room_ref=private.provider_room_ref,
+                provider_participant_ref=f"participant_transmit_{marker}",
+                action_scope="microphone_publish",
+                policy_version="ptt-v1",
+                idempotency_key_hash="c" * 64,
+                request_fingerprint="d" * 64,
+                issued_at=now,
+                expires_at=now + timedelta(minutes=5),
+                outcome_code="issued",
+            )
+            db.add(transmit)
+            await db.commit()
+            transmit_id = transmit.id
             with pytest.raises(ChannelError) as active_media:
                 await select_channel(
                     db,
                     account_id=account_id,
-                    channel_id=private_id,
+                    channel_id=GENERAL_CHANNEL_ID,
                     now=now,
                 )
             assert active_media.value.code == "CHANNEL_MEDIA_ACTIVE"
             await db.execute(
                 update(MediaGrant)
-                .where(MediaGrant.id == grant_id)
+                .where(MediaGrant.id == transmit_id)
                 .values(revoked_at=now, outcome_code="released")
             )
             await db.commit()
@@ -287,7 +376,7 @@ async def _channel_catalog_selection() -> None:
             choose(GENERAL_CHANNEL_ID),
             choose(private_id),
         )
-        assert sorted(versions) == [3, 4]
+        assert sorted(versions) == [4, 5]
 
         async with factory() as db:
             assert (
@@ -303,7 +392,7 @@ async def _channel_catalog_selection() -> None:
             )
             assert final is not None
             assert final.channel_id in {GENERAL_CHANNEL_ID, private_id}
-            assert final.version == 4
+            assert final.version == 5
 
             stored_grant = await db.scalar(select(MediaGrant).where(MediaGrant.id == grant_id))
             assert stored_grant is not None

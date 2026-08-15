@@ -96,6 +96,10 @@ for phrase in (
     "selection.channel_id = general_channel_id",
     '"channel_not_available"',
     '"channel_media_active"',
+    'reason="channel_switched"',
+    'reason="channel_left"',
+    'reason="channel_closed"',
+    "revoke_channel_media_grants(",
     "hash_invite(",
     "verify_invite(",
     '"channel_invite_invalid"',
@@ -103,6 +107,25 @@ for phrase in (
 ):
     if phrase not in service:
         fail(f"channel authorization is missing {phrase!r}")
+
+media_service = read("backend/app/ptt/service.py")
+for phrase in (
+    '"channel_switched"',
+    '"channel_left"',
+    '"channel_closed"',
+    "async def revoke_channel_media_grants(",
+    "mediagrant.revoked_at.is_(none)",
+):
+    if phrase not in media_service:
+        fail(f"channel reconciliation is missing {phrase!r}")
+recovery_service = read("backend/app/recovery/service.py")
+for phrase in (
+    "channel.creator_account_id == account_id",
+    "channelmembership.account_id == account_id",
+    "mediagrant.account_id == account_id",
+):
+    if phrase not in recovery_service:
+        fail(f"temporary-account deletion guard is missing {phrase!r}")
 for forbidden in ("livekit", "boto3", "redis", "requests.", "httpx."):
     if forbidden in service:
         fail(f"channel catalog introduces forbidden dependency/call {forbidden!r}")

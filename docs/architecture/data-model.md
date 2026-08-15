@@ -153,8 +153,10 @@ Membership is authorization state, not presence, and public channels require no 
 
 Every migrated and newly created account receives exactly one General selection.
 Account-row locking serializes changes. An unavailable selection falls back to General;
-selection changes fail closed while media authority remains active until S06-D05 adds
-revoke-before-switch reconciliation.
+an active transmission blocks selection changes. Otherwise S06-D05 revokes prior
+channel-bound media rows locally before changing the selection, then bounded provider
+reconciliation cleans up the obsolete participant. Unknown cleanup remains pending
+and locally denied.
 
 ### media_grant
 
@@ -279,7 +281,7 @@ later locked Sprint 5 deliverables.
 
 ### Sprint 6 channel and media authority
 
-S06-D02 through D04 implement the durable channel authority:
+S06-D02 through D05 implement the durable channel authority:
 
 - `channel` stores deterministic General/RV rows and private-capable metadata without
   exposing provider room references through the API.
@@ -295,6 +297,9 @@ S06-D02 through D04 implement the durable channel authority:
 - Receive grants derive their channel and opaque room from that selection. Transmit,
   publication, and proximity eligibility preserve the same binding and require exact
   same-channel selection plus private membership when applicable.
+- Selection changes, leave, and closure revoke affected grants before mutating channel
+  state. Provider cleanup is bounded and retryable; partial failure cannot reactivate
+  local authority. Fresh receive authority is issued only from the resulting selection.
 - No Redis, worker, AWS resource, live provider call, or paid service is introduced.
 
 ## Retention baseline
