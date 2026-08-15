@@ -61,12 +61,15 @@ async def _channel_catalog_selection() -> None:
         version=1,
     )
     membership = ChannelMembership(account=account, channel=private)
+    cleanup_account_ids: tuple[uuid.UUID, ...] = ()
 
     try:
         async with factory() as db:
             db.add_all([account, other_account, device, private, other_private, membership])
             await db.commit()
             account_id = account.id
+            other_account_id = other_account.id
+            cleanup_account_ids = (account_id, other_account_id)
             device_id = device.id
             private_id = private.id
             other_private_id = other_private.id
@@ -136,6 +139,7 @@ async def _channel_catalog_selection() -> None:
             )
             db.add(grant)
             await db.commit()
+            grant_id = grant.id
             with pytest.raises(ChannelError) as active_media:
                 await select_channel(
                     db,
@@ -146,7 +150,7 @@ async def _channel_catalog_selection() -> None:
             assert active_media.value.code == "CHANNEL_MEDIA_ACTIVE"
             await db.execute(
                 update(MediaGrant)
-                .where(MediaGrant.id == grant.id)
+                .where(MediaGrant.id == grant_id)
                 .values(revoked_at=now, outcome_code="released")
             )
             await db.commit()
@@ -182,18 +186,16 @@ async def _channel_catalog_selection() -> None:
             assert final.channel_id in {GENERAL_CHANNEL_ID, private_id}
             assert final.version == 4
 
-            stored_grant = await db.scalar(select(MediaGrant).where(MediaGrant.id == grant.id))
+            stored_grant = await db.scalar(select(MediaGrant).where(MediaGrant.id == grant_id))
             assert stored_grant is not None
             assert stored_grant.channel_id == RV_CHANNEL_ID
     finally:
         async with factory() as db:
             await db.execute(
-                delete(ChannelSelection).where(
-                    ChannelSelection.account_id.in_((account.id, other_account.id))
-                )
+                delete(ChannelSelection).where(ChannelSelection.account_id.in_(cleanup_account_ids))
             )
             await db.commit()
-            for account_id in (account.id, other_account.id):
+            for account_id in cleanup_account_ids:
                 stored = await db.get(Account, account_id)
                 if stored is not None:
                     await db.delete(stored)
