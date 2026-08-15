@@ -19,12 +19,14 @@
 - Current and incremental local/CI implementation cost: $0 AWS + $0 LiveKit
 - Cloud activation, paid plans, and recurring spend above $10/month remain unauthorized
 
-## Sprint 6 — Channels (planning proposed; coding blocked)
+## Sprint 6 — Channels (approved and ready)
 
-- [Sprint 6: Channels](sprints/sprint-6-channels.md) — PROPOSED
-- [Sprint 6 readiness](sprints/sprint-6-readiness.md) — NOT READY
-- Product-owner approval is required before tracker creation or coding
-- Current/incremental planning cost: $0 AWS + $0 LiveKit
+- [Sprint 6: Channels](sprints/sprint-6-channels.md) — APPROVED
+- [Sprint 6 readiness](sprints/sprint-6-readiness.md) — READY
+- Product-owner approval recorded in [#129](https://github.com/drakeg/roadtalk/issues/129)
+- Locked implementation tracker [#139](https://github.com/drakeg/roadtalk/issues/139)
+- Deliverable issues [#130](https://github.com/drakeg/roadtalk/issues/130)–[#138](https://github.com/drakeg/roadtalk/issues/138)
+- Current/incremental local/CI implementation cost: $0 AWS + $0 LiveKit
 - Provider/cloud activation, paid plans, and recurring spend remain unauthorized
 
 ## Sprint 5 — Proximity Engine (complete)

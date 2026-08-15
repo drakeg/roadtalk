@@ -2,10 +2,10 @@
 
 ## Status
 
-Proposed — awaiting product-owner approval. Sprint 5 was accepted by merged PR #127
-on 2026-08-14 and authorizes Sprint 6 planning only. Coding, provider/cloud activation,
-and recurring spend remain unauthorized until this specification and readiness gate
-are explicitly approved.
+Approved for local/GitHub CI implementation — product-owner approved on 2026-08-14
+through issue #129. Approval covers S06-R01–R12, S06-T01–T12, S06-D01–D09, the
+readiness and $0 cost policy, named evidence boundaries, and locked tracker #139.
+It does not authorize provider/cloud activation, paid services, or recurring spend.
 
 ## Objective
 
@@ -205,6 +205,8 @@ bounded fail-closed media reconciliation.
 
 Entry requires merged Sprint 5 review PR #127, closed #118/#119, and explicit approval
 of this specification, readiness, $0 cost policy, named exceptions, and tracker scope.
+Those conditions were satisfied on 2026-08-14 through approval issue #129 and locked
+tracker #139.
 
 Exit requires S06-R01–R12, S06-T01–T12, and S06-D01–D09 fully traced; complete green
 backend/PostGIS/migration/mobile/security/disabled-IaC suites; synthetic General/RV/
@@ -227,6 +229,8 @@ emergency-service claims.
 ## References
 
 - [Sprint 6 readiness](sprint-6-readiness.md)
+- [Sprint 6 approval issue](https://github.com/drakeg/roadtalk/issues/129)
+- [Sprint 6 implementation tracker](https://github.com/drakeg/roadtalk/issues/139)
 - [Sprint 5 review](sprint-5-review.md)
 - [API architecture](../architecture/api-architecture.md)
 - [Data model](../architecture/data-model.md)

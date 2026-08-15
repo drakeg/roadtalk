@@ -1,17 +1,17 @@
 # Sprint 6 readiness
 
 - Sprint: 6 — Channels
-- Status: NOT READY — awaiting product-owner approval
+- Status: READY — approved for local/GitHub CI implementation
 - Planning date: 2026-08-13
 - Current and incremental cost: **$0 AWS + $0 LiveKit per month**
 
 ## Authorization boundary
 
-Merged Sprint 5 review PR #127 authorizes this planning record only. Sprint 6 coding
-begins only after the product owner explicitly approves the specification, readiness,
-cost policy, evidence boundary, and tracker scope. Approval does not activate AWS or
-LiveKit, close Sprint 1 exceptions, attach a payment method, or authorize a paid or
-always-on environment.
+The product owner approved the specification, readiness, cost policy, named evidence
+boundaries, and locked S06-D01–D09 scope on 2026-08-14 through issue #129. Sprint 6
+may proceed only through local development and GitHub CI in tracker #139. Approval
+does not activate AWS or LiveKit, close Sprint 1 exceptions, attach a payment method,
+or authorize a paid or always-on environment.
 
 ## Scope readiness
 
@@ -151,16 +151,19 @@ automatic shutdown controls or permission to spend.
 - [x] Synthetic versus live/device/cloud evidence is separated.
 - [x] Current/incremental cost is $0 and no activation is required.
 - [x] Requirements/tests/deliverables and implementation order are complete.
-- [ ] Product owner approves Sprint 6 specification, readiness, cost and evidence boundaries.
-- [ ] Tracker and implementation issues are created from the approved wording.
+- [x] Product owner approved Sprint 6 specification, readiness, cost and evidence
+  boundaries through #129.
+- [x] Tracker #139 and deliverable issues #130–#138 were created from the approved wording.
 
-**NOT READY.** Planning is complete enough for review, but coding remains blocked until
-explicit approval. Approval would authorize only local/GitHub CI Sprint 6 implementation
-at $0, not live provider/cloud activation, paid services, field tests, or Sprint 7 work.
+**READY.** Approval authorizes only local/GitHub CI Sprint 6 implementation at $0 in
+locked tracker order, not live provider/cloud activation, paid services, field tests,
+or Sprint 7 work.
 
 ## References
 
 - [Sprint 6 specification](sprint-6-channels.md)
+- [Sprint 6 approval issue](https://github.com/drakeg/roadtalk/issues/129)
+- [Sprint 6 implementation tracker](https://github.com/drakeg/roadtalk/issues/139)
 - [Sprint 5 review](sprint-5-review.md)
 - [System architecture](../architecture/system-architecture.md)
 - [API architecture](../architecture/api-architecture.md)
