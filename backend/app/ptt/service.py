@@ -124,6 +124,9 @@ _PROVIDER_CLEANUP_OUTCOMES = {
     "session_revoked",
     "device_revoked",
     "account_revoked",
+    "channel_switched",
+    "channel_left",
+    "channel_closed",
 }
 
 
@@ -955,6 +958,27 @@ async def revoke_account_media_grants(
             MediaGrant.revoked_at.is_(None),
         )
         .values(revoked_at=resolved_now, outcome_code=reason)
+    )
+
+
+async def revoke_channel_media_grants(
+    db: AsyncSession,
+    *,
+    channel_id: uuid.UUID,
+    reason: str,
+    account_id: uuid.UUID | None = None,
+    now: datetime | None = None,
+) -> None:
+    """Locally deny active channel authority before its semantic state changes."""
+    resolved_now = now or utcnow()
+    criteria = [
+        MediaGrant.channel_id == channel_id,
+        MediaGrant.revoked_at.is_(None),
+    ]
+    if account_id is not None:
+        criteria.append(MediaGrant.account_id == account_id)
+    await db.execute(
+        update(MediaGrant).where(*criteria).values(revoked_at=resolved_now, outcome_code=reason)
     )
 
 

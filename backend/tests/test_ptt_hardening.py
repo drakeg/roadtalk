@@ -13,7 +13,37 @@ from app.ptt.provider import (
     MicrophonePublishRequest,
     ParticipantRequest,
 )
-from app.ptt.service import GrantError, reconcile_media_grants, release_transmit_grant
+from app.ptt.service import (
+    GrantError,
+    reconcile_media_grants,
+    release_transmit_grant,
+    revoke_channel_media_grants,
+)
+
+
+def test_channel_authority_is_revoked_locally_before_reconciliation() -> None:
+    async def exercise() -> None:
+        db = AsyncMock(spec=AsyncSession)
+        now = datetime(2026, 8, 15, 12, tzinfo=UTC)
+        channel_id = uuid.uuid4()
+        account_id = uuid.uuid4()
+
+        await revoke_channel_media_grants(
+            db,
+            channel_id=channel_id,
+            account_id=account_id,
+            reason="channel_switched",
+            now=now,
+        )
+
+        statement = db.execute.await_args.args[0]
+        compiled = str(statement.compile(compile_kwargs={"literal_binds": True}))
+        assert "media_grant.channel_id" in compiled
+        assert "media_grant.account_id" in compiled
+        assert "media_grant.revoked_at IS NULL" in compiled
+        assert "channel_switched" in compiled
+
+    asyncio.run(exercise())
 
 
 def grant(

@@ -188,9 +188,13 @@ def test_catalog_and_selection_return_semantic_channel_metadata_only(
         del args, kwargs
         return selection(channel_id=RV_CHANNEL_ID, slug="rv", label="RV", version=2)
 
+    async def reconcile(*args: object, **kwargs: object) -> None:
+        del args, kwargs
+
     monkeypatch.setattr(channels_api, "list_channels", catalog)
     monkeypatch.setattr(channels_api, "get_current_channel", current)
     monkeypatch.setattr(channels_api, "select_channel", select)
+    monkeypatch.setattr(channels_api, "reconcile_media_grants", reconcile)
     application = authenticated_application()
 
     with TestClient(application) as client:
@@ -275,11 +279,15 @@ def test_private_lifecycle_routes_return_only_approved_data(
         del args, kwargs
         return ChannelLifecycleReceipt(channel_id, "closed", changed_at, True)
 
+    async def reconcile(*args: object, **kwargs: object) -> None:
+        del args, kwargs
+
     monkeypatch.setattr(channels_api, "create_private_channel", private_receipt)
     monkeypatch.setattr(channels_api, "join_private_channel", lifecycle)
     monkeypatch.setattr(channels_api, "leave_private_channel", left)
     monkeypatch.setattr(channels_api, "rotate_private_invite", private_receipt)
     monkeypatch.setattr(channels_api, "close_private_channel", closed)
+    monkeypatch.setattr(channels_api, "reconcile_media_grants", reconcile)
     application = authenticated_application()
 
     with TestClient(application) as client:

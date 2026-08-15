@@ -184,6 +184,12 @@ opaque room. Eligibility requires the sender and receiver to remain selected int
 same channel, with active private membership where applicable. Transmit uses
 `POST /api/v1/ptt/grants/{receive_grant_id}/transmit` with an empty, extra-forbidden
 body; clients cannot select provider identifiers, sources, permissions, or TTL.
+S06-D05 makes a channel change locally revoke the prior channel's grants before the
+selection commit and performs bounded cleanup afterward. Active transmission blocks
+selection, while leave and closure revoke affected authority before fallback or
+membership changes. Provider ambiguity remains pending and denied; the next receive
+grant is freshly derived from the resulting server-authoritative selection without
+MoveParticipant.
 
 Any unknown foundational state fails closed.
 

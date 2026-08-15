@@ -133,8 +133,8 @@ public rows, give every existing and new account a General selection, and bind e
 metadata-only media grant to a channel with prior grants backfilled to General. The
 catalog returns enabled public rows plus only caller-member private rows; current
 selection defaults/falls back to General and changes are serialized on the account
-row. Until S06-D05 adds revoke-before-switch, active media causes switching to fail
-closed. Responses expose no membership/owner identity or count, invite, provider room,
+row. S06-D05's revoke-before-switch behavior is described below. Responses expose no
+membership/owner identity or count, invite, provider room,
 participant, presence, or proximity detail. No live provider call, AWS resource,
 managed service, worker, cache, or recurring cost is introduced.
 
@@ -147,6 +147,20 @@ room mismatches, and client room selectors fail closed. Provider tokens retain
 receive-only join, automatic subscription remains off, and microphone publication
 and selective delivery remain the only later capabilities. No live provider call,
 AWS resource, managed service, or recurring cost is introduced.
+
+S06-D05 replaces the temporary all-media switch block with revoke-before-switch.
+An active transmission still blocks selection changes; otherwise prior channel-bound
+receive and media authority is locally revoked before the durable selection changes.
+Leaving a selected private channel and closing a private channel apply the same local
+deny-first ordering before General fallback, membership withdrawal, or closure.
+Bounded reconciliation then disables publication and removes stale participants; an
+ambiguous or partial provider failure remains durably pending and cannot restore local
+authority. A subsequent receive request derives fresh authority from the new selected
+channel. Existing logout/session/device/account recovery and deletion paths retain the
+same local-revocation-before-reconciliation boundary; temporary-account transfer also
+fails closed when channel membership, ownership, or media authority exists, so its
+source-account deletion cannot discard pending cleanup state. No MoveParticipant operation,
+worker, live provider call, managed service, or recurring cost is added.
 
 ## Local setup
 
