@@ -161,6 +161,23 @@ The client holds access tokens only inside the existing session client. Identity
 reuse its bearer transport and perform at most one refresh-and-retry after a 401.
 No callsign, account identifier, token, or request body is logged or stored by this flow.
 
+## Channel catalog and switching
+
+Authenticated users can open **Channels** to see General, RV, and only the private
+channels returned for their account. The screen shows a semantic selected marker and
+public/private label, with no member identity, member count, owner, invite fingerprint,
+provider room, participant, presence, or proximity detail. A private invite can be
+submitted to join and is cleared from the input immediately; create, one-time invite
+display, rotation, and closure remain assigned to S06-D07.
+
+Selecting another channel or leaving a private channel first uses the shared media
+lifecycle to turn microphone capture off, disconnect the prior room, and release its
+grant. Only then does the authenticated channel request run. If live audio remains
+enabled and foreground-active, completion obtains a fresh receive grant through the
+existing server-derived flow. Loading, selected, switching, joined, left, unavailable,
+and retry states use text and accessibility roles rather than color alone. Provider or
+membership details are never copied into errors, logs, analytics, or local storage.
+
 ## Anonymous recovery
 
 Authenticated users can open **Account recovery** to create or rotate an optional
@@ -262,8 +279,9 @@ development logs must never print request bodies, authorization headers, or stor
 
 ## Scope boundary
 
-S05-D07 adds the accessible foreground selective-receive and publication-handshake
-experience with deterministic client safety tests. It does not add channel selection, user channels,
+S06-D06 adds the accessible caller-scoped channel catalog, join/select/leave actions,
+and capture-off-first transition ordering with deterministic client safety tests. It
+does not add private-channel creation, one-time invite display, rotation, closure,
 background transmission, hands-free/toggle behavior, recording, transcription,
 provider deployment, or any cloud resource. Operations/evidence and final review
 remain assigned to S04-D08–D09. Real-device audio route, interruption,

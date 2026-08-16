@@ -28,6 +28,10 @@ describe("foundation screen", () => {
 
     expect(view.getByRole("header", { name: "RoadTalk" })).toBeOnTheScreen();
     await fireEvent.press(
+      view.getByRole("button", { name: "Choose a RoadTalk channel" }),
+    );
+    expect(navigate).toHaveBeenCalledWith("Channels");
+    await fireEvent.press(
       view.getByRole("button", { name: "Set up or edit identity" }),
     );
     expect(navigate).toHaveBeenCalledWith("Identity");
@@ -63,6 +67,6 @@ describe("foundation screen", () => {
 
     expect(view.queryByText(/push.to.talk/i)).not.toBeOnTheScreen();
     expect(view.queryByText(/nearby/i)).not.toBeOnTheScreen();
-    expect(view.queryByText(/channel/i)).not.toBeOnTheScreen();
+    expect(view.getByRole("button", { name: "Choose a RoadTalk channel" })).toBeOnTheScreen();
   });
 });

@@ -85,5 +85,7 @@ export type MediaLifecycleControl = {
   setAppActive(active: boolean): Promise<void>;
   setScreenActive(active: boolean): Promise<void>;
   setAuthenticated(authenticated: boolean): Promise<void>;
+  prepareChannelTransition(): Promise<void>;
+  completeChannelTransition(): Promise<void>;
   dispose(): Promise<void>;
 };

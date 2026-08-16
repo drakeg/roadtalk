@@ -2,6 +2,7 @@ import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { DiagnosticsScreen } from "./screens/DiagnosticsScreen";
+import { ChannelScreen } from "./screens/ChannelScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { IdentityScreen } from "./screens/IdentityScreen";
 import { LocationPermissionScreen } from "./screens/LocationPermissionScreen";
@@ -11,6 +12,7 @@ import { colors } from "./theme";
 
 export type RootStackParamList = {
   Foundation: undefined;
+  Channels: undefined;
   Diagnostics: undefined;
   Identity: undefined;
   LocationPermission: undefined;
@@ -41,6 +43,11 @@ export function AppNavigator() {
           headerTitleStyle: { fontWeight: "600" },
         }}
       >
+        <Stack.Screen
+          component={ChannelScreen}
+          name="Channels"
+          options={{ title: "Channels" }}
+        />
         <Stack.Screen
           component={LocationPermissionScreen}
           name="LocationPermission"

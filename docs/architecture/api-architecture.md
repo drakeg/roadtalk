@@ -191,6 +191,13 @@ membership changes. Provider ambiguity remains pending and denied; the next rece
 grant is freshly derived from the resulting server-authoritative selection without
 MoveParticipant.
 
+S06-D06 adds a process-memory-only mobile channel adapter for catalog, current
+selection, join, select, and leave. It validates semantic response shapes and rejects
+membership/provider fields. The shared media controller stops capture, disconnects,
+and releases old authority before a selection or leave request; successful or failed
+completion can reconnect only through a fresh server-derived receive grant. Private
+creation, invite display/rotation, and closure remain in S06-D07.
+
 Any unknown foundational state fails closed.
 
 ## Idempotency and concurrency

@@ -45,6 +45,7 @@ export class MediaLifecycleController implements MediaLifecycleControl {
   private generation = 0;
   private transmitGeneration = 0;
   private microphoneOperation: Promise<unknown> = Promise.resolve();
+  private resumeAfterChannelTransition = false;
 
   constructor(
     private readonly permission: MicrophonePermissionGateway,
@@ -195,12 +196,29 @@ export class MediaLifecycleController implements MediaLifecycleControl {
     await this.reconcile();
   }
 
+  async prepareChannelTransition(): Promise<void> {
+    if (this.disposed) return;
+    this.resumeAfterChannelTransition = this.enabled;
+    await this.stop();
+    this.publish({ status: "paused" });
+  }
+
+  async completeChannelTransition(): Promise<void> {
+    if (this.disposed) return;
+    const resume = this.resumeAfterChannelTransition;
+    this.resumeAfterChannelTransition = false;
+    if (!resume) return;
+    this.enabled = true;
+    await this.reconcile();
+  }
+
   async dispose(): Promise<void> {
     if (this.disposed) {
       return;
     }
     this.disposed = true;
     this.enabled = false;
+    this.resumeAfterChannelTransition = false;
     await this.stop();
     this.listeners.clear();
   }

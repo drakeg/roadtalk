@@ -3,16 +3,19 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AppNavigator } from "./src/AppNavigator";
 import { ErrorBoundary } from "./src/ErrorBoundary";
+import { MediaLifecycleProvider } from "./src/media/MediaLifecycleContext";
 import { SessionProvider } from "./src/session/SessionContext";
 
 export default function App() {
   return (
     <ErrorBoundary>
       <SessionProvider>
-        <SafeAreaProvider>
-          <StatusBar style="auto" />
-          <AppNavigator />
-        </SafeAreaProvider>
+        <MediaLifecycleProvider>
+          <SafeAreaProvider>
+            <StatusBar style="auto" />
+            <AppNavigator />
+          </SafeAreaProvider>
+        </MediaLifecycleProvider>
       </SessionProvider>
     </ErrorBoundary>
   );
