@@ -36,6 +36,16 @@ export function HomeScreen({ navigation }: Props) {
       {authenticated ? (
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel="Choose a RoadTalk channel"
+          onPress={() => navigation.navigate("Channels")}
+          style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+        >
+          <Text style={styles.buttonText}>Channels</Text>
+        </Pressable>
+      ) : null}
+      {authenticated ? (
+        <Pressable
+          accessibilityRole="button"
           accessibilityLabel="Review microphone and live audio privacy"
           onPress={() => navigation.navigate("MicrophonePermission")}
           style={({ pressed }) => [

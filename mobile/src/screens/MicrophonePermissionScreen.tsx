@@ -12,6 +12,7 @@ import {
 
 import type { RootStackParamList } from "../AppNavigator";
 import { createDefaultMediaLifecycle } from "../media/defaultLifecycle";
+import { useMediaLifecycle } from "../media/MediaLifecycleContext";
 import type {
   MediaLifecycleControl,
   MediaLifecycleSnapshot,
@@ -29,9 +30,13 @@ type Props = NativeStackScreenProps<
 export function MicrophonePermissionScreen({ lifecycle, navigation }: Props) {
   const session = useSession();
   const sessionClient = useSessionClient();
+  const sharedLifecycle = useMediaLifecycle();
   const ownedLifecycle = useMemo(
-    () => lifecycle ?? createDefaultMediaLifecycle(sessionClient),
-    [lifecycle, sessionClient],
+    () =>
+      lifecycle ??
+      sharedLifecycle ??
+      createDefaultMediaLifecycle(sessionClient),
+    [lifecycle, sessionClient, sharedLifecycle],
   );
   const snapshot = useSyncExternalStore(
     (listener) => ownedLifecycle.subscribe(listener),
@@ -71,11 +76,11 @@ export function MicrophonePermissionScreen({ lifecycle, navigation }: Props) {
 
   useEffect(
     () => () => {
-      if (lifecycle === undefined) {
+      if (lifecycle === undefined && sharedLifecycle === null) {
         void ownedLifecycle.dispose();
       }
     },
-    [lifecycle, ownedLifecycle],
+    [lifecycle, ownedLifecycle, sharedLifecycle],
   );
 
   return (

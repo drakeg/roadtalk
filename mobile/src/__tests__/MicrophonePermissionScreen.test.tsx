@@ -38,6 +38,8 @@ function lifecycle(
     setAppActive: jest.fn(async () => undefined),
     setScreenActive: jest.fn(async () => undefined),
     setAuthenticated: jest.fn(async () => undefined),
+    prepareChannelTransition: jest.fn(async () => undefined),
+    completeChannelTransition: jest.fn(async () => undefined),
     dispose: jest.fn(async () => undefined),
   };
 }

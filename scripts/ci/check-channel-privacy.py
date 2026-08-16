@@ -126,6 +126,38 @@ for phrase in (
 ):
     if phrase not in recovery_service:
         fail(f"temporary-account deletion guard is missing {phrase!r}")
+
+mobile_api = read("mobile/src/channels/api.ts")
+for phrase in (
+    '"/channels"',
+    '"/me/channel"',
+    '"/channels/private/join"',
+    '"member_count"',
+    '"provider_room_ref"',
+):
+    if phrase not in mobile_api:
+        fail(f"mobile channel transport is missing {phrase!r}")
+
+mobile_controller = read("mobile/src/channels/ChannelController.ts")
+media_controller = read("mobile/src/media/MediaLifecycleController.ts")
+for phrase in ("preparechanneltransition", "completechanneltransition"):
+    if phrase not in mobile_controller or phrase not in media_controller:
+        fail(f"safe mobile channel transition is missing {phrase!r}")
+
+mobile_ui = read("mobile/src/screens/channelscreen.tsx")
+for forbidden in (
+    "member_count",
+    "owner_id",
+    "provider_room_ref",
+    "participant_ref",
+    "fingerprint",
+    "console.",
+    "analytics",
+    "asyncstorage",
+    "securestore",
+):
+    if forbidden in mobile_ui or forbidden in mobile_controller:
+        fail(f"mobile channel experience exposes forbidden field/path {forbidden!r}")
 for forbidden in ("livekit", "boto3", "redis", "requests.", "httpx."):
     if forbidden in service:
         fail(f"channel catalog introduces forbidden dependency/call {forbidden!r}")

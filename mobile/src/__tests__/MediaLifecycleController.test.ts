@@ -269,4 +269,33 @@ describe("microphone and receive-room lifecycle", () => {
     expect(controller.getSnapshot()).toEqual({ status: "error" });
     expect(transport.releaseGrant).toHaveBeenCalledWith("grant-1");
   });
+
+  it("stops old authority before a channel transition and reconnects fresh", async () => {
+    const permission = new FakePermission();
+    permission.current = { status: "granted", canAskAgain: true };
+    const transport = new FakeTransport();
+    transport.createReceiveGrant
+      .mockResolvedValueOnce(transport.grant)
+      .mockResolvedValueOnce({ ...transport.grant, grantId: "grant-2" });
+    const room = new FakeRoom();
+    const controller = new MediaLifecycleController(permission, transport, room);
+    await active(controller);
+    await controller.enable();
+
+    await controller.prepareChannelTransition();
+
+    expect(room.stopMicrophone).toHaveBeenCalled();
+    expect(room.disconnect).toHaveBeenCalled();
+    expect(transport.releaseGrant).toHaveBeenCalledWith("grant-1");
+    expect(controller.getSnapshot()).toEqual({ status: "paused" });
+
+    await controller.completeChannelTransition();
+
+    expect(transport.createReceiveGrant).toHaveBeenCalledTimes(2);
+    expect(room.connectReceiveOnly).toHaveBeenCalledTimes(2);
+    expect(controller.getSnapshot()).toEqual({ status: "ready" });
+    expect(
+      transport.releaseGrant.mock.invocationCallOrder[0]!,
+    ).toBeLessThan(transport.createReceiveGrant.mock.invocationCallOrder[1]!);
+  });
 });
