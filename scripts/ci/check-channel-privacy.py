@@ -144,7 +144,7 @@ for phrase in ("preparechanneltransition", "completechanneltransition"):
     if phrase not in mobile_controller or phrase not in media_controller:
         fail(f"safe mobile channel transition is missing {phrase!r}")
 
-mobile_ui = read("mobile/src/screens/channelscreen.tsx")
+mobile_ui = read("mobile/src/screens/ChannelScreen.tsx")
 for forbidden in (
     "member_count",
     "owner_id",
