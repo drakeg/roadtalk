@@ -167,8 +167,13 @@ Authenticated users can open **Channels** to see General, RV, and only the priva
 channels returned for their account. The screen shows a semantic selected marker and
 public/private label, with no member identity, member count, owner, invite fingerprint,
 provider room, participant, presence, or proximity detail. A private invite can be
-submitted to join and is cleared from the input immediately; create, one-time invite
-display, rotation, and closure remain assigned to S06-D07.
+submitted to join and is cleared from the input immediately. Private-channel owners
+can create a named channel, rotate its invite, or close the channel. Create and
+rotation display a returned invite only in current screen memory. The invite is
+selectable for sharing, is never written to storage, logs, or analytics, and is
+irreversibly removed from the UI with **I saved it**. Replayed operations cannot
+recover a prior secret. Invite replacement and closure require explicit confirmation;
+errors reveal neither ownership nor whether an unseen channel exists.
 
 Selecting another channel or leaving a private channel first uses the shared media
 lifecycle to turn microphone capture off, disconnect the prior room, and release its
@@ -279,9 +284,9 @@ development logs must never print request bodies, authorization headers, or stor
 
 ## Scope boundary
 
-S06-D06 adds the accessible caller-scoped channel catalog, join/select/leave actions,
-and capture-off-first transition ordering with deterministic client safety tests. It
-does not add private-channel creation, one-time invite display, rotation, closure,
+S06-D07 completes the accessible private-channel lifecycle with creation, one-time
+invite display, rotation, confirmed closure, and deterministic privacy tests. It
+does not add invite history, secret recovery, membership/ownership disclosure,
 background transmission, hands-free/toggle behavior, recording, transcription,
 provider deployment, or any cloud resource. Operations/evidence and final review
 remain assigned to S04-D08–D09. Real-device audio route, interruption,

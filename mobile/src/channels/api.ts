@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { randomUUID } from "expo-crypto";
 
 import { environment } from "../config";
 import { useSessionClient } from "../session/SessionContext";
@@ -9,9 +10,13 @@ import type {
   ChannelSelection,
   ChannelSummary,
   ChannelTransport,
+  PrivateChannelReceipt,
 } from "./types";
 
-type Problem = { code?: string; detail?: string };
+type Problem = {
+  code?: string;
+  detail?: string | { code?: string; detail?: string };
+};
 type Json = Record<string, unknown>;
 
 export class ChannelApiError extends Error {
@@ -28,6 +33,7 @@ export class ChannelApi implements ChannelTransport {
   constructor(
     private readonly baseUrl: string,
     private readonly session: SessionClient,
+    private readonly idempotencyKey: () => string = randomUUID,
   ) {}
 
   async list(): Promise<ChannelCatalog> {
@@ -73,6 +79,37 @@ export class ChannelApi implements ChannelTransport {
     );
   }
 
+  async create(displayLabel: string): Promise<PrivateChannelReceipt> {
+    return this.privateReceipt(
+      await this.request("/channels/private", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": this.idempotencyKey(),
+        },
+        body: JSON.stringify({ display_label: displayLabel }),
+      }),
+    );
+  }
+
+  async rotate(channelId: string): Promise<PrivateChannelReceipt> {
+    return this.privateReceipt(
+      await this.request(
+        `/channels/${encodeURIComponent(channelId)}/invite/rotation`,
+        { method: "POST", headers: { "Idempotency-Key": this.idempotencyKey() } },
+      ),
+    );
+  }
+
+  async close(channelId: string): Promise<ChannelLifecycle> {
+    return this.lifecycle(
+      await this.request(`/channels/${encodeURIComponent(channelId)}`, {
+        method: "DELETE",
+      }),
+      "closed",
+    );
+  }
+
   private async request(path: string, init: RequestInit): Promise<Json> {
     let response: Response;
     try {
@@ -85,9 +122,12 @@ export class ChannelApi implements ChannelTransport {
     }
     if (!response.ok) {
       const problem = (await response.json().catch(() => ({}))) as Problem;
+      const code =
+        problem.code ??
+        (typeof problem.detail === "object" ? problem.detail.code : undefined);
       throw new ChannelApiError(
         response.status,
-        problem.code ?? "CHANNEL_REQUEST_FAILED",
+        code ?? "CHANNEL_REQUEST_FAILED",
       );
     }
     try {
@@ -173,7 +213,7 @@ export class ChannelApi implements ChannelTransport {
 
   private lifecycle(
     body: Json,
-    state: "joined" | "left",
+    state: "joined" | "left" | "closed",
   ): ChannelLifecycle {
     if (
       typeof body.channel_id !== "string" ||
@@ -188,6 +228,32 @@ export class ChannelApi implements ChannelTransport {
       channelId: body.channel_id,
       state,
       changedAt: body.changed_at,
+      replayed: body.replayed,
+    };
+  }
+
+  private privateReceipt(body: Json): PrivateChannelReceipt {
+    const semanticBody = { ...body };
+    delete semanticBody.invite;
+    delete semanticBody.created_at;
+    delete semanticBody.replayed;
+    const channel = this.channel(semanticBody);
+    if (
+      channel.type !== "private" ||
+      typeof body.created_at !== "string" ||
+      !Number.isFinite(Date.parse(body.created_at)) ||
+      (body.invite !== null &&
+        (typeof body.invite !== "string" ||
+          body.invite.length < 40 ||
+          body.invite.length > 128)) ||
+      typeof body.replayed !== "boolean"
+    ) {
+      throw this.invalidResponse();
+    }
+    return {
+      ...channel,
+      createdAt: body.created_at,
+      invite: body.invite,
       replayed: body.replayed,
     };
   }
