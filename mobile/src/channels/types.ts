@@ -20,8 +20,14 @@ export type ChannelSelection = ChannelSummary & {
 
 export type ChannelLifecycle = {
   channelId: string;
-  state: "joined" | "left";
+  state: "joined" | "left" | "closed";
   changedAt: string;
+  replayed: boolean;
+};
+
+export type PrivateChannelReceipt = ChannelSummary & {
+  createdAt: string;
+  invite: string | null;
   replayed: boolean;
 };
 
@@ -31,6 +37,9 @@ export type ChannelTransport = {
   select(channelId: string): Promise<ChannelSelection>;
   join(invite: string): Promise<ChannelLifecycle>;
   leave(channelId: string): Promise<ChannelLifecycle>;
+  create(displayLabel: string): Promise<PrivateChannelReceipt>;
+  rotate(channelId: string): Promise<PrivateChannelReceipt>;
+  close(channelId: string): Promise<ChannelLifecycle>;
 };
 
 export type ChannelTransition = {
@@ -44,7 +53,14 @@ export type ChannelSnapshot =
       status: "ready";
       items: ChannelSummary[];
       selectedId: string;
-      notice?: "joined" | "left" | "selected";
+      notice?:
+        | "joined"
+        | "left"
+        | "selected"
+        | "created"
+        | "rotated"
+        | "closed";
+      oneTimeInvite?: { channelId: string; value: string } | undefined;
     }
   | {
       status: "switching";
@@ -65,4 +81,8 @@ export type ChannelControl = {
   select(channelId: string): Promise<void>;
   join(invite: string): Promise<void>;
   leave(channelId: string): Promise<void>;
+  create(displayLabel: string): Promise<void>;
+  rotate(channelId: string): Promise<void>;
+  close(channelId: string): Promise<void>;
+  dismissInvite(): void;
 };

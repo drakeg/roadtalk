@@ -12,7 +12,11 @@ import {
 import type { RootStackParamList } from "../AppNavigator";
 import { useChannelApi } from "../channels/api";
 import { ChannelController } from "../channels/ChannelController";
-import type { ChannelControl, ChannelTransition } from "../channels/types";
+import type {
+  ChannelControl,
+  ChannelSnapshot,
+  ChannelTransition,
+} from "../channels/types";
 import { useMediaLifecycle } from "../media/MediaLifecycleContext";
 import { colors, spacing } from "../theme";
 
@@ -37,6 +41,12 @@ export function ChannelScreen({ control, navigation }: Props) {
     () => ownedControl.getSnapshot(),
   );
   const [invite, setInvite] = useState("");
+  const [channelName, setChannelName] = useState("");
+  const [confirmation, setConfirmation] = useState<{
+    kind: "rotate" | "close";
+    channelId: string;
+    label: string;
+  } | null>(null);
 
   useEffect(() => {
     if (control === undefined) void ownedControl.load();
@@ -78,11 +88,7 @@ export function ChannelScreen({ control, navigation }: Props) {
         </Text>
         {snapshot.status === "ready" && snapshot.notice !== undefined ? (
           <Text style={styles.notice}>
-            {snapshot.notice === "joined"
-              ? "Private channel joined."
-              : snapshot.notice === "left"
-                ? "Private channel left. General is selected when needed."
-                : "Channel selected. Live audio will use fresh authorization."}
+            {noticeText(snapshot.notice)}
           </Text>
         ) : null}
       </View>
@@ -128,50 +134,195 @@ export function ChannelScreen({ control, navigation }: Props) {
             </Pressable>
           ) : null}
           {channel.type === "private" ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Leave ${channel.displayLabel} private channel`}
-              disabled={changing}
-              onPress={() => void ownedControl.leave(channel.id)}
-              style={({ pressed }) => [
-                styles.secondaryButton,
-                (pressed || changing) && styles.pressed,
-              ]}
-            >
-              <Text style={styles.secondaryText}>Leave private channel</Text>
-            </Pressable>
+            <View style={styles.actions}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Rotate invite for ${channel.displayLabel}`}
+                disabled={changing}
+                onPress={() =>
+                  setConfirmation({
+                    kind: "rotate",
+                    channelId: channel.id,
+                    label: channel.displayLabel,
+                  })
+                }
+                style={({ pressed }) => [
+                  styles.secondaryButton,
+                  (pressed || changing) && styles.pressed,
+                ]}
+              >
+                <Text style={styles.secondaryText}>Rotate invite</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Leave ${channel.displayLabel} private channel`}
+                disabled={changing}
+                onPress={() => void ownedControl.leave(channel.id)}
+                style={({ pressed }) => [
+                  styles.secondaryButton,
+                  (pressed || changing) && styles.pressed,
+                ]}
+              >
+                <Text style={styles.secondaryText}>Leave private channel</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Close ${channel.displayLabel} private channel`}
+                disabled={changing}
+                onPress={() =>
+                  setConfirmation({
+                    kind: "close",
+                    channelId: channel.id,
+                    label: channel.displayLabel,
+                  })
+                }
+                style={({ pressed }) => [
+                  styles.dangerButton,
+                  (pressed || changing) && styles.pressed,
+                ]}
+              >
+                <Text style={styles.dangerText}>Close private channel</Text>
+              </Pressable>
+            </View>
           ) : null}
         </View>
       ))}
 
       {snapshot.status === "ready" ? (
-        <View style={styles.joinCard}>
-          <Text style={styles.cardTitle}>Join a private channel</Text>
-          <Text style={styles.body}>
-            Paste an invite shared with you. It is used only for this request
-            and is cleared from the screen immediately.
+        <View style={styles.actions}>
+          {snapshot.oneTimeInvite !== undefined ? (
+            <View accessibilityLiveRegion="assertive" style={styles.inviteCard}>
+              <Text accessibilityRole="header" style={styles.cardTitle}>
+                Save this invite now
+              </Text>
+              <Text style={styles.body}>
+                This secret is shown only once. Share it privately; RoadTalk cannot
+                display it again after you dismiss it.
+              </Text>
+              <Text
+                accessibilityLabel="One-time private channel invite"
+                selectable
+                style={styles.inviteValue}
+              >
+                {snapshot.oneTimeInvite.value}
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Dismiss one-time private channel invite"
+                onPress={() => ownedControl.dismissInvite()}
+                style={({ pressed }) => [
+                  styles.secondaryButton,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text style={styles.secondaryText}>I saved it</Text>
+              </Pressable>
+            </View>
+          ) : null}
+          <View style={styles.joinCard}>
+            <Text style={styles.cardTitle}>Create a private channel</Text>
+            <TextInput
+              accessibilityLabel="New private channel name"
+              maxLength={64}
+              onChangeText={setChannelName}
+              placeholder="Channel name"
+              style={styles.input}
+              value={channelName}
+            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Create private channel"
+              onPress={() => {
+                const submitted = channelName;
+                setChannelName("");
+                void ownedControl.create(submitted);
+              }}
+              style={({ pressed }) => [
+                styles.primaryButton,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={styles.primaryText}>Create private channel</Text>
+            </Pressable>
+          </View>
+          <View style={styles.joinCard}>
+            <Text style={styles.cardTitle}>Join a private channel</Text>
+            <Text style={styles.body}>
+              Paste an invite shared with you. It is used only for this request
+              and is cleared from the screen immediately.
+            </Text>
+            <TextInput
+              accessibilityLabel="Private channel invite"
+              autoCapitalize="none"
+              autoCorrect={false}
+              onChangeText={setInvite}
+              placeholder="Private invite"
+              secureTextEntry
+              style={styles.input}
+              value={invite}
+            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Join private channel"
+              onPress={() => {
+                const submitted = invite;
+                setInvite("");
+                void ownedControl.join(submitted);
+              }}
+              style={({ pressed }) => [
+                styles.primaryButton,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={styles.primaryText}>Join private channel</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
+
+      {confirmation !== null ? (
+        <View accessibilityLiveRegion="assertive" style={styles.confirmCard}>
+          <Text accessibilityRole="header" style={styles.cardTitle}>
+            {confirmation.kind === "rotate"
+              ? "Replace this invite?"
+              : "Close this channel?"}
           </Text>
-          <TextInput
-            accessibilityLabel="Private channel invite"
-            autoCapitalize="none"
-            autoCorrect={false}
-            onChangeText={setInvite}
-            placeholder="Private invite"
-            secureTextEntry
-            style={styles.input}
-            value={invite}
-          />
+          <Text style={styles.body}>
+            {confirmation.kind === "rotate"
+              ? `The old invite for ${confirmation.label} will stop working.`
+              : `${confirmation.label} will close for everyone and cannot be reopened.`}
+          </Text>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Join private channel"
+            accessibilityLabel={`Confirm ${confirmation.kind} for ${confirmation.label}`}
             onPress={() => {
-              const submitted = invite;
-              setInvite("");
-              void ownedControl.join(submitted);
+              const pending = confirmation;
+              setConfirmation(null);
+              if (pending.kind === "rotate") {
+                void ownedControl.rotate(pending.channelId);
+              } else {
+                void ownedControl.close(pending.channelId);
+              }
             }}
-            style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.dangerButton,
+              pressed && styles.pressed,
+            ]}
           >
-            <Text style={styles.primaryText}>Join private channel</Text>
+            <Text style={styles.dangerText}>
+              {confirmation.kind === "rotate" ? "Replace invite" : "Close channel"}
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Cancel private channel change"
+            onPress={() => setConfirmation(null)}
+            style={({ pressed }) => [
+              styles.secondaryButton,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={styles.secondaryText}>Cancel</Text>
           </Pressable>
         </View>
       ) : null}
@@ -213,6 +364,7 @@ const styles = StyleSheet.create({
     gap: spacing.medium,
     padding: spacing.medium,
   },
+  actions: { gap: spacing.medium },
   joinCard: { gap: spacing.medium },
   channelHeader: { alignItems: "center", flexDirection: "row", gap: spacing.medium },
   channelCopy: { flex: 1, gap: 4 },
@@ -220,6 +372,23 @@ const styles = StyleSheet.create({
   meta: { color: colors.muted, fontSize: 15 },
   selected: { color: colors.primary, fontSize: 15, fontWeight: "700" },
   notice: { color: colors.primary, fontSize: 16, fontWeight: "600" },
+  inviteCard: {
+    backgroundColor: colors.surface,
+    borderColor: colors.primary,
+    borderRadius: 12,
+    borderWidth: 2,
+    gap: spacing.medium,
+    padding: spacing.medium,
+  },
+  inviteValue: { color: colors.text, fontFamily: "monospace", fontSize: 15 },
+  confirmCard: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: spacing.medium,
+    padding: spacing.medium,
+  },
   primaryButton: {
     alignItems: "center",
     backgroundColor: colors.primary,
@@ -239,6 +408,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.large,
   },
   secondaryText: { color: colors.primary, fontSize: 17, fontWeight: "600" },
+  dangerButton: {
+    alignItems: "center",
+    borderColor: colors.danger,
+    borderRadius: 12,
+    borderWidth: 2,
+    justifyContent: "center",
+    minHeight: 48,
+    paddingHorizontal: spacing.large,
+  },
+  dangerText: { color: colors.danger, fontSize: 17, fontWeight: "600" },
   input: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
@@ -251,3 +430,17 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.75 },
 });
+
+function noticeText(
+  notice: NonNullable<Extract<ChannelSnapshot, { status: "ready" }>["notice"]>,
+): string {
+  const messages = {
+    joined: "Private channel joined.",
+    left: "Private channel left. General is selected when needed.",
+    selected: "Channel selected. Live audio will use fresh authorization.",
+    created: "Private channel created.",
+    rotated: "Private channel invite replaced.",
+    closed: "Private channel closed. General is selected when needed.",
+  } as const;
+  return messages[notice];
+}

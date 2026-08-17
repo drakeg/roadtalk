@@ -198,6 +198,13 @@ and releases old authority before a selection or leave request; successful or fa
 completion can reconnect only through a fresh server-derived receive grant. Private
 creation, invite display/rotation, and closure remain in S06-D07.
 
+S06-D07 extends that adapter across the private-channel owner lifecycle. Create and
+rotation use fresh idempotency keys, validate the exact semantic receipt, and retain a
+returned invite only in dismissible screen memory. Replayed receipts cannot recover a
+previous invite. Rotation and closure require explicit confirmation, closure uses the
+same capture-off-first media transition as selection/leave, and management errors
+remain ownership- and existence-neutral.
+
 Any unknown foundational state fails closed.
 
 ## Idempotency and concurrency

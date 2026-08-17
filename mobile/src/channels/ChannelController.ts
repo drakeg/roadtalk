@@ -110,11 +110,79 @@ export class ChannelController implements ChannelControl {
     });
   }
 
+  async create(displayLabel: string): Promise<void> {
+    const ready = this.readySnapshot();
+    const normalized = displayLabel.trim();
+    if (ready === null || normalized.length < 1 || normalized.length > 64) {
+      this.publishError("Enter a private channel name up to 64 characters.");
+      return;
+    }
+    try {
+      const receipt = await this.transport.create(normalized);
+      const catalog = await this.transport.list();
+      this.publish({
+        ...ready,
+        items: catalog.items,
+        notice: "created",
+        oneTimeInvite:
+          receipt.invite === null
+            ? undefined
+            : { channelId: receipt.id, value: receipt.invite },
+      });
+    } catch {
+      this.publishError("The private channel could not be created.");
+    }
+  }
+
+  async rotate(channelId: string): Promise<void> {
+    const ready = this.readySnapshot();
+    const channel = ready?.items.find((item) => item.id === channelId);
+    if (ready === null || channel?.type !== "private") return;
+    try {
+      const receipt = await this.transport.rotate(channelId);
+      this.publish({
+        ...ready,
+        notice: "rotated",
+        oneTimeInvite:
+          receipt.invite === null
+            ? undefined
+            : { channelId: receipt.id, value: receipt.invite },
+      });
+    } catch {
+      this.publishError("Private channel management is unavailable.");
+    }
+  }
+
+  async close(channelId: string): Promise<void> {
+    const ready = this.readySnapshot();
+    const channel = ready?.items.find((item) => item.id === channelId);
+    if (ready === null || channel?.type !== "private") return;
+    await this.transitionOperation(async () => {
+      await this.transport.close(channelId);
+      const [catalog, current] = await Promise.all([
+        this.transport.list(),
+        this.transport.current(),
+      ]);
+      return {
+        items: catalog.items,
+        selectedId: current.id,
+        notice: "closed" as const,
+      };
+    });
+  }
+
+  dismissInvite(): void {
+    const ready = this.readySnapshot();
+    if (ready !== null && ready.oneTimeInvite !== undefined) {
+      this.publish({ ...ready, oneTimeInvite: undefined });
+    }
+  }
+
   private async transitionOperation(
     mutate: () => Promise<{
       items: Extract<ChannelSnapshot, { status: "ready" }>["items"];
       selectedId: string;
-      notice: "selected" | "left";
+      notice: "selected" | "left" | "closed";
     }>,
   ): Promise<void> {
     const ready = this.readySnapshot();

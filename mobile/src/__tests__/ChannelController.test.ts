@@ -47,6 +47,24 @@ function transport(): jest.Mocked<ChannelTransport> {
       changedAt: "2026-08-15T12:00:00Z",
       replayed: false,
     })),
+    create: jest.fn(async (_displayLabel: string) => ({
+      ...privateChannel,
+      createdAt: "2026-08-15T12:00:00Z",
+      invite: "rtc1." + "a".repeat(43),
+      replayed: false,
+    })),
+    rotate: jest.fn(async (_channelId: string) => ({
+      ...privateChannel,
+      createdAt: "2026-08-15T12:00:00Z",
+      invite: "rtc1." + "b".repeat(43),
+      replayed: false,
+    })),
+    close: jest.fn(async (_channelId: string) => ({
+      channelId: privateChannel.id,
+      state: "closed" as const,
+      changedAt: "2026-08-15T12:00:00Z",
+      replayed: false,
+    })),
   };
 }
 
@@ -139,5 +157,72 @@ describe("channel catalog and safe switching controller", () => {
       message: "The channel could not be changed. Your prior channel remains selected.",
     });
     expect(JSON.stringify(controller.getSnapshot())).not.toContain("provider room secret");
+  });
+
+  it("shows create and rotated invites once, then clears them from memory", async () => {
+    const remote = transport();
+    const controller = new ChannelController(remote, transition([]));
+    await controller.load();
+
+    await controller.create(" Camp Friends ");
+    expect(remote.create).toHaveBeenCalledWith("Camp Friends");
+    expect(controller.getSnapshot()).toEqual(
+      expect.objectContaining({
+        notice: "created",
+        oneTimeInvite: expect.objectContaining({ value: "rtc1." + "a".repeat(43) }),
+      }),
+    );
+    controller.dismissInvite();
+    expect(controller.getSnapshot()).not.toHaveProperty("oneTimeInvite.value");
+
+    await controller.rotate(privateChannel.id);
+    expect(controller.getSnapshot()).toEqual(
+      expect.objectContaining({
+        notice: "rotated",
+        oneTimeInvite: expect.objectContaining({ value: "rtc1." + "b".repeat(43) }),
+      }),
+    );
+  });
+
+  it("stops media before closing and reloads the server selection", async () => {
+    const events: string[] = [];
+    const remote = transport();
+    remote.close.mockImplementationOnce(async () => {
+      events.push("server-closed");
+      return {
+        channelId: privateChannel.id,
+        state: "closed",
+        changedAt: "2026-08-15T12:00:00Z",
+        replayed: false,
+      };
+    });
+    const controller = new ChannelController(remote, transition(events));
+    await controller.load();
+    await controller.close(privateChannel.id);
+
+    expect(events).toEqual(["media-stopped", "server-closed", "media-reconnected"]);
+    expect(controller.getSnapshot()).toEqual(
+      expect.objectContaining({ status: "ready", notice: "closed" }),
+    );
+  });
+
+  it("does not disclose server ownership or provider details on management errors", async () => {
+    const remote = transport();
+    remote.rotate.mockRejectedValueOnce(
+      new Error("owner account and provider room secret"),
+    );
+    const controller = new ChannelController(remote, transition([]));
+    await controller.load();
+    await controller.rotate(privateChannel.id);
+
+    expect(controller.getSnapshot()).toEqual(
+      expect.objectContaining({
+        status: "error",
+        message: "Private channel management is unavailable.",
+      }),
+    );
+    expect(JSON.stringify(controller.getSnapshot())).not.toMatch(
+      /owner account|provider room secret/,
+    );
   });
 });

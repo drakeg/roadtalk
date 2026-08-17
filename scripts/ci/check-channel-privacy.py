@@ -134,6 +134,9 @@ for phrase in (
     '"/channels/private/join"',
     '"member_count"',
     '"provider_room_ref"',
+    '"idempotency-key"',
+    '"/channels/private"',
+    '"closed"',
 ):
     if phrase not in mobile_api:
         fail(f"mobile channel transport is missing {phrase!r}")
@@ -145,6 +148,15 @@ for phrase in ("preparechanneltransition", "completechanneltransition"):
         fail(f"safe mobile channel transition is missing {phrase!r}")
 
 mobile_ui = read("mobile/src/screens/ChannelScreen.tsx")
+for phrase in (
+    "save this invite now",
+    "dismissinvite",
+    "rotate invite",
+    "close private channel",
+    "create private channel",
+):
+    if phrase not in mobile_ui:
+        fail(f"mobile private-channel lifecycle is missing {phrase!r}")
 for forbidden in (
     "member_count",
     "owner_id",
