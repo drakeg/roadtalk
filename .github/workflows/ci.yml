@@ -141,6 +141,25 @@ jobs:
       - uses: terraform-linters/setup-tflint@c750028ac0f3831886a261f96da68ab58a92e7ec # v6
         with:
           tflint_version: v0.59.1
+      - name: Validate local Compose configuration
+        run: |
+          docker compose --env-file .env.example config --quiet
+          BACKEND_PORT=18000 docker compose --env-file .env.example config --format json > "$RUNNER_TEMP/compose.json"
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          config = json.loads(Path(os.environ["RUNNER_TEMP"]).joinpath("compose.json").read_text())
+          ports = config["services"]["backend"]["ports"]
+          if not any(
+              str(port.get("target")) == "8000"
+              and str(port.get("published")) == "18000"
+              and port.get("host_ip") == "127.0.0.1"
+              for port in ports
+          ):
+              raise SystemExit("custom BACKEND_PORT did not resolve to loopback 127.0.0.1:18000 -> 8000")
+          PY
       - name: Audit Python dependencies
         run: |
           python -m pip install --disable-pip-version-check --upgrade 'pip>=26.1.2'
