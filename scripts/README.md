@@ -41,10 +41,13 @@ Scripts must:
   S06-D01–D09, General/RV/private semantics, one-time invite security, channel-bound
   proximity/media authority, 100/25/10 and 400 ms targets, named exceptions, READY
   status, approval/tracker records, and $0/no-new-service boundaries.
-- `scripts/ci/check-channel-privacy.py` locks S06-D02 deterministic General/RV seeds,
+- `scripts/ci/check-channel-privacy.py` locks deterministic General/RV seeds,
   one-per-account selection, active private-membership catalog authorization, required
   media-grant channel binding, exact caller-scoped routes, non-disclosing schemas,
   serialized fail-closed switching, and the no-provider/no-new-service boundary.
+- `scripts/ci/check-channel-hardening.py` requires the S06-D08 multi-channel 100/25/10
+  scale test, channel/invite/race/privacy coverage, the channel operations and evidence
+  records, disabled Terraform validation, and no new paid or later-sprint dependencies.
 
 Run every gate locally before opening a pull request; GitHub CI runs them again in the
 security job.
