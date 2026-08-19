@@ -7,27 +7,19 @@
 - [Original RoadTalk Development Plan](reference/RoadTalk_Development_Plan.docx)
 - [Agile Workflow](AGILE_WORKFLOW.md)
 
-## Sprint 4 — Push-to-Talk (complete)
-
-- [Sprint 4: Push-to-Talk](sprints/sprint-4-push-to-talk.md) — APPROVED
-- [Sprint 4 readiness](sprints/sprint-4-readiness.md) — READY
-- [Sprint 4 traceability](sprints/sprint-4-traceability.md) — COMPLETE
-- [Sprint 4 review](sprints/sprint-4-review.md) — APPROVED
-- Completed planning/approval issue [#90](https://github.com/drakeg/roadtalk/issues/90)
-- Implementation tracker [#100](https://github.com/drakeg/roadtalk/issues/100)
-- [Sprint 4 synthetic PTT evidence](evidence/sprint-4/README.md)
-- Current and incremental local/CI implementation cost: $0 AWS + $0 LiveKit
-- Cloud activation, paid plans, and recurring spend above $10/month remain unauthorized
-
-## Sprint 6 — Channels (approved and ready)
+## Sprint 6 — Channels (implementation complete; acceptance upon review merge)
 
 - [Sprint 6: Channels](sprints/sprint-6-channels.md) — APPROVED
 - [Sprint 6 readiness](sprints/sprint-6-readiness.md) — READY
+- [Sprint 6 traceability](sprints/sprint-6-traceability.md) — COMPLETE UPON REVIEW MERGE
+- [Sprint 6 review](sprints/sprint-6-review.md) — APPROVAL REQUESTED
+- [Sprint 6 synthetic channel evidence](evidence/sprint-6/README.md)
 - Product-owner approval recorded in [#129](https://github.com/drakeg/roadtalk/issues/129)
-- Locked implementation tracker [#139](https://github.com/drakeg/roadtalk/issues/139)
+- Implementation tracker [#139](https://github.com/drakeg/roadtalk/issues/139)
 - Deliverable issues [#130](https://github.com/drakeg/roadtalk/issues/130)–[#138](https://github.com/drakeg/roadtalk/issues/138)
+- D08 hardening/evidence merged in PR #147; D09 review merge records final acceptance
 - Current/incremental local/CI implementation cost: $0 AWS + $0 LiveKit
-- Provider/cloud activation, paid plans, and recurring spend remain unauthorized
+- Provider/cloud activation, paid plans, production/public beta, and recurring spend remain unauthorized
 
 ## Sprint 5 — Proximity Engine (complete)
 
@@ -40,6 +32,18 @@
 - Implementation tracker [#119](https://github.com/drakeg/roadtalk/issues/119)
 - Current/incremental local/CI implementation cost: $0 AWS + $0 LiveKit
 - Provider/cloud activation, paid plans, and recurring spend remain unauthorized
+
+## Sprint 4 — Push-to-Talk (complete)
+
+- [Sprint 4: Push-to-Talk](sprints/sprint-4-push-to-talk.md) — APPROVED
+- [Sprint 4 readiness](sprints/sprint-4-readiness.md) — READY
+- [Sprint 4 traceability](sprints/sprint-4-traceability.md) — COMPLETE
+- [Sprint 4 review](sprints/sprint-4-review.md) — APPROVED
+- Completed planning/approval issue [#90](https://github.com/drakeg/roadtalk/issues/90)
+- Implementation tracker [#100](https://github.com/drakeg/roadtalk/issues/100)
+- [Sprint 4 synthetic PTT evidence](evidence/sprint-4/README.md)
+- Current and incremental local/CI implementation cost: $0 AWS + $0 LiveKit
+- Cloud activation, paid plans, and recurring spend above $10/month remain unauthorized
 
 ## Sprint 3 — Location (complete)
 
@@ -102,6 +106,8 @@
 - [Identity and recovery operations](runbooks/identity-recovery-operations.md)
 - [Foreground location operations](runbooks/location-operations.md)
 - [Push-to-Talk operations and cost controls](runbooks/ptt-operations.md)
+- [Proximity operations](runbooks/proximity-operations.md)
+- [Channel operations](runbooks/channel-operations.md)
 - [CI quality and security](runbooks/ci-quality-security.md)
 - [Field-test deployment and rollback](runbooks/field-test-deployment.md)
 - [Database backup and restore](runbooks/database-backup-restore.md)
