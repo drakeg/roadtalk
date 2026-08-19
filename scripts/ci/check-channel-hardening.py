@@ -94,7 +94,12 @@ require(
     "current and incremental cost: **$0/month**",
     "aws/livekit resources created: none",
     "live-provider, physical-device, and cloud status: **not performed**",
-    "eligible, cross-channel denied, selection/switch, invite verification, and reconciliation p95",
+    "eligible p95:",
+    "cross-channel denied p95:",
+    "selection/switch p95:",
+    "invite verification p95:",
+    "reconciliation p95:",
+    "control-plane target: **400 ms**",
     "alerts and ci gates are not automatic shutdown controls",
 )
 
