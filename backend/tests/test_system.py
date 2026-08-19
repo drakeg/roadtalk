@@ -29,9 +29,12 @@ def test_web_root_renders_roadtalk_interface() -> None:
         response = test_client.get("/")
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/html")
-    assert "<title>RoadTalk</title>" in response.text
-    assert "Talk to the road around you." in response.text
+    assert "RoadTalk | Local Operations Dashboard" in response.text
+    assert "RoadTalk service overview" in response.text
+    assert "API response latency" in response.text
+    assert "Operational event log" in response.text
     assert "/api/v1/system/version" in response.text
+    assert "/health/ready" in response.text
 
 
 def test_liveness_returns_request_id() -> None:
