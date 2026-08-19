@@ -10,7 +10,7 @@ from typing import cast
 import pytest
 from geoalchemy2 import WKTElement
 from geoalchemy2.elements import WKBElement
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.channels.constants import GENERAL_CHANNEL_ID, RV_CHANNEL_ID
@@ -61,10 +61,17 @@ async def _exercise_scale() -> None:
     now = datetime(2026, 8, 18, 22, tzinfo=UTC)
 
     channel_ids = [
-        GENERAL_CHANNEL_ID if index < 40 else RV_CHANNEL_ID if index < 80 else PRIVATE_CHANNEL_ID
+        GENERAL_CHANNEL_ID
+        if index < 40
+        else RV_CHANNEL_ID
+        if index < 80
+        else PRIVATE_CHANNEL_ID
         for index in range(100)
     ]
-    accounts = [Account(channel_selection=ChannelSelection(channel_id=channel_ids[index])) for index in range(100)]
+    accounts = [
+        Account(channel_selection=ChannelSelection(channel_id=channel_ids[index]))
+        for index in range(100)
+    ]
     devices = [
         Device(
             account=account,
@@ -94,15 +101,23 @@ async def _exercise_scale() -> None:
             db.add_all(accounts)
             await db.flush()
             cleanup_account_ids = [account.id for account in accounts]
+            account_channels = dict(zip(cleanup_account_ids, channel_ids, strict=True))
             db.add_all(
                 ChannelMembership(account_id=accounts[index].id, channel_id=PRIVATE_CHANNEL_ID)
                 for index in range(80, 100)
             )
 
-            public_rooms = {
-                GENERAL_CHANNEL_ID: settings.ptt_controlled_room_ref,
-                RV_CHANNEL_ID: "rm_v1_rv",
-                PRIVATE_CHANNEL_ID: PRIVATE_ROOM_REF,
+            seeded_public = (
+                await db.scalars(
+                    select(Channel).where(Channel.id.in_((GENERAL_CHANNEL_ID, RV_CHANNEL_ID)))
+                )
+            ).all()
+            public_rooms = {channel.id: channel.provider_room_ref for channel in seeded_public}
+            public_rooms[PRIVATE_CHANNEL_ID] = PRIVATE_ROOM_REF
+            assert set(public_rooms) == {
+                GENERAL_CHANNEL_ID,
+                RV_CHANNEL_ID,
+                PRIVATE_CHANNEL_ID,
             }
 
             for index, (account, device) in enumerate(zip(accounts, devices, strict=True)):
@@ -126,7 +141,10 @@ async def _exercise_scale() -> None:
                         CurrentLocation(
                             account_id=account.id,
                             source_device_id=device.id,
-                            position=cast(WKBElement, WKTElement(f"POINT({index * 0.000001} 0)", srid=4326)),
+                            position=cast(
+                                WKBElement,
+                                WKTElement(f"POINT({index * 0.000001} 0)", srid=4326),
+                            ),
                             observed_at=now,
                             received_at=now,
                             horizontal_accuracy_m=10,
@@ -227,7 +245,7 @@ async def _exercise_scale() -> None:
                 )
                 eligible_ms.append((perf_counter() - started) * 1_000)
                 assert len(result) == expected_receivers[channel_id]
-                assert {channel_ids[cleanup_account_ids.index(item.account_id)] for item in result} == {channel_id}
+                assert {account_channels[item.account_id] for item in result} == {channel_id}
 
             cross_channel_denied_ms: list[float] = []
             wrong_policy = proximity_policy_from_settings(
@@ -248,17 +266,31 @@ async def _exercise_scale() -> None:
                 cross_channel_denied_ms.append((perf_counter() - started) * 1_000)
 
             switch_ms: list[float] = []
-            for target in (GENERAL_CHANNEL_ID, RV_CHANNEL_ID, GENERAL_CHANNEL_ID, RV_CHANNEL_ID, GENERAL_CHANNEL_ID):
+            for target in (
+                GENERAL_CHANNEL_ID,
+                RV_CHANNEL_ID,
+                GENERAL_CHANNEL_ID,
+                RV_CHANNEL_ID,
+                GENERAL_CHANNEL_ID,
+            ):
                 started = perf_counter()
                 await select_channel(db, account_id=accounts[60].id, channel_id=target, now=now)
                 switch_ms.append((perf_counter() - started) * 1_000)
 
             invite = new_invite()
-            encoded = hash_invite(invite, settings.channel_invite_pepper.get_secret_value(), salt=b"0123456789abcdef")
+            encoded = hash_invite(
+                invite,
+                settings.channel_invite_pepper.get_secret_value(),
+                salt=b"0123456789abcdef",
+            )
             invite_verify_ms: list[float] = []
             for _ in range(5):
                 started = perf_counter()
-                assert verify_invite(invite, encoded, settings.channel_invite_pepper.get_secret_value())
+                assert verify_invite(
+                    invite,
+                    encoded,
+                    settings.channel_invite_pepper.get_secret_value(),
+                )
                 invite_verify_ms.append((perf_counter() - started) * 1_000)
 
             started = perf_counter()
@@ -286,7 +318,11 @@ async def _exercise_scale() -> None:
                 "target_ms": TARGET_MS,
             }
             print("Channel synthetic scale: " + json.dumps(metrics, sort_keys=True))
-            assert all(value <= TARGET_MS for key, value in metrics.items() if key.endswith("_p95_ms"))
+            assert all(
+                value <= TARGET_MS
+                for key, value in metrics.items()
+                if key.endswith("_p95_ms")
+            )
     finally:
         if cleanup_account_ids:
             async with factory() as db:
