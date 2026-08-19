@@ -28,12 +28,12 @@ from app.db.models import (
     MediaGrant,
     Session,
 )
+from app.ptt.provider import FakeMediaProvider
 from app.ptt.proximity import (
     ProximityEligibilityError,
     find_eligible_receive_grants,
     proximity_policy_from_settings,
 )
-from app.ptt.provider import FakeMediaProvider
 from app.ptt.service import reconcile_proximity_delivery
 
 TARGET_MS = 400
