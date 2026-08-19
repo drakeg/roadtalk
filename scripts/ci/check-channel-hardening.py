@@ -62,7 +62,8 @@ required_tests = {
     ),
     "backend/tests/test_ptt_proximity_database.py": (
         "test_proximity_query_enforces_complete_private_receiver_matrix",
-        "selected_channel_id": rv_channel_id,
+        "selected_channel_id",
+        "rv_channel_id",
     ),
     "mobile/src/__tests__/ChannelController.test.ts": (
         "preparechanneltransition",
