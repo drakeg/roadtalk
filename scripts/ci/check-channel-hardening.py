@@ -61,12 +61,13 @@ required_tests = {
         "test_invite_limiter_covers_peer_and_account",
     ),
     "backend/tests/test_ptt_proximity_database.py": (
-        "same_channel",
-        "cross_channel",
+        "test_proximity_query_enforces_complete_private_receiver_matrix",
+        "selected_channel_id": rv_channel_id,
     ),
     "mobile/src/__tests__/ChannelController.test.ts": (
         "preparechanneltransition",
         "completechanneltransition",
+        "provider room secret",
     ),
 }
 for path, names in required_tests.items():
