@@ -7,7 +7,7 @@ BACKEND_BIN := $(BACKEND_VENV)/bin
 
 .DEFAULT_GOAL := help
 
-.PHONY: help prerequisites setup config up up-redis wait ps logs down reset database-shell redis-cli verify-database backend-install backend-run backend-migrate backend-migration-check backend-migration-downgrade backend-format-check backend-lint backend-typecheck backend-test mobile-install mobile-start mobile-ios mobile-android mobile-doctor mobile-typecheck mobile-test terraform-validate container-build
+.PHONY: help prerequisites setup config up up-redis wait ps logs down reset database-shell redis-cli verify-database local-url backend-install backend-run backend-migrate backend-migration-check backend-migration-downgrade backend-format-check backend-lint backend-typecheck backend-test mobile-install mobile-start mobile-ios mobile-android mobile-doctor mobile-typecheck mobile-test terraform-validate container-build
 
 help: ## Show local development commands.
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_-]+:.*## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -25,9 +25,11 @@ config: ## Validate the resolved Docker Compose configuration.
 
 up: setup ## Build and start the local API and PostgreSQL/PostGIS stack.
 	@$(COMPOSE) --env-file "$(ENV_FILE)" up -d --build --wait database backend
+	@$(MAKE) local-url
 
-up-redis: setup ## Start PostgreSQL/PostGIS plus optional Redis and wait until healthy.
-	@$(COMPOSE) --env-file "$(ENV_FILE)" --profile redis up -d --wait
+up-redis: setup ## Start API, PostgreSQL/PostGIS, and optional Redis; wait until healthy.
+	@$(COMPOSE) --env-file "$(ENV_FILE)" --profile redis up -d --build --wait
+	@$(MAKE) local-url
 
 wait: ## Wait for the local database to become healthy.
 	@sh scripts/wait-for-local-services.sh
@@ -54,13 +56,20 @@ redis-cli: ## Open redis-cli when the optional Redis profile is running.
 verify-database: ## Verify PostgreSQL and PostGIS are available.
 	@$(COMPOSE) --env-file "$(ENV_FILE)" exec -T database psql -U "$${POSTGRES_USER:-roadtalk}" -d "$${POSTGRES_DB:-roadtalk}" -v ON_ERROR_STOP=1 -c "SELECT current_database(), PostGIS_Full_Version();"
 
+local-url: ## Print the configured local API and docs URLs.
+	@test -f "$(ENV_FILE)" || { echo "Missing $(ENV_FILE). Run 'make setup'."; exit 1; }
+	@set -a; . ./$(ENV_FILE); set +a; \
+		port="$${BACKEND_PORT:-8000}"; \
+		echo "RoadTalk API:  http://127.0.0.1:$$port/api/v1"; \
+		echo "RoadTalk docs: http://127.0.0.1:$$port/docs"
+
 backend-install: ## Create the backend virtual environment and install development dependencies.
 	@$(BACKEND_PYTHON) -m venv "$(BACKEND_VENV)"
 	@$(BACKEND_BIN)/pip install -e 'backend[dev]'
 
-backend-run: ## Run the local FastAPI development server.
+backend-run: ## Run the local FastAPI development server on BACKEND_PORT.
 	@test -f "$(ENV_FILE)" || { echo "Missing $(ENV_FILE). Run 'make setup'."; exit 1; }
-	@set -a; . ./$(ENV_FILE); set +a; cd backend && ../$(BACKEND_BIN)/uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+	@set -a; . ./$(ENV_FILE); set +a; cd backend && ../$(BACKEND_BIN)/uvicorn app.main:app --host 127.0.0.1 --port "$${BACKEND_PORT:-8000}" --reload
 
 backend-migrate: ## Upgrade the configured database to the latest migration.
 	@test -f "$(ENV_FILE)" || { echo "Missing $(ENV_FILE). Run 'make setup'."; exit 1; }
@@ -89,14 +98,23 @@ backend-test: ## Run backend tests with branch coverage.
 mobile-install: ## Install the locked mobile dependencies.
 	@cd mobile && npm ci
 
-mobile-start: ## Start Metro for the Expo development client.
-	@cd mobile && npm start
+mobile-start: ## Start Metro and derive the API URL from BACKEND_PORT unless overridden.
+	@test -f "$(ENV_FILE)" || { echo "Missing $(ENV_FILE). Run 'make setup'."; exit 1; }
+	@set -a; . ./$(ENV_FILE); set +a; \
+		export EXPO_PUBLIC_API_BASE_URL="$${EXPO_PUBLIC_API_BASE_URL:-http://localhost:$${BACKEND_PORT:-8000}/api/v1}"; \
+		cd mobile && npm start
 
-mobile-ios: ## Generate/run the local iOS development build.
-	@cd mobile && npm run ios
+mobile-ios: ## Generate/run iOS with the configured local API endpoint.
+	@test -f "$(ENV_FILE)" || { echo "Missing $(ENV_FILE). Run 'make setup'."; exit 1; }
+	@set -a; . ./$(ENV_FILE); set +a; \
+		export EXPO_PUBLIC_API_BASE_URL="$${EXPO_PUBLIC_API_BASE_URL:-http://localhost:$${BACKEND_PORT:-8000}/api/v1}"; \
+		cd mobile && npm run ios
 
-mobile-android: ## Generate/run the local Android development build.
-	@cd mobile && npm run android
+mobile-android: ## Generate/run Android with the configured local API endpoint.
+	@test -f "$(ENV_FILE)" || { echo "Missing $(ENV_FILE). Run 'make setup'."; exit 1; }
+	@set -a; . ./$(ENV_FILE); set +a; \
+		export EXPO_PUBLIC_API_BASE_URL="$${EXPO_PUBLIC_API_BASE_URL:-http://localhost:$${BACKEND_PORT:-8000}/api/v1}"; \
+		cd mobile && npm run android
 
 mobile-doctor: ## Validate Expo dependency and project configuration.
 	@cd mobile && npm run doctor
