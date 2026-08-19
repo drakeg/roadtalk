@@ -61,11 +61,7 @@ async def _exercise_scale() -> None:
     now = datetime(2026, 8, 18, 22, tzinfo=UTC)
 
     channel_ids = [
-        GENERAL_CHANNEL_ID
-        if index < 40
-        else RV_CHANNEL_ID
-        if index < 80
-        else PRIVATE_CHANNEL_ID
+        GENERAL_CHANNEL_ID if index < 40 else RV_CHANNEL_ID if index < 80 else PRIVATE_CHANNEL_ID
         for index in range(100)
     ]
     accounts = [
@@ -319,9 +315,7 @@ async def _exercise_scale() -> None:
             }
             print("Channel synthetic scale: " + json.dumps(metrics, sort_keys=True))
             assert all(
-                value <= TARGET_MS
-                for key, value in metrics.items()
-                if key.endswith("_p95_ms")
+                value <= TARGET_MS for key, value in metrics.items() if key.endswith("_p95_ms")
             )
     finally:
         if cleanup_account_ids:
