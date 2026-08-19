@@ -48,6 +48,10 @@ Scripts must:
 - `scripts/ci/check-channel-hardening.py` requires the S06-D08 multi-channel 100/25/10
   scale test, channel/invite/race/privacy coverage, the channel operations and evidence
   records, disabled Terraform validation, and no new paid or later-sprint dependencies.
+- `scripts/ci/check-sprint-6-review.py` requires complete S06-R01–R12, S06-T01–T12,
+  and S06-D01–D09 traceability; the five accepted multi-channel p95 measurements;
+  merge-bound product-owner approval; honest live/device/cloud exceptions; the $0
+  cost decision; and the bounded Expo patch follow-up.
 
 Run every gate locally before opening a pull request; GitHub CI runs them again in the
 security job.
