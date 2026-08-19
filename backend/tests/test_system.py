@@ -24,6 +24,19 @@ def client() -> TestClient:
     )
 
 
+def test_web_root_renders_roadtalk_interface() -> None:
+    with client() as test_client:
+        response = test_client.get("/")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    assert "RoadTalk | Local Operations Dashboard" in response.text
+    assert "RoadTalk service overview" in response.text
+    assert "API response latency" in response.text
+    assert "Operational event log" in response.text
+    assert "/api/v1/system/version" in response.text
+    assert "/health/ready" in response.text
+
+
 def test_liveness_returns_request_id() -> None:
     with client() as test_client:
         response = test_client.get("/health/live", headers={"X-Request-ID": "test-request"})
