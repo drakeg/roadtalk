@@ -1,8 +1,8 @@
 # Operational runbooks
 
-These runbooks are the operator entry point through Sprint 4. Follow them exactly, use
-only synthetic data, and record evidence without secrets, tokens, database dumps,
-or personal data.
+These runbooks are the operator entry point for the implemented RoadTalk sprints. Follow
+them exactly, use only synthetic data unless separately approved, and record evidence
+without secrets, tokens, database dumps, or personal data.
 
 | Operation | Runbook | Evidence to retain |
 |---|---|---|
@@ -12,6 +12,7 @@ or personal data.
 | Foreground location | [Foreground location operations](location-operations.md) | Stable problem codes, route templates, semantic synthetic result |
 | Push-to-Talk and media cost | [PTT operations](ptt-operations.md) | Aggregate synthetic results, usage ceilings, cost and destroy verification |
 | Proximity authorization | [Proximity operations](proximity-operations.md) | Aggregate p95 values, zero-resource result, and named exceptions |
+| Channel authorization and lifecycle | [Channel operations](channel-operations.md) | Aggregate multi-channel p95 values, zero-resource result, and named exceptions |
 | CI failure triage | [CI quality and security](ci-quality-security.md) | Workflow URL, failed gate, corrective commit |
 | Field-test deploy/rollback | [Field-test deployment](field-test-deployment.md) | Commit, image digest, SSM command IDs, health results |
 | Backup/restore | [Database backup and restore](database-backup-restore.md) | Object key/version, checksums, row-count comparison |
@@ -33,7 +34,9 @@ or personal data.
 - Never request coordinates, accuracy, heading, speed, nearby identities, exact
   counts/distances, or request bodies as location diagnostic evidence.
 - Never request participant tokens, provider keys/secrets, audio, transcripts,
-  room/participant references, or recordings as PTT diagnostic evidence.
+  room/participant references, or recordings as PTT or channel diagnostic evidence.
+- Never retain private-channel labels, invite plaintext/hash/fingerprint, membership
+  details, or provider room references as channel evidence.
 
 ## Rehearsal record
 
@@ -47,4 +50,5 @@ actual results, artifact identifiers, duration, cost impact, and follow-ups. Exe
 4. field-test shutdown after evidence collection.
 
 The runbooks are complete when a reviewer can reproduce each bounded procedure.
-Execution evidence belongs in S01-D13, not in this directory.
+Execution evidence belongs in S01-D13 or the sprint-specific evidence directory, not
+in this index.
