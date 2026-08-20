@@ -83,6 +83,7 @@ class Settings(BaseSettings):
     ptt_media_provider_enabled: bool = False
     ptt_media_provider: Literal["disabled", "livekit"] = "disabled"
     ptt_livekit_url: str | None = None
+    ptt_livekit_api_url: str | None = None
     ptt_livekit_api_key: SecretStr | None = None
     ptt_livekit_api_secret: SecretStr | None = None
 
@@ -107,6 +108,7 @@ class Settings(BaseSettings):
 
         livekit_values = (
             self.ptt_livekit_url,
+            self.ptt_livekit_api_url,
             self.ptt_livekit_api_key,
             self.ptt_livekit_api_secret,
         )
@@ -120,9 +122,23 @@ class Settings(BaseSettings):
         if self.ptt_media_provider != "livekit":
             raise ValueError("enabled PTT media requires the livekit provider")
         if any(value is None for value in livekit_values):
-            raise ValueError("enabled PTT media requires URL, API key, and API secret")
-        if not self.ptt_livekit_url or not self.ptt_livekit_url.startswith("wss://"):
-            raise ValueError("PTT LiveKit URL must use wss://")
+            raise ValueError(
+                "enabled PTT media requires public URL, API URL, API key, and API secret"
+            )
+        if self.ptt_livekit_url is None or not self.ptt_livekit_url.startswith(("ws://", "wss://")):
+            raise ValueError("PTT LiveKit public URL must use ws:// or wss://")
+        if self.environment in {"field-test", "production"} and not self.ptt_livekit_url.startswith(
+            "wss://"
+        ):
+            raise ValueError("shared PTT LiveKit URL must use wss://")
+        if self.ptt_livekit_api_url is None or not self.ptt_livekit_api_url.startswith(
+            ("http://", "https://")
+        ):
+            raise ValueError("PTT LiveKit API URL must use http:// or https://")
+        if self.environment in {"field-test", "production"} and not self.ptt_livekit_api_url.startswith(
+            "https://"
+        ):
+            raise ValueError("shared PTT LiveKit API URL must use https://")
         return self
 
 
