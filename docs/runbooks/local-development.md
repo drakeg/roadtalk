@@ -31,6 +31,11 @@ local API/docs URLs.
 The example secrets are local-only and must never be reused in a shared, field-test,
 or production environment.
 
+The browser radio stores a non-sensitive monotonic location sequence in browser local
+storage so replay protection continues to work after a page reload or reconnect. This
+value contains no coordinates, call sign, token, or other location content. Clearing
+site data safely resets it; the next value is seeded from the current time.
+
 ## Services
 
 | Service | Default host endpoint | Startup |
