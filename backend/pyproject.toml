@@ -11,6 +11,7 @@ dependencies = [
   "alembic>=1.14,<1.19",
   "fastapi>=0.139,<0.140",
   "geoalchemy2>=0.20,<0.21",
+  "livekit-api>=1.0,<2",
   "psycopg[binary,pool]>=3.2,<4",
   "pydantic-settings>=2.14,<3",
   "pyjwt>=2.10,<3",
