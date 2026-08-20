@@ -1,9 +1,17 @@
-from fastapi import APIRouter, Request
+from datetime import UTC, datetime
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings
+from app.db.models import Account, Channel, ChannelMembership, CurrentLocation, MediaGrant
+from app.db.session import get_session
 
 router = APIRouter(tags=["system"])
+DatabaseSession = Annotated[AsyncSession, Depends(get_session)]
 
 
 class StatusResponse(BaseModel):
@@ -19,6 +27,14 @@ class VersionResponse(BaseModel):
     name: str
     version: str
     environment: str
+
+
+class OperationalMetricsResponse(BaseModel):
+    active_accounts: int
+    active_locations: int
+    enabled_channels: int
+    active_memberships: int
+    valid_media_grants: int
 
 
 @router.get("/health/live", response_model=StatusResponse, include_in_schema=False)
@@ -40,4 +56,28 @@ async def version(request: Request) -> VersionResponse:
         name=settings.app_name,
         version=settings.version,
         environment=settings.environment,
+    )
+
+
+@router.get("/api/v1/system/metrics", response_model=OperationalMetricsResponse)
+async def operational_metrics(session: DatabaseSession) -> OperationalMetricsResponse:
+    now = datetime.now(UTC)
+    statements = (
+        select(func.count()).select_from(Account).where(Account.status == "active"),
+        select(func.count()).select_from(CurrentLocation).where(CurrentLocation.expires_at > now),
+        select(func.count()).select_from(Channel).where(Channel.enabled.is_(True)),
+        select(func.count())
+        .select_from(ChannelMembership)
+        .where(ChannelMembership.state == "active"),
+        select(func.count())
+        .select_from(MediaGrant)
+        .where(MediaGrant.revoked_at.is_(None), MediaGrant.expires_at > now),
+    )
+    counts = [int((await session.execute(statement)).scalar_one()) for statement in statements]
+    return OperationalMetricsResponse(
+        active_accounts=counts[0],
+        active_locations=counts[1],
+        enabled_channels=counts[2],
+        active_memberships=counts[3],
+        valid_media_grants=counts[4],
     )
