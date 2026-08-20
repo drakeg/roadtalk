@@ -9,10 +9,10 @@ from app.config import Settings
 from app.ptt.provider import (
     DisabledMediaProvider,
     FakeMediaProvider,
+    LiveKitMediaProvider,
     MediaProviderDisabledError,
     MediaProviderSubscriptionError,
     MediaProviderTrackVerificationError,
-    MediaProviderUnavailableError,
     MicrophonePublishRequest,
     MicrophoneTrackLookupRequest,
     ParticipantRequest,
@@ -236,7 +236,7 @@ def test_receive_request_cannot_enable_automatic_subscription() -> None:
         )
 
 
-def test_provider_factory_never_constructs_live_adapter() -> None:
+def test_provider_factory_constructs_only_explicit_livekit_adapter() -> None:
     disabled = Settings(environment="test")
     assert isinstance(media_provider_from_settings(disabled), DisabledMediaProvider)
 
@@ -244,9 +244,42 @@ def test_provider_factory_never_constructs_live_adapter() -> None:
         environment="test",
         ptt_media_provider_enabled=True,
         ptt_media_provider="livekit",
-        ptt_livekit_url="wss://synthetic.invalid",
+        ptt_livekit_url="ws://127.0.0.1:7880",
+        ptt_livekit_api_url="http://livekit:7880",
         ptt_livekit_api_key=SecretStr("synthetic-key"),
         ptt_livekit_api_secret=SecretStr("synthetic-secret"),
     )
-    with pytest.raises(MediaProviderUnavailableError, match="not implemented"):
-        media_provider_from_settings(enabled)
+    provider = media_provider_from_settings(enabled)
+    assert isinstance(provider, LiveKitMediaProvider)
+
+
+def test_livekit_receive_token_starts_receive_only() -> None:
+    async def exercise() -> None:
+        provider = LiveKitMediaProvider(
+            server_url="ws://127.0.0.1:7880",
+            api_url="http://livekit:7880",
+            api_key="devkey",
+            api_secret="secret",
+        )
+        credential = await provider.issue_receive_credential(
+            ReceiveCredentialRequest(
+                room_ref="room_opaque_1",
+                participant_ref="participant_opaque_1",
+                ttl_seconds=300,
+            )
+        )
+        claims = jwt.decode(
+            credential.participant_token.get_secret_value(),
+            "secret",
+            algorithms=["HS256"],
+            options={"verify_aud": False, "verify_exp": False, "verify_nbf": False},
+        )
+        assert credential.server_url == "ws://127.0.0.1:7880"
+        assert claims["sub"] == "participant_opaque_1"
+        assert claims["video"]["room"] == "room_opaque_1"
+        assert claims["video"]["roomJoin"] is True
+        assert claims["video"]["canSubscribe"] is True
+        assert claims["video"]["canPublish"] is False
+        assert claims["video"]["canPublishData"] is False
+
+    asyncio.run(exercise())

@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 class AnonymousSessionRequest(BaseModel):
     installation_id: str = Field(min_length=16, max_length=255)
-    platform: Literal["android", "ios"]
+    platform: Literal["android", "ios", "web"]
 
 
 class RefreshRequest(BaseModel):

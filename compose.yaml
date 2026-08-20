@@ -53,6 +53,22 @@ services:
     networks:
       - roadtalk
 
+  livekit:
+    image: livekit/livekit-server:v1.13.1
+    profiles:
+      - voice
+    restart: unless-stopped
+    command:
+      - --dev
+      - --bind
+      - 0.0.0.0
+    ports:
+      - "127.0.0.1:${LIVEKIT_PORT:-7880}:7880"
+      - "${LIVEKIT_RTC_TCP_PORT:-7881}:7881/tcp"
+      - "${LIVEKIT_RTC_UDP_PORT:-7882}:7882/udp"
+    networks:
+      - roadtalk
+
   backend:
     build:
       context: .
@@ -67,8 +83,12 @@ services:
       ROADTALK_REFRESH_TOKEN_PEPPER: ${ROADTALK_REFRESH_TOKEN_PEPPER:-local-only-refresh-pepper-change-me}
       ROADTALK_RECOVERY_KEY_PEPPER: ${ROADTALK_RECOVERY_KEY_PEPPER:-local-only-recovery-pepper-change-me}
       ROADTALK_CHANNEL_INVITE_PEPPER: ${ROADTALK_CHANNEL_INVITE_PEPPER:-local-only-channel-pepper-change-me}
-      ROADTALK_PTT_MEDIA_PROVIDER_ENABLED: "false"
-      ROADTALK_PTT_MEDIA_PROVIDER: disabled
+      ROADTALK_PTT_MEDIA_PROVIDER_ENABLED: ${ROADTALK_PTT_MEDIA_PROVIDER_ENABLED:-false}
+      ROADTALK_PTT_MEDIA_PROVIDER: ${ROADTALK_PTT_MEDIA_PROVIDER:-disabled}
+      ROADTALK_PTT_LIVEKIT_URL: ${ROADTALK_PTT_LIVEKIT_URL:-}
+      ROADTALK_PTT_LIVEKIT_API_URL: ${ROADTALK_PTT_LIVEKIT_API_URL:-}
+      ROADTALK_PTT_LIVEKIT_API_KEY: ${ROADTALK_PTT_LIVEKIT_API_KEY:-}
+      ROADTALK_PTT_LIVEKIT_API_SECRET: ${ROADTALK_PTT_LIVEKIT_API_SECRET:-}
     command:
       - /bin/sh
       - -c
