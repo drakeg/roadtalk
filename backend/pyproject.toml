@@ -47,6 +47,9 @@ show_missing = true
 line-length = 100
 target-version = "py312"
 
+[tool.ruff.format]
+exclude = ["app/radio.py"]
+
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "ASYNC", "S"]
 

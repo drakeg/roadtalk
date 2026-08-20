@@ -136,9 +136,10 @@ class Settings(BaseSettings):
             ("http://", "https://")
         ):
             raise ValueError("PTT LiveKit API URL must use http:// or https://")
-        if self.environment in {"field-test", "production"} and not self.ptt_livekit_api_url.startswith(
-            "https://"
-        ):
+        if self.environment in {
+            "field-test",
+            "production",
+        } and not self.ptt_livekit_api_url.startswith("https://"):
             raise ValueError("shared PTT LiveKit API URL must use https://")
         return self
 
