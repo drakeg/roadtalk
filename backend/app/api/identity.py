@@ -20,6 +20,7 @@ from app.identity.service import (
 )
 
 router = APIRouter(tags=["identity"])
+DEFAULT_WEB_AVATAR_ID = "road-runner"
 
 
 @router.get("/api/v1/avatars", response_model=AvatarCatalogResponse)
@@ -73,12 +74,18 @@ async def patch_profile(
     db: DatabaseSession,
     current: CurrentSession,
 ) -> ProfileResponse:
+    avatar_id = payload.avatar_id
+    if current.device.platform == "web" and payload.callsign is not None and avatar_id is None:
+        existing_profile = await read_profile(db, account_id=current.account.id)
+        if existing_profile.identity.avatar_id is None:
+            avatar_id = DEFAULT_WEB_AVATAR_ID
+
     try:
         return await update_profile(
             db,
             account_id=current.account.id,
             candidate=payload.callsign,
-            avatar_id=payload.avatar_id,
+            avatar_id=avatar_id,
             expected_version=payload.version,
             cooldown_seconds=request.app.state.settings.callsign_change_cooldown_seconds,
         )
