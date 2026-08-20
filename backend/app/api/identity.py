@@ -23,6 +23,20 @@ router = APIRouter(tags=["identity"])
 DEFAULT_WEB_AVATAR_ID = "road-runner"
 
 
+def web_profile_avatar_id(
+    *,
+    platform: str,
+    callsign: str | None,
+    requested_avatar_id: str | None,
+    existing_avatar_id: str | None,
+) -> str | None:
+    if requested_avatar_id is not None:
+        return requested_avatar_id
+    if platform == "web" and callsign is not None and existing_avatar_id is None:
+        return DEFAULT_WEB_AVATAR_ID
+    return None
+
+
 @router.get("/api/v1/avatars", response_model=AvatarCatalogResponse)
 async def get_avatar_catalog() -> AvatarCatalogResponse:
     return avatar_catalog()
@@ -74,11 +88,13 @@ async def patch_profile(
     db: DatabaseSession,
     current: CurrentSession,
 ) -> ProfileResponse:
-    avatar_id = payload.avatar_id
-    if current.device.platform == "web" and payload.callsign is not None and avatar_id is None:
-        existing_profile = await read_profile(db, account_id=current.account.id)
-        if existing_profile.identity.avatar_id is None:
-            avatar_id = DEFAULT_WEB_AVATAR_ID
+    existing_profile = await read_profile(db, account_id=current.account.id)
+    avatar_id = web_profile_avatar_id(
+        platform=current.device.platform,
+        callsign=payload.callsign,
+        requested_avatar_id=payload.avatar_id,
+        existing_avatar_id=existing_profile.identity.avatar_id,
+    )
 
     try:
         return await update_profile(
