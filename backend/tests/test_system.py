@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any
 
 from fastapi.testclient import TestClient
@@ -41,6 +42,25 @@ def test_web_root_renders_roadtalk_radio() -> None:
     assert "/api/v1/me/profile" in response.text
     assert "/api/v1/callsigns/availability" in response.text
     assert "/ops" in response.text
+    assert 'src="/assets/livekit-client.umd.js"' in response.text
+    assert "cdn.jsdelivr.net" not in response.text
+
+
+def test_livekit_browser_client_is_served_locally(
+    monkeypatch: Any,
+    tmp_path: Path,
+) -> None:
+    asset = tmp_path / "livekit-client.umd.js"
+    asset.write_text("window.LivekitClient = {};", encoding="utf-8")
+    monkeypatch.setattr("app.radio.LIVEKIT_CLIENT_PATH", asset)
+
+    with client() as test_client:
+        response = test_client.get("/assets/livekit-client.umd.js")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/javascript")
+    assert response.headers["cache-control"] == "public, max-age=31536000, immutable"
+    assert response.text == "window.LivekitClient = {};"
 
 
 def test_operations_dashboard_remains_available() -> None:
