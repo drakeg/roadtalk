@@ -22,6 +22,7 @@ from app.middleware import RequestContextMiddleware
 from app.problems import install_problem_handlers
 from app.ptt.limiter import PttLimiter
 from app.ptt.provider import media_provider_from_settings
+from app.radio import router as radio_router
 from app.recovery.limiter import RecoveryLimiter
 from app.web import router as web_router
 
@@ -76,6 +77,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.readiness.register("database", check_database)
     app.add_middleware(RequestContextMiddleware, settings=resolved)
     install_problem_handlers(app)
+    app.include_router(radio_router)
     app.include_router(web_router)
     app.include_router(system_router)
     app.include_router(auth_router)
