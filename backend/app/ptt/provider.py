@@ -211,9 +211,7 @@ class LiveKitMediaProvider:
             can_subscribe=True,
             can_publish=request.enabled,
             can_publish_data=False,
-            can_publish_sources=(
-                [self._MICROPHONE_SOURCE] if request.enabled else []
-            ),
+            can_publish_sources=([self._MICROPHONE_SOURCE] if request.enabled else []),
         )
         try:
             async with self._client() as client:
@@ -253,19 +251,13 @@ class LiveKitMediaProvider:
                     )
                 )
         except Exception as exc:
-            raise MediaProviderTrackVerificationError(
-                "LiveKit participant lookup failed"
-            ) from exc
+            raise MediaProviderTrackVerificationError("LiveKit participant lookup failed") from exc
 
         observed = next(
             (track for track in participant.tracks if track.sid == request.track_ref),
             None,
         )
-        if (
-            observed is None
-            or int(observed.source) != self._MICROPHONE_SOURCE
-            or observed.muted
-        ):
+        if observed is None or int(observed.source) != self._MICROPHONE_SOURCE or observed.muted:
             raise MediaProviderTrackVerificationError(
                 "opaque track is not an active owned microphone publication"
             )
