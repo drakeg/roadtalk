@@ -158,7 +158,7 @@ class DisabledMediaProvider:
 class LiveKitMediaProvider:
     """LiveKit adapter used by local self-hosted and approved live deployments."""
 
-    _MICROPHONE_SOURCE = api.TrackSource.SOURCE_MICROPHONE
+    _MICROPHONE_SOURCE = api.TrackSource.MICROPHONE
 
     def __init__(
         self,
