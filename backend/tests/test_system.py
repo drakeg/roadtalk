@@ -3,6 +3,7 @@ from typing import Any
 from fastapi.testclient import TestClient
 
 from app.config import Settings
+from app.db.session import get_session
 from app.main import create_app
 
 
@@ -73,6 +74,41 @@ def test_version_endpoint_is_versioned() -> None:
         "name": "RoadTalk API",
         "version": "test-version",
         "environment": "test",
+    }
+
+
+def test_operational_metrics_returns_only_aggregate_counts() -> None:
+    class Result:
+        def __init__(self, value: int) -> None:
+            self.value = value
+
+        def scalar_one(self) -> int:
+            return self.value
+
+    class Session:
+        def __init__(self) -> None:
+            self.values = iter((12, 7, 4, 18, 3))
+
+        async def execute(self, statement: object) -> Result:
+            del statement
+            return Result(next(self.values))
+
+    application = create_app(test_settings())
+
+    async def session_override() -> Any:
+        yield Session()
+
+    application.dependency_overrides[get_session] = session_override
+    with TestClient(application, raise_server_exceptions=False) as test_client:
+        response = test_client.get("/api/v1/system/metrics")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "active_accounts": 12,
+        "active_locations": 7,
+        "enabled_channels": 4,
+        "active_memberships": 18,
+        "valid_media_grants": 3,
     }
 
 
