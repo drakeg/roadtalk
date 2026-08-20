@@ -29,8 +29,8 @@ up: setup ## Build and start the local API and PostgreSQL/PostGIS stack.
 
 up-voice: setup ## Build and start RoadTalk with local self-hosted LiveKit voice enabled.
 	@set -a; . ./$(ENV_FILE); set +a; \
-		export ROADTALK_PTT_MEDIA_PROVIDER_ENABLED="$${ROADTALK_PTT_MEDIA_PROVIDER_ENABLED:-true}"; \
-		export ROADTALK_PTT_MEDIA_PROVIDER="$${ROADTALK_PTT_MEDIA_PROVIDER:-livekit}"; \
+		export ROADTALK_PTT_MEDIA_PROVIDER_ENABLED=true; \
+		export ROADTALK_PTT_MEDIA_PROVIDER=livekit; \
 		export ROADTALK_PTT_LIVEKIT_URL="$${ROADTALK_PTT_LIVEKIT_URL:-ws://127.0.0.1:$${LIVEKIT_PORT:-7880}}"; \
 		export ROADTALK_PTT_LIVEKIT_API_URL="$${ROADTALK_PTT_LIVEKIT_API_URL:-http://livekit:7880}"; \
 		export ROADTALK_PTT_LIVEKIT_API_KEY="$${ROADTALK_PTT_LIVEKIT_API_KEY:-devkey}"; \
