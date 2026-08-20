@@ -33,6 +33,13 @@ def test_web_root_renders_roadtalk_radio() -> None:
     assert "RoadTalk | Web Radio" in response.text
     assert "HOLD TO" in response.text
     assert "Start RoadTalk" in response.text
+    assert "Your RoadTalk identity" in response.text
+    assert "Choose a call sign" in response.text
+    assert "Permissions" in response.text
+    assert "location-permission" in response.text
+    assert "mic-permission" in response.text
+    assert "/api/v1/me/profile" in response.text
+    assert "/api/v1/callsigns/availability" in response.text
     assert "/ops" in response.text
 
 
