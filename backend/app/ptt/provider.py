@@ -158,7 +158,7 @@ class DisabledMediaProvider:
 class LiveKitMediaProvider:
     """LiveKit adapter used by local self-hosted and approved live deployments."""
 
-    _MICROPHONE_SOURCE = 2
+    _MICROPHONE_SOURCE = api.TrackSource.SOURCE_MICROPHONE
 
     def __init__(
         self,
@@ -257,7 +257,7 @@ class LiveKitMediaProvider:
             (track for track in participant.tracks if track.sid == request.track_ref),
             None,
         )
-        if observed is None or int(observed.source) != self._MICROPHONE_SOURCE or observed.muted:
+        if observed is None or observed.source != self._MICROPHONE_SOURCE or observed.muted:
             raise MediaProviderTrackVerificationError(
                 "opaque track is not an active owned microphone publication"
             )
