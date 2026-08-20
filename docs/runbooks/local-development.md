@@ -28,6 +28,10 @@ exist. `make up` builds the backend image, upgrades the database through Alembic
 starts PostgreSQL/PostGIS and the FastAPI backend, waits for health, and prints the
 local API/docs URLs.
 
+The backend image also downloads the pinned LiveKit browser client during the image
+build and verifies its SHA-256 checksum. The running browser radio serves that asset
+from RoadTalk itself, so using the radio does not depend on a third-party CDN request.
+
 The example secrets are local-only and must never be reused in a shared, field-test,
 or production environment.
 
@@ -125,6 +129,7 @@ local image version aligned with the validated stack.
 - Compose interpolation also resolves a non-default `BACKEND_PORT`;
 - backend/database ports remain loopback-bound;
 - backend runs migrations before serving and has a readiness healthcheck;
+- browser voice code is checksum-pinned into the backend image and served locally;
 - Redis remains optional behind a profile;
 - no secret file is committed;
 - reset requires explicit confirmation;

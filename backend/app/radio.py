@@ -1,9 +1,21 @@
+from pathlib import Path
+
 from fastapi import APIRouter
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 
 from app.web import web_home
 
 router = APIRouter(include_in_schema=False)
+LIVEKIT_CLIENT_PATH = Path("/opt/roadtalk/web/livekit-client.umd.js")
+
+
+@router.get("/assets/livekit-client.umd.js", response_class=FileResponse)
+async def livekit_client() -> FileResponse:
+    return FileResponse(
+        LIVEKIT_CLIENT_PATH,
+        media_type="application/javascript",
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )
 
 
 @router.get("/ops", response_class=HTMLResponse)
@@ -20,7 +32,7 @@ async def radio_console() -> HTMLResponse:
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>RoadTalk | Web Radio</title>
-  <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.21.0/dist/livekit-client.umd.min.js"></script>
+  <script src="/assets/livekit-client.umd.js"></script>
   <style>
     :root{color-scheme:dark;--bg:#07141b;--panel:#10232e;--panel2:#0b1c25;--text:#f2f7f9;--muted:#8fa7b2;--accent:#f2b84b;--green:#70da96;--red:#ff7979;--line:rgba(255,255,255,.1)}
     *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0,rgba(242,184,75,.12),transparent 35rem),var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;min-height:100vh}
