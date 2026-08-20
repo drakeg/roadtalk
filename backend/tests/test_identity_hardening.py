@@ -19,7 +19,7 @@ def settings(*, recovery_attempt_limit: int = 10) -> Settings:
     )
 
 
-def test_openapi_exposes_only_approved_through_s06_d03_contracts() -> None:
+def test_openapi_exposes_only_approved_contracts() -> None:
     schema = create_app(settings()).openapi()
 
     assert set(schema["paths"]) == {
@@ -48,6 +48,7 @@ def test_openapi_exposes_only_approved_through_s06_d03_contracts() -> None:
         "/api/v1/ptt/grants/{receive_grant_id}/transmit",
         "/api/v1/ptt/grants/{transmit_grant_id}/publication",
         "/api/v1/sessions/recover",
+        "/api/v1/system/metrics",
         "/api/v1/system/version",
     }
     components = schema["components"]["schemas"]
