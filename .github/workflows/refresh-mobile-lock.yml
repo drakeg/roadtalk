@@ -1,0 +1,36 @@
+name: Refresh mobile lockfile
+
+on:
+  push:
+    branches:
+      - agent/web-avatar-picker
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-lockfile:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          ref: agent/web-avatar-picker
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - name: Refresh lockfile
+        working-directory: mobile
+        run: npm install --package-lock-only --ignore-scripts
+      - name: Commit refreshed lockfile
+        run: |
+          if git diff --quiet -- mobile/package-lock.json; then
+            echo "Lockfile already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mobile/package-lock.json
+          git commit -m "fix(mobile): refresh SDK 57 lockfile"
+          git push origin HEAD:agent/web-avatar-picker
