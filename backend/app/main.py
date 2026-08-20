@@ -20,6 +20,7 @@ from app.location.limiter import LocationLimiter
 from app.logging import configure_logging
 from app.middleware import RequestContextMiddleware
 from app.problems import install_problem_handlers
+from app.profile_web import router as profile_web_router
 from app.ptt.limiter import PttLimiter
 from app.ptt.provider import media_provider_from_settings
 from app.radio import router as radio_router
@@ -78,6 +79,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(RequestContextMiddleware, settings=resolved)
     install_problem_handlers(app)
     app.include_router(radio_router)
+    app.include_router(profile_web_router)
     app.include_router(web_router)
     app.include_router(system_router)
     app.include_router(auth_router)
