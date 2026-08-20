@@ -159,6 +159,17 @@ jobs:
               for port in ports
           ):
               raise SystemExit("custom BACKEND_PORT did not resolve to loopback 127.0.0.1:18000 -> 8000")
+          services = config["services"]
+          if "livekit" not in services:
+              raise SystemExit("default Compose stack must include local LiveKit")
+          backend_environment = services["backend"]["environment"]
+          if str(backend_environment.get("ROADTALK_PTT_MEDIA_PROVIDER_ENABLED")).lower() != "true":
+              raise SystemExit("default Compose backend must enable the local media provider")
+          if backend_environment.get("ROADTALK_PTT_MEDIA_PROVIDER") != "livekit":
+              raise SystemExit("default Compose backend must use the LiveKit adapter")
+          dependencies = services["backend"].get("depends_on", {})
+          if "livekit" not in dependencies:
+              raise SystemExit("backend must start with the local LiveKit service")
           PY
       - name: Audit Python dependencies
         run: |
