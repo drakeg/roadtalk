@@ -7,7 +7,7 @@ BACKEND_BIN := $(BACKEND_VENV)/bin
 
 .DEFAULT_GOAL := help
 
-.PHONY: help prerequisites setup config up up-redis wait ps logs down reset database-shell redis-cli verify-database local-url backend-install backend-run backend-migrate backend-migration-check backend-migration-downgrade backend-format-check backend-lint backend-typecheck backend-test mobile-install mobile-start mobile-ios mobile-android mobile-doctor mobile-typecheck mobile-test terraform-validate container-build
+.PHONY: help prerequisites setup config up up-voice up-redis wait ps logs down reset database-shell redis-cli verify-database local-url backend-install backend-run backend-migrate backend-migration-check backend-migration-downgrade backend-format-check backend-lint backend-typecheck backend-test mobile-install mobile-start mobile-ios mobile-android mobile-doctor mobile-typecheck mobile-test terraform-validate container-build
 
 help: ## Show local development commands.
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_-]+:.*## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -27,6 +27,19 @@ up: setup ## Build and start the local API and PostgreSQL/PostGIS stack.
 	@$(COMPOSE) --env-file "$(ENV_FILE)" up -d --build --wait database backend
 	@$(MAKE) local-url
 
+up-voice: setup ## Build and start RoadTalk with local self-hosted LiveKit voice enabled.
+	@set -a; . ./$(ENV_FILE); set +a; \
+		export ROADTALK_PTT_MEDIA_PROVIDER_ENABLED="$${ROADTALK_PTT_MEDIA_PROVIDER_ENABLED:-true}"; \
+		export ROADTALK_PTT_MEDIA_PROVIDER="$${ROADTALK_PTT_MEDIA_PROVIDER:-livekit}"; \
+		export ROADTALK_PTT_LIVEKIT_URL="$${ROADTALK_PTT_LIVEKIT_URL:-ws://127.0.0.1:$${LIVEKIT_PORT:-7880}}"; \
+		export ROADTALK_PTT_LIVEKIT_API_URL="$${ROADTALK_PTT_LIVEKIT_API_URL:-http://livekit:7880}"; \
+		export ROADTALK_PTT_LIVEKIT_API_KEY="$${ROADTALK_PTT_LIVEKIT_API_KEY:-devkey}"; \
+		export ROADTALK_PTT_LIVEKIT_API_SECRET="$${ROADTALK_PTT_LIVEKIT_API_SECRET:-secret}"; \
+		$(COMPOSE) --env-file "$(ENV_FILE)" --profile voice up -d --build --wait database livekit backend
+	@$(MAKE) local-url
+	@set -a; . ./$(ENV_FILE); set +a; \
+		echo "RoadTalk voice: ws://127.0.0.1:$${LIVEKIT_PORT:-7880}"
+
 up-redis: setup ## Start API, PostgreSQL/PostGIS, and optional Redis; wait until healthy.
 	@$(COMPOSE) --env-file "$(ENV_FILE)" --profile redis up -d --build --wait
 	@$(MAKE) local-url
@@ -40,12 +53,12 @@ ps: ## Show local service status.
 logs: ## Follow local service logs.
 	@$(COMPOSE) --env-file "$(ENV_FILE)" logs --follow --tail=200
 
-down: ## Stop local services without deleting data.
-	@$(COMPOSE) --env-file "$(ENV_FILE)" --profile redis down
+down: ## Stop all local services without deleting data.
+	@$(COMPOSE) --env-file "$(ENV_FILE)" --profile redis --profile voice down
 
 reset: ## Delete local containers and data; requires CONFIRM_RESET=yes.
 	@test "$(CONFIRM_RESET)" = "yes" || { echo "Refusing destructive reset. Re-run with CONFIRM_RESET=yes."; exit 1; }
-	@$(COMPOSE) --env-file "$(ENV_FILE)" --profile redis down --volumes --remove-orphans
+	@$(COMPOSE) --env-file "$(ENV_FILE)" --profile redis --profile voice down --volumes --remove-orphans
 
 database-shell: ## Open psql inside the local database container.
 	@$(COMPOSE) --env-file "$(ENV_FILE)" exec database psql -U "$${POSTGRES_USER:-roadtalk}" -d "$${POSTGRES_DB:-roadtalk}"
@@ -56,10 +69,12 @@ redis-cli: ## Open redis-cli when the optional Redis profile is running.
 verify-database: ## Verify PostgreSQL and PostGIS are available.
 	@$(COMPOSE) --env-file "$(ENV_FILE)" exec -T database psql -U "$${POSTGRES_USER:-roadtalk}" -d "$${POSTGRES_DB:-roadtalk}" -v ON_ERROR_STOP=1 -c "SELECT current_database(), PostGIS_Full_Version();"
 
-local-url: ## Print the configured local API and docs URLs.
+local-url: ## Print the configured local web, API, operations, and docs URLs.
 	@test -f "$(ENV_FILE)" || { echo "Missing $(ENV_FILE). Run 'make setup'."; exit 1; }
 	@set -a; . ./$(ENV_FILE); set +a; \
 		port="$${BACKEND_PORT:-8000}"; \
+		echo "RoadTalk web:  http://127.0.0.1:$$port/"; \
+		echo "RoadTalk ops:  http://127.0.0.1:$$port/ops"; \
 		echo "RoadTalk API:  http://127.0.0.1:$$port/api/v1"; \
 		echo "RoadTalk docs: http://127.0.0.1:$$port/docs"
 
