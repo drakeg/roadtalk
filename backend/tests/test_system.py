@@ -25,17 +25,24 @@ def client() -> TestClient:
     )
 
 
-def test_web_root_renders_roadtalk_interface() -> None:
+def test_web_root_renders_roadtalk_radio() -> None:
     with client() as test_client:
         response = test_client.get("/")
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/html")
+    assert "RoadTalk | Web Radio" in response.text
+    assert "HOLD TO" in response.text
+    assert "Start RoadTalk" in response.text
+    assert "/ops" in response.text
+
+
+def test_operations_dashboard_remains_available() -> None:
+    with client() as test_client:
+        response = test_client.get("/ops")
+    assert response.status_code == 200
     assert "RoadTalk | Local Operations Dashboard" in response.text
-    assert "RoadTalk service overview" in response.text
     assert "API response latency" in response.text
     assert "Operational event log" in response.text
-    assert "/api/v1/system/version" in response.text
-    assert "/health/ready" in response.text
 
 
 def test_liveness_returns_request_id() -> None:
@@ -74,6 +81,17 @@ def test_version_endpoint_is_versioned() -> None:
         "name": "RoadTalk API",
         "version": "test-version",
         "environment": "test",
+    }
+
+
+def test_client_config_exposes_only_browser_safe_values() -> None:
+    with client() as test_client:
+        response = test_client.get("/api/v1/system/client-config")
+    assert response.status_code == 200
+    assert response.json() == {
+        "location_policy_version": "location-v1",
+        "location_disclosure_version": "location-disclosure-v1",
+        "media_provider_enabled": False,
     }
 
 
