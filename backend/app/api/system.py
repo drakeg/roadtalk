@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
@@ -10,6 +11,7 @@ from app.db.models import Account, Channel, ChannelMembership, CurrentLocation, 
 from app.db.session import get_session
 
 router = APIRouter(tags=["system"])
+DatabaseSession = Annotated[AsyncSession, Depends(get_session)]
 
 
 class StatusResponse(BaseModel):
@@ -74,9 +76,7 @@ async def client_config(request: Request) -> ClientConfigResponse:
 
 
 @router.get("/api/v1/system/metrics", response_model=OperationalMetricsResponse)
-async def operational_metrics(
-    session: AsyncSession = Depends(get_session),
-) -> OperationalMetricsResponse:
+async def operational_metrics(session: DatabaseSession) -> OperationalMetricsResponse:
     now = datetime.now(UTC)
     statements = (
         select(func.count()).select_from(Account).where(Account.status == "active"),
