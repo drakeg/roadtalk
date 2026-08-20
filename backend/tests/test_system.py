@@ -63,6 +63,17 @@ def test_livekit_browser_client_is_served_locally(
     assert response.text == "window.LivekitClient = {};"
 
 
+def test_web_radio_preserves_location_order_across_page_reloads() -> None:
+    with client() as test_client:
+        response = test_client.get("/")
+
+    assert response.status_code == 200
+    assert "LOCATION_SEQUENCE_KEY='rt_location_seq'" in response.text
+    assert "Math.max(state.seq,stored,Date.now())+1" in response.text
+    assert "client_sequence:sequence" in response.text
+    assert "RoadTalk could not update your location" in response.text
+
+
 def test_operations_dashboard_remains_available() -> None:
     with client() as test_client:
         response = test_client.get("/ops")
