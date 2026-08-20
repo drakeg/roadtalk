@@ -27,6 +27,12 @@ class VersionResponse(BaseModel):
     environment: str
 
 
+class ClientConfigResponse(BaseModel):
+    location_policy_version: str
+    location_disclosure_version: str
+    media_provider_enabled: bool
+
+
 class OperationalMetricsResponse(BaseModel):
     active_accounts: int
     active_locations: int
@@ -54,6 +60,16 @@ async def version(request: Request) -> VersionResponse:
         name=settings.app_name,
         version=settings.version,
         environment=settings.environment,
+    )
+
+
+@router.get("/api/v1/system/client-config", response_model=ClientConfigResponse)
+async def client_config(request: Request) -> ClientConfigResponse:
+    settings: Settings = request.app.state.settings
+    return ClientConfigResponse(
+        location_policy_version=settings.location_policy_version,
+        location_disclosure_version=settings.location_disclosure_version,
+        media_provider_enabled=settings.ptt_media_provider_enabled,
     )
 
 
