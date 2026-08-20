@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Literal, NoReturn, Protocol
 
 import jwt
+from livekit import api
 from pydantic import SecretStr
 
 from app.config import Settings
@@ -18,7 +19,7 @@ class MediaProviderDisabledError(MediaProviderError):
 
 
 class MediaProviderUnavailableError(MediaProviderError):
-    """Raised when an approved production adapter is not installed or available."""
+    """Raised when the configured media provider is unavailable."""
 
 
 class MediaProviderTrackVerificationError(MediaProviderError):
@@ -154,6 +155,144 @@ class DisabledMediaProvider:
         self._raise()
 
 
+class LiveKitMediaProvider:
+    """LiveKit adapter used by local self-hosted and approved live deployments."""
+
+    _MICROPHONE_SOURCE = 2
+
+    def __init__(
+        self,
+        *,
+        server_url: str,
+        api_url: str,
+        api_key: str,
+        api_secret: str,
+    ) -> None:
+        self._server_url = server_url
+        self._api_url = api_url
+        self._api_key = api_key
+        self._api_secret = api_secret
+
+    def _client(self) -> api.LiveKitAPI:
+        return api.LiveKitAPI(
+            url=self._api_url,
+            api_key=self._api_key,
+            api_secret=self._api_secret,
+        )
+
+    async def issue_receive_credential(
+        self, request: ReceiveCredentialRequest
+    ) -> ReceiveCredential:
+        now = datetime.now(UTC)
+        expires_at = now + timedelta(seconds=request.ttl_seconds)
+        token = (
+            api.AccessToken(self._api_key, self._api_secret)
+            .with_identity(request.participant_ref)
+            .with_ttl(timedelta(seconds=request.ttl_seconds))
+            .with_grants(
+                api.VideoGrants(
+                    room_join=True,
+                    room=request.room_ref,
+                    can_subscribe=True,
+                    can_publish=False,
+                    can_publish_data=False,
+                )
+            )
+            .to_jwt()
+        )
+        return ReceiveCredential(
+            server_url=self._server_url,
+            participant_token=SecretStr(token),
+            expires_at=expires_at,
+        )
+
+    async def set_microphone_publish(self, request: MicrophonePublishRequest) -> None:
+        permission = api.ParticipantPermission(
+            can_subscribe=True,
+            can_publish=request.enabled,
+            can_publish_data=False,
+            can_publish_sources=(
+                [self._MICROPHONE_SOURCE] if request.enabled else []
+            ),
+        )
+        try:
+            async with self._client() as client:
+                await client.room.update_participant(
+                    api.UpdateParticipantRequest(
+                        room=request.room_ref,
+                        identity=request.participant_ref,
+                        permission=permission,
+                    )
+                )
+        except Exception as exc:
+            raise MediaProviderUnavailableError(
+                "LiveKit participant permission update failed"
+            ) from exc
+
+    async def remove_participant(self, request: ParticipantRequest) -> None:
+        try:
+            async with self._client() as client:
+                await client.room.remove_participant(
+                    api.RoomParticipantIdentity(
+                        room=request.room_ref,
+                        identity=request.participant_ref,
+                    )
+                )
+        except Exception as exc:
+            raise MediaProviderUnavailableError("LiveKit participant removal failed") from exc
+
+    async def verify_microphone_track(
+        self, request: MicrophoneTrackLookupRequest
+    ) -> VerifiedMicrophoneTrack:
+        try:
+            async with self._client() as client:
+                participant = await client.room.get_participant(
+                    api.RoomParticipantIdentity(
+                        room=request.room_ref,
+                        identity=request.participant_ref,
+                    )
+                )
+        except Exception as exc:
+            raise MediaProviderTrackVerificationError(
+                "LiveKit participant lookup failed"
+            ) from exc
+
+        observed = next(
+            (track for track in participant.tracks if track.sid == request.track_ref),
+            None,
+        )
+        if (
+            observed is None
+            or int(observed.source) != self._MICROPHONE_SOURCE
+            or observed.muted
+        ):
+            raise MediaProviderTrackVerificationError(
+                "opaque track is not an active owned microphone publication"
+            )
+        return VerifiedMicrophoneTrack(
+            room_ref=request.room_ref,
+            participant_ref=request.participant_ref,
+            track_ref=request.track_ref,
+        )
+
+    async def update_track_subscriptions(self, request: SelectiveSubscriptionRequest) -> None:
+        try:
+            async with self._client() as client:
+                for participant_ref in request.participant_refs:
+                    await client.room.update_subscriptions(
+                        api.UpdateSubscriptionsRequest(
+                            room=request.track.room_ref,
+                            identity=participant_ref,
+                            track_sids=[request.track.track_ref],
+                            subscribe=request.action == "subscribe",
+                        )
+                    )
+        except Exception as exc:
+            raise MediaProviderSubscriptionError(
+                "LiveKit selective subscription update failed"
+            ) from exc
+
+
 class FakeMediaProvider:
     """Deterministic, no-network provider for unit tests and CI."""
 
@@ -251,4 +390,18 @@ class FakeMediaProvider:
 def media_provider_from_settings(settings: Settings) -> MediaProvider:
     if not settings.ptt_media_provider_enabled:
         return DisabledMediaProvider()
-    raise MediaProviderUnavailableError("live PTT media adapter is not implemented")
+    if settings.ptt_media_provider != "livekit":
+        raise MediaProviderUnavailableError("unsupported PTT media provider")
+    if (
+        settings.ptt_livekit_url is None
+        or settings.ptt_livekit_api_url is None
+        or settings.ptt_livekit_api_key is None
+        or settings.ptt_livekit_api_secret is None
+    ):
+        raise MediaProviderUnavailableError("LiveKit media configuration is incomplete")
+    return LiveKitMediaProvider(
+        server_url=settings.ptt_livekit_url,
+        api_url=settings.ptt_livekit_api_url,
+        api_key=settings.ptt_livekit_api_key.get_secret_value(),
+        api_secret=settings.ptt_livekit_api_secret.get_secret_value(),
+    )
