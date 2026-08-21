@@ -33,7 +33,7 @@ up-voice: up ## Compatibility alias for the default voice-ready stack.
 up-lan: setup ## Start the voice-ready stack behind opt-in LAN HTTPS.
 	@test -n "$(ROADTALK_LAN_HOST)" || { echo "Set ROADTALK_LAN_HOST to this computer's private IP address."; exit 1; }
 	@ROADTALK_LAN_HOST="$(ROADTALK_LAN_HOST)" $(LAN_COMPOSE) --env-file "$(ENV_FILE)" up -d --build --wait
-	@echo "RoadTalk LAN: https://$(ROADTALK_LAN_HOST):${ROADTALK_LAN_HTTPS_PORT:-8443}/"
+	@port="${ROADTALK_LAN_HTTPS_PORT:-8443}"; echo "RoadTalk LAN: https://$(ROADTALK_LAN_HOST):$port/"
 	@echo "Run 'make lan-ca ROADTALK_LAN_HOST=$(ROADTALK_LAN_HOST)' and trust the certificate on each test device."
 
 lan-ca: ## Export the local HTTPS certificate authority for trusted test devices.
@@ -41,6 +41,7 @@ lan-ca: ## Export the local HTTPS certificate authority for trusted test devices
 	@mkdir -p .local
 	@ROADTALK_LAN_HOST="$(ROADTALK_LAN_HOST)" $(LAN_COMPOSE) --env-file "$(ENV_FILE)" cp gateway:/data/caddy/pki/authorities/local/root.crt .local/roadtalk-local-ca.crt
 	@echo "Certificate authority: .local/roadtalk-local-ca.crt"
+
 up-redis: setup ## Start API, PostgreSQL/PostGIS, and optional Redis; wait until healthy.
 	@$(COMPOSE) --env-file "$(ENV_FILE)" --profile redis up -d --build --wait
 	@$(MAKE) local-url
