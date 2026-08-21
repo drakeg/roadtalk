@@ -23,23 +23,11 @@ config: ## Validate the resolved Docker Compose configuration.
 	@test -f "$(ENV_FILE)" || { echo "Missing $(ENV_FILE). Run 'make setup'."; exit 1; }
 	@$(COMPOSE) --env-file "$(ENV_FILE)" config --quiet
 
-up: setup ## Build and start the local API and PostgreSQL/PostGIS stack.
-	@$(COMPOSE) --env-file "$(ENV_FILE)" up -d --build --wait database backend
+up: setup ## Build and start the complete local RoadTalk voice stack.
+	@$(COMPOSE) --env-file "$(ENV_FILE)" up -d --build --wait database livekit backend
 	@$(MAKE) local-url
 
-up-voice: setup ## Build and start RoadTalk with local self-hosted LiveKit voice enabled.
-	@set -a; . ./$(ENV_FILE); set +a; \
-		export ROADTALK_PTT_MEDIA_PROVIDER_ENABLED=true; \
-		export ROADTALK_PTT_MEDIA_PROVIDER=livekit; \
-		export ROADTALK_PTT_LIVEKIT_URL="$${ROADTALK_PTT_LIVEKIT_URL:-ws://127.0.0.1:$${LIVEKIT_PORT:-7880}}"; \
-		export ROADTALK_PTT_LIVEKIT_API_URL="$${ROADTALK_PTT_LIVEKIT_API_URL:-http://livekit:7880}"; \
-		export ROADTALK_PTT_LIVEKIT_API_KEY="$${ROADTALK_PTT_LIVEKIT_API_KEY:-devkey}"; \
-		export ROADTALK_PTT_LIVEKIT_API_SECRET="$${ROADTALK_PTT_LIVEKIT_API_SECRET:-secret}"; \
-		$(COMPOSE) --env-file "$(ENV_FILE)" --profile voice up -d --build --wait database livekit backend
-	@$(MAKE) local-url
-	@set -a; . ./$(ENV_FILE); set +a; \
-		echo "RoadTalk voice: ws://127.0.0.1:$${LIVEKIT_PORT:-7880}"
-
+up-voice: up ## Compatibility alias for the default voice-ready stack.
 up-redis: setup ## Start API, PostgreSQL/PostGIS, and optional Redis; wait until healthy.
 	@$(COMPOSE) --env-file "$(ENV_FILE)" --profile redis up -d --build --wait
 	@$(MAKE) local-url

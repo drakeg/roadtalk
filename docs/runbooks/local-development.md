@@ -6,8 +6,8 @@
 ## Cost boundary
 
 This environment runs only on the developer's machine and creates no AWS or LiveKit
-resources. PostgreSQL/PostGIS and the FastAPI backend run as local containers. Redis
-remains optional behind a Compose profile and is not required by the current product.
+Cloud resources. PostgreSQL/PostGIS, self-hosted LiveKit, and the FastAPI backend run
+as local containers. Redis remains optional behind a Compose profile.
 
 ## Prerequisites
 
@@ -25,8 +25,9 @@ make verify-database
 
 `make setup` creates an ignored `.env` from `.env.example` only when it does not
 exist. `make up` builds the backend image, upgrades the database through Alembic,
-starts PostgreSQL/PostGIS and the FastAPI backend, waits for health, and prints the
-local API/docs URLs.
+starts PostgreSQL/PostGIS, self-hosted LiveKit, and the FastAPI backend, waits for
+health, and prints the local URLs. Plain `docker compose up --build` starts the same
+voice-ready stack in the foreground.
 
 The backend image also downloads the pinned LiveKit browser client during the image
 build and verifies its SHA-256 checksum. The running browser radio serves that asset
@@ -46,10 +47,12 @@ site data safely resets it; the next value is seeded from the current time.
 |---|---|---|
 | RoadTalk FastAPI | `http://127.0.0.1:8000` | `make up` |
 | PostgreSQL 17 + PostGIS 3.5 | `127.0.0.1:5432` | `make up` |
+| LiveKit (local voice) | `ws://127.0.0.1:7880` | `make up` |
 | Redis 8 | `127.0.0.1:6379` | `make up-redis` |
 
-All published ports bind only to loopback. Redis is optional and excluded from the
-default Compose profile.
+HTTP and database ports bind only to loopback. LiveKit's local WebRTC transport also
+publishes its TCP/UDP media ports so browsers and devices can establish audio. Redis
+is optional and excluded from the default Compose profile.
 
 ## Changing the local API port
 
@@ -89,7 +92,8 @@ explicit testing decision rather than silently broadening the bind address.
 | `make prerequisites` | Check Docker, daemon, and Compose. |
 | `make setup` | Create `.env` if absent and validate Compose. |
 | `make config` | Validate the resolved Compose model. |
-| `make up` | Build/start API + PostgreSQL/PostGIS and wait for health. |
+| `make up` | Build/start API + PostgreSQL/PostGIS + local LiveKit voice and wait for health. |
+| `make up-voice` | Compatibility alias for `make up`. |
 | `make up-redis` | Build/start API + database + optional Redis. |
 | `make local-url` | Print configured API and docs URLs. |
 | `make ps` | Display service health/status. |
@@ -133,9 +137,10 @@ local image version aligned with the validated stack.
 - Compose YAML and interpolation parse with the default port;
 - Compose interpolation also resolves a non-default `BACKEND_PORT`;
 - backend/database ports remain loopback-bound;
+- the default stack includes local self-hosted LiveKit and enables the backend media adapter;
 - backend runs migrations before serving and has a readiness healthcheck;
 - browser voice code is checksum-pinned into the backend image and served locally;
 - Redis remains optional behind a profile;
 - no secret file is committed;
 - reset requires explicit confirmation;
-- no AWS or LiveKit resource/call is introduced.
+- no AWS or LiveKit Cloud resource/call is introduced.
