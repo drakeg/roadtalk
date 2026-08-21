@@ -54,6 +54,46 @@ HTTP and database ports bind only to loopback. LiveKit's local WebRTC transport 
 publishes its TCP/UDP media ports so browsers and devices can establish audio. Redis
 is optional and excluded from the default Compose profile.
 
+## Testing from another device on your home network
+
+The default stack intentionally binds the web application to loopback. For an explicit,
+temporary home-LAN test, find this computer's private IPv4 address and run:
+
+```sh
+make up-lan ROADTALK_LAN_HOST=10.0.0.25
+make lan-ca ROADTALK_LAN_HOST=10.0.0.25
+```
+
+Replace `10.0.0.25` with the Docker host's actual private address. The LAN workflow
+adds a Caddy HTTPS gateway at `https://10.0.0.25:8443/` and routes both the RoadTalk
+API and LiveKit signaling through it. HTTPS is required because browsers do not grant
+microphone or precise-location access to an ordinary insecure private-IP origin.
+
+Caddy's local certificate authority is exported to
+`.local/roadtalk-local-ca.crt`. Securely copy that certificate to each test device,
+install it as a trusted root, and explicitly enable full trust where the operating
+system requires it. Do not copy or trust any other file from the Caddy data volume.
+Restart the device browser after changing certificate trust.
+
+Your host firewall must permit the following inbound traffic from the trusted home
+subnet only:
+
+| Protocol | Port | Purpose |
+|---|---:|---|
+| TCP | 8443 | RoadTalk HTTPS and LiveKit secure signaling |
+| TCP | 7881 | LiveKit WebRTC fallback |
+| UDP | 7882 | LiveKit WebRTC media |
+
+Do not configure router port forwarding, public DNS, or internet exposure. The gateway
+uses local development credentials and is suitable only for a private, trusted test
+network. Stop LAN exposure when testing is complete:
+
+```sh
+make down-lan ROADTALK_LAN_HOST=10.0.0.25
+```
+
+The normal `docker compose up --build` and `make up` workflows remain loopback-only.
+
 ## Changing the local API port
 
 Set `BACKEND_PORT` in `.env` and restart the stack. No Compose-file edit is required.
@@ -94,6 +134,8 @@ explicit testing decision rather than silently broadening the bind address.
 | `make config` | Validate the resolved Compose model. |
 | `make up` | Build/start API + PostgreSQL/PostGIS + local LiveKit voice and wait for health. |
 | `make up-voice` | Compatibility alias for `make up`. |
+| `make up-lan ROADTALK_LAN_HOST=…` | Start the opt-in home-LAN HTTPS gateway. |
+| `make lan-ca ROADTALK_LAN_HOST=…` | Export the local CA certificate for test devices. |
 | `make up-redis` | Build/start API + database + optional Redis. |
 | `make local-url` | Print configured API and docs URLs. |
 | `make ps` | Display service health/status. |
@@ -101,7 +143,8 @@ explicit testing decision rather than silently broadening the bind address.
 | `make verify-database` | Query PostgreSQL and PostGIS versions. |
 | `make database-shell` | Open psql. |
 | `make redis-cli` | Open redis-cli when the optional profile is running. |
-| `make down` | Stop containers without deleting data. |
+| `make down` | Stop loopback-only containers without deleting data. |
+| `make down-lan ROADTALK_LAN_HOST=…` | Stop the LAN HTTPS stack without deleting data. |
 | `make reset CONFIRM_RESET=yes` | Delete local containers and named volumes. |
 
 ## Host-process backend alternative
@@ -138,6 +181,7 @@ local image version aligned with the validated stack.
 - Compose interpolation also resolves a non-default `BACKEND_PORT`;
 - backend/database ports remain loopback-bound;
 - the default stack includes local self-hosted LiveKit and enables the backend media adapter;
+- the LAN override requires an explicit host IP, resolves an HTTPS gateway, and keeps the normal stack loopback-only;
 - backend runs migrations before serving and has a readiness healthcheck;
 - browser voice code is checksum-pinned into the backend image and served locally;
 - Redis remains optional behind a profile;
