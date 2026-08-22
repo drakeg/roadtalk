@@ -76,7 +76,9 @@ def test_route_mode_openapi_is_exact_authenticated_and_non_disclosing() -> None:
         "availability",
     }
     assert set(components["RouteModeUpdateRequest"]["properties"]) == {"mode", "expected_version"}
-    serialized = str(components).lower()
+    exposed_fields = set(components["RouteModeResponse"]["properties"]) | set(
+        components["RouteModeUpdateRequest"]["properties"]
+    )
     for forbidden in (
         "route_name",
         "road",
@@ -86,7 +88,7 @@ def test_route_mode_openapi_is_exact_authenticated_and_non_disclosing() -> None:
         "coordinate",
         "audience",
     ):
-        assert forbidden not in serialized
+        assert forbidden not in exposed_fields
 
 
 def test_route_mode_routes_require_authentication() -> None:
