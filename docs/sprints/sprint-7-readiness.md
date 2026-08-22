@@ -1,14 +1,14 @@
 # Sprint 7 readiness
 
 - Sprint: 7 — Route Awareness
-- Status: READY FOR PRODUCT-OWNER DECISION; implementation not yet authorized
+- Status: APPROVED FOR LOCKED LOCAL/CI IMPLEMENTATION
 - Planning date: 2026-08-22
 - Current and incremental implementation cost: **$0 AWS + $0 LiveKit + $0 routing provider per month**
 
 ## Authorization boundary
 
-This readiness record accompanies the proposed Sprint 7 specification. Approval may
-authorize only local development and GitHub CI against deterministic route fixtures and
+Planning PR #164 records product-owner approval of the Sprint 7 specification. Tracker
+#173 locks delivery issues #165–#172. This approval authorizes only local development and GitHub CI against deterministic route fixtures and
 a fake provider. It does not activate a hosted routing API, the public OSRM demo
 service, OpenStreetMap APIs/tiles, a regional dataset, a routing container, LiveKit
 Cloud, AWS, a payment method, a paid plan, an always-on environment, field deployment,
@@ -104,9 +104,9 @@ A real provider or self-hosted regional road graph would require a separate comp
 of license, attribution, data size/update process, latency, rate limits, privacy,
 operations and recurring cost. No free tier is assumed to be permanent or sufficient.
 
-## Locked implementation order if approved
+## Locked implementation order
 
-1. Merge specification/readiness approval and create one tracker plus D02–D09 issues.
+1. Specification/readiness approved in #164; tracker #173 and D02–D09 issues #165–#172 created.
 2. Add route-mode persistence/API with Nearby default.
 3. Add minimized provider boundary, deterministic fake and hard-disabled real config.
 4. Add current context persistence, matching validation, expiry and deletion.
@@ -125,13 +125,13 @@ reviewable, keep all prior gates green, and add no external call or dataset.
 - [x] Local alpha stabilization through PR #163 is merged.
 - [x] Objective, product decisions, APIs, data boundary and exclusions are specified.
 - [x] Privacy/security/licensing/cost and evidence limits are explicit.
-- [ ] Product owner approves the specification and readiness record.
-- [ ] Sprint 7 tracker and exact work items are created and locked.
+- [x] Product owner approved the specification and readiness record by merging PR #164.
+- [x] Sprint 7 tracker #173 and exact work items #165–#172 are created and locked.
 
-**Decision: READY FOR APPROVAL, NOT READY TO CODE.** Merging this planning record may
-serve as product-owner approval, after which tracker creation is the only authorized
-next action. It does not itself permit provider activation or implementation before
-the tracker is locked.
+**Decision: READY TO CODE WITHIN THE LOCKED LOCAL/CI BOUNDARY.** Implementation must
+follow #165 → #166 → #167 → #168 → #169 → #170 → #171 → #172. This decision does not
+permit provider activation, external network calls, dataset downloads, cloud resources,
+or spend.
 
 ## References
 

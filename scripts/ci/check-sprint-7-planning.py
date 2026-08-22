@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail CI when proposed Sprint 7 planning loses a safety boundary."""
+"""Fail CI when approved Sprint 7 planning loses a safety boundary."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ for identifier in (
         fail(f"{specification} does not define {identifier.upper()}")
 
 for phrase in (
-    "proposed for product-owner review",
+    "approved for implementation in locked tracker issue #173",
     "nearby remains the default",
     "same road is an explicit account setting",
     "does not ask for or infer a destination",
@@ -51,7 +51,7 @@ for phrase in (
 readiness_path = "docs/sprints/sprint-7-readiness.md"
 readiness = read(readiness_path)
 for phrase in (
-    "ready for product-owner decision; implementation not yet authorized",
+    "approved for locked local/ci implementation",
     "nearby remains the default",
     "same road is an explicit restrictive receive mode",
     "real provider configuration must remain disabled",
@@ -59,7 +59,7 @@ for phrase in (
     "one `current_route_context` row",
     "odbl attribution/share-alike",
     "terraform | disabled; zero resources",
-    "ready for approval, not ready to code",
+    "ready to code within the locked local/ci boundary",
 ):
     if phrase not in readiness:
         fail(f"{readiness_path} is missing {phrase!r}")
@@ -67,7 +67,7 @@ for phrase in (
 workflow = read(".github/workflows/ci.yml")
 if "python scripts/ci/check-sprint-7-planning.py" not in workflow:
     fail("CI does not enforce the Sprint 7 planning gate")
-if "check proposed sprint 7 planning boundaries" not in workflow:
-    fail("CI does not describe Sprint 7 planning as proposed")
+if "check approved sprint 7 planning boundaries" not in workflow:
+    fail("CI does not describe Sprint 7 planning as approved")
 
 print("Sprint 7 planning gate: passed")

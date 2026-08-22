@@ -7,10 +7,10 @@
 - [Original RoadTalk Development Plan](reference/RoadTalk_Development_Plan.docx)
 - [Agile Workflow](AGILE_WORKFLOW.md)
 
-## Sprint 7 — Route Awareness (proposed; not authorized to implement)
+## Sprint 7 — Route Awareness (approved; locked local/CI implementation)
 
-- [Sprint 7: Route Awareness](sprints/sprint-7-route-awareness.md) — PROPOSED
-- [Sprint 7 readiness](sprints/sprint-7-readiness.md) — READY FOR PRODUCT-OWNER DECISION
+- [Sprint 7: Route Awareness](sprints/sprint-7-route-awareness.md) — APPROVED
+- [Sprint 7 readiness](sprints/sprint-7-readiness.md) — READY TO CODE WITHIN LOCKED BOUNDARY
 - Nearby remains default; Same road is an explicit restrictive mode
 - No destination, navigation, route history, map, provider activation, dataset download,
   cloud resource, external routing call, or recurring spend is approved

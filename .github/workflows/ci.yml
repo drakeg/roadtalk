@@ -220,7 +220,7 @@ jobs:
         run: python scripts/ci/check-sprint-5-review.py
       - name: Check approved Sprint 6 planning boundaries
         run: python scripts/ci/check-sprint-6-planning.py
-      - name: Check proposed Sprint 7 planning boundaries
+      - name: Check approved Sprint 7 planning boundaries
         run: python scripts/ci/check-sprint-7-planning.py
       - name: Check Sprint 6 channel privacy and scope
         run: python scripts/ci/check-channel-privacy.py
