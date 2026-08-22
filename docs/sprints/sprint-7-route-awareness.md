@@ -2,10 +2,9 @@
 
 ## Status
 
-Proposed for product-owner review. This document defines a local/GitHub CI scope only.
-Merging the planning pull request approves the specification and readiness record; it
-does not itself authorize implementation until the Sprint 7 tracker is created and
-locked. No routing provider, map dataset, cloud resource, or paid service is activated.
+Approved for implementation in locked tracker issue #173. This document defines a
+local/GitHub CI scope only. Product-owner approval was recorded by merging planning PR
+#164; issues #165–#172 are locked in dependency order by #173. No routing provider, map dataset, cloud resource, or paid service is activated.
 
 ## Objective
 
@@ -179,9 +178,10 @@ delete current route context.
 
 ## Entry and exit criteria
 
-Entry requires accepted Sprint 6, merged local alpha stabilizations through PR #163,
-explicit product-owner approval of this specification/readiness/cost boundary, and a
-locked Sprint 7 tracker. Until then, Sprint 7 implementation is not authorized.
+Entry requirements are satisfied: Sprint 6 is accepted, local alpha stabilizations
+through PR #163 are merged, product-owner approval of this specification/readiness/cost
+boundary is recorded by merged PR #164, and tracker #173 locks issues #165–#172. Sprint
+7 implementation is authorized only in that order and within this boundary.
 
 Exit requires S07-R01–R12, S07-T01–T12 and S07-D01–D09 fully traced; green backend,
 PostGIS, migration, mobile/browser, security, container and disabled-IaC suites; a
