@@ -17,9 +17,7 @@ def _route_mode_error(exc: RouteModeError) -> HTTPException:
 
 
 @router.get("/me/route-mode", response_model=RouteModeResponse)
-async def read_route_mode(
-    db: DatabaseSession, current: CurrentSession
-) -> RouteModeResponse:
+async def read_route_mode(db: DatabaseSession, current: CurrentSession) -> RouteModeResponse:
     try:
         receipt = await get_route_mode(db, account_id=current.account.id)
     except RouteModeError as exc:
