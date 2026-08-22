@@ -28,10 +28,10 @@ def upgrade() -> None:
         ),
         sa.Column("version", sa.Integer(), server_default="1", nullable=False),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+            "created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
         ),
         sa.Column(
-            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+            "updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False
         ),
         sa.CheckConstraint(
             "mode IN ('nearby', 'same_road')", name="ck_account_route_mode_mode_allowed"
