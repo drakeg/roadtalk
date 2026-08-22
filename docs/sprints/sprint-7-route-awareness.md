@@ -31,6 +31,7 @@ Nearby experience.
   direction bucket, confidence state, source location version, policy version, and
   short expiry. Snapped coordinates, road names, geometries, traces, and raw provider
   payloads are neither persisted nor returned.
+- Automatic subscription remains disabled; selective subscription stays server-authorized.
 - Same-road delivery requires both endpoints to have fresh, confident context for the
   same normalized corridor and compatible direction. Missing, ambiguous, stale,
   conflicting, or provider-failed context denies Same-road delivery; it does not fall
