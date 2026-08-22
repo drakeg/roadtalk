@@ -2,6 +2,19 @@
 
 All notable RoadTalk changes are recorded here. The repository history and sprint review records remain the detailed source of truth.
 
+## Unreleased — Sprint 7: Route Awareness
+
+### Planning
+
+- Proposed S07-R01–R12, S07-T01–T12 and S07-D01–D09 for an explicit Same-road
+  receive mode layered after existing proximity/channel authorization.
+- Preserved Nearby as the default and excluded destinations, navigation, route history,
+  maps, external routing calls, datasets and provider activation.
+- Defined current-only keyed corridor/direction context, deterministic provider fakes,
+  fail-closed behavior, $0 implementation, and explicit ODbL/provider decision gates.
+- Sprint 7 implementation remains unauthorized until product-owner approval and a
+  locked tracker.
+
 ## Unreleased — Sprint 6: Channels
 
 ### Planning
