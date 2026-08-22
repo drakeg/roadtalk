@@ -20,7 +20,12 @@ def upgrade() -> None:
         "account_route_mode",
         sa.Column("account_id", sa.Uuid(), nullable=False),
         sa.Column("mode", sa.String(16), server_default="nearby", nullable=False),
-        sa.Column("selected_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column(
+            "selected_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            nullable=False,
+        ),
         sa.Column("version", sa.Integer(), server_default="1", nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
