@@ -8,10 +8,7 @@ from typing import Any
 import pytest
 
 MIGRATION_PATH = (
-    Path(__file__).parents[1]
-    / "migrations"
-    / "versions"
-    / "0011_repair_channel_idempotency.py"
+    Path(__file__).parents[1] / "migrations" / "versions" / "0011_repair_channel_idempotency.py"
 )
 
 
