@@ -4,6 +4,10 @@ Sprint 6 active owner: S06-D02 Channel schema and public catalog.
 
 The backend is a Python/FastAPI modular-monolith control API.
 
+## Sprint 7 route mode
+
+Authenticated accounts can read and conditionally update their explicit receive mode at `GET/PUT /api/v1/me/route-mode`. Nearby is the persisted default. Same-road selection is stored but reports unavailable until later locked deliverables add deterministic context matching. The request accepts only `mode` and `expected_version`; no route, road, provider, location, or audience data crosses this boundary.
+
 ## Current foundation
 
 S01-D03 and S01-D04 provide:
