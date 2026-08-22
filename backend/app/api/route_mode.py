@@ -9,11 +9,9 @@ router = APIRouter(prefix="/api/v1", tags=["route-mode"])
 
 def _route_mode_error(exc: RouteModeError) -> HTTPException:
     return HTTPException(
-        status_code=(
-            status.HTTP_409_CONFLICT
-            if exc.code == "ROUTE_MODE_VERSION_CONFLICT"
-            else status.HTTP_404_NOT_FOUND
-        ),
+        status_code=status.HTTP_409_CONFLICT
+        if exc.code == "ROUTE_MODE_VERSION_CONFLICT"
+        else status.HTTP_404_NOT_FOUND,
         detail={"code": exc.code, "detail": exc.detail},
     )
 
