@@ -9,11 +9,12 @@ Identity, and Sprint 3 — Location are complete. Sprint 1 is conditionally acce
 with named exceptions that must close before the first field test.
 
 Sprint 4 — Push-to-Talk and Sprint 5 — Proximity Engine are complete and accepted.
-Sprint 6 — Channels implementation is complete through S06-D08 and merged PR #147.
-Merging the S06-D09 review records final Sprint 6 product-owner acceptance, closes
-[tracker #139](https://github.com/drakeg/roadtalk/issues/139), and permits the next
-RoadTalk planning decision. It does not authorize Sprint 7 coding, AWS or LiveKit
-activation, paid plans, recurring spend, production/public beta, or field-test claims.
+Sprint 6 — Channels is complete and accepted by merged review PR #149. Sprint 7 —
+Route Awareness is proposed for product-owner review and remains **not authorized for
+implementation**. The proposal keeps Nearby as the default, makes Same road an explicit
+restrictive mode, and excludes destinations, navigation, maps, external routing calls,
+datasets, AWS/LiveKit Cloud activation, paid plans, recurring spend, production/public
+beta, and field-test claims.
 
 ## Repository layout
 
@@ -23,8 +24,8 @@ activation, paid plans, recurring spend, production/public beta, or field-test c
 | `backend/` | FastAPI modular-monolith API, migrations, and backend tests | Sprint 6 channel, membership, invite, selection, proximity/media authorization, and reconciliation are implemented; no live adapter is active |
 | `infrastructure/` | Terraform bootstrap, environment roots, and reusable modules | Remains disabled by default; Sprint 6 adds no AWS resource |
 | `scripts/` | Cross-project developer and operational helper scripts | Sprint 6 privacy, hardening, and final-review gates are enforced |
-| `docs/` | Architecture, sprint records, ADRs, security, privacy, design, evidence, and runbooks | Sprint 6 implementation/evidence is complete; acceptance is recorded by the D09 review merge |
-| `.github/` | Pull-request, issue, CI, quality, and security workflows | Existing gates plus Sprint 6 channel/review gates remain enforced |
+| `docs/` | Architecture, sprint records, ADRs, security, privacy, design, evidence, and runbooks | Sprint 7 route-awareness specification/readiness is proposed; implementation remains blocked |
+| `.github/` | Pull-request, issue, CI, quality, and security workflows | Existing gates plus the proposed Sprint 7 planning boundary are enforced |
 
 ## Start here
 
