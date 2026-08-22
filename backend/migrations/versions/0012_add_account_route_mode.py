@@ -27,9 +27,15 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("version", sa.Integer(), server_default="1", nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.CheckConstraint("mode IN ('nearby', 'same_road')", name="ck_account_route_mode_mode_allowed"),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.CheckConstraint(
+            "mode IN ('nearby', 'same_road')", name="ck_account_route_mode_mode_allowed"
+        ),
         sa.CheckConstraint("version >= 1", name="ck_account_route_mode_version_positive"),
         sa.ForeignKeyConstraint(["account_id"], ["account.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("account_id"),
