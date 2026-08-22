@@ -35,9 +35,7 @@ def _receipt(selection: AccountRouteMode) -> RouteModeReceipt:
 async def _locked_selection(
     db: AsyncSession, *, account_id: uuid.UUID, now: datetime
 ) -> AccountRouteMode:
-    account = await db.scalar(
-        select(Account).where(Account.id == account_id).with_for_update()
-    )
+    account = await db.scalar(select(Account).where(Account.id == account_id).with_for_update())
     if account is None or account.status != "active":
         raise RouteModeError("ROUTE_MODE_UNAVAILABLE", "The route mode is unavailable.")
     selection = await db.scalar(
@@ -58,9 +56,7 @@ async def _locked_selection(
 async def get_route_mode(
     db: AsyncSession, *, account_id: uuid.UUID, now: datetime | None = None
 ) -> RouteModeReceipt:
-    selection = await _locked_selection(
-        db, account_id=account_id, now=now or datetime.now(UTC)
-    )
+    selection = await _locked_selection(db, account_id=account_id, now=now or datetime.now(UTC))
     await db.commit()
     return _receipt(selection)
 
