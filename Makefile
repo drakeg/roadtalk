@@ -1,5 +1,6 @@
 SHELL := /bin/sh
 COMPOSE ?= docker compose
+LAN_COMPOSE := $(COMPOSE) -f compose.yaml -f compose.lan.yaml
 ENV_FILE ?= .env
 BACKEND_PYTHON ?= python3.12
 BACKEND_VENV ?= backend/.venv
@@ -7,7 +8,7 @@ BACKEND_BIN := $(BACKEND_VENV)/bin
 
 .DEFAULT_GOAL := help
 
-.PHONY: help prerequisites setup config up up-voice up-redis wait ps logs down reset database-shell redis-cli verify-database local-url backend-install backend-run backend-migrate backend-migration-check backend-migration-downgrade backend-format-check backend-lint backend-typecheck backend-test mobile-install mobile-start mobile-ios mobile-android mobile-doctor mobile-typecheck mobile-test terraform-validate container-build
+.PHONY: help prerequisites setup config up up-voice up-lan lan-ca up-redis wait ps logs down down-lan reset database-shell redis-cli verify-database local-url backend-install backend-run backend-migrate backend-migration-check backend-migration-downgrade backend-format-check backend-lint backend-typecheck backend-test mobile-install mobile-start mobile-ios mobile-android mobile-doctor mobile-typecheck mobile-test terraform-validate container-build
 
 help: ## Show local development commands.
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_-]+:.*## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -28,6 +29,19 @@ up: setup ## Build and start the complete local RoadTalk voice stack.
 	@$(MAKE) local-url
 
 up-voice: up ## Compatibility alias for the default voice-ready stack.
+
+up-lan: setup ## Start the voice-ready stack behind opt-in LAN HTTPS.
+	@test -n "$(ROADTALK_LAN_HOST)" || { echo "Set ROADTALK_LAN_HOST to this computer's private IP address."; exit 1; }
+	@ROADTALK_LAN_HOST="$(ROADTALK_LAN_HOST)" $(LAN_COMPOSE) --env-file "$(ENV_FILE)" up -d --build --wait
+	@port="${ROADTALK_LAN_HTTPS_PORT:-8443}"; echo "RoadTalk LAN: https://$(ROADTALK_LAN_HOST):$port/"
+	@echo "Run 'make lan-ca ROADTALK_LAN_HOST=$(ROADTALK_LAN_HOST)' and trust the certificate on each test device."
+
+lan-ca: ## Export the local HTTPS certificate authority for trusted test devices.
+	@test -n "$(ROADTALK_LAN_HOST)" || { echo "Set ROADTALK_LAN_HOST to this computer's private IP address."; exit 1; }
+	@mkdir -p .local
+	@ROADTALK_LAN_HOST="$(ROADTALK_LAN_HOST)" $(LAN_COMPOSE) --env-file "$(ENV_FILE)" cp gateway:/data/caddy/pki/authorities/local/root.crt .local/roadtalk-local-ca.crt
+	@echo "Certificate authority: .local/roadtalk-local-ca.crt"
+
 up-redis: setup ## Start API, PostgreSQL/PostGIS, and optional Redis; wait until healthy.
 	@$(COMPOSE) --env-file "$(ENV_FILE)" --profile redis up -d --build --wait
 	@$(MAKE) local-url
@@ -41,8 +55,12 @@ ps: ## Show local service status.
 logs: ## Follow local service logs.
 	@$(COMPOSE) --env-file "$(ENV_FILE)" logs --follow --tail=200
 
-down: ## Stop all local services without deleting data.
+down: ## Stop loopback-only local services without deleting data.
 	@$(COMPOSE) --env-file "$(ENV_FILE)" --profile redis --profile voice down
+
+down-lan: ## Stop the LAN HTTPS stack without deleting data.
+	@test -n "$(ROADTALK_LAN_HOST)" || { echo "Set ROADTALK_LAN_HOST to this computer's private IP address."; exit 1; }
+	@ROADTALK_LAN_HOST="$(ROADTALK_LAN_HOST)" $(LAN_COMPOSE) --env-file "$(ENV_FILE)" --profile redis down
 
 reset: ## Delete local containers and data; requires CONFIRM_RESET=yes.
 	@test "$(CONFIRM_RESET)" = "yes" || { echo "Refusing destructive reset. Re-run with CONFIRM_RESET=yes."; exit 1; }

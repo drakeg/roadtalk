@@ -145,6 +145,8 @@ jobs:
         run: |
           docker compose --env-file .env.example config --quiet
           BACKEND_PORT=18000 docker compose --env-file .env.example config --format json > "$RUNNER_TEMP/compose.json"
+          ROADTALK_LAN_HOST=10.0.0.25 docker compose -f compose.yaml -f compose.lan.yaml --env-file .env.example config --format json > "$RUNNER_TEMP/compose-lan.json"
+          docker run --rm -e ROADTALK_LAN_HOST=10.0.0.25 -e ROADTALK_LAN_HTTPS_PORT=8443 -v "$PWD/deploy/local/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2.11.4-alpine caddy validate --config /etc/caddy/Caddyfile
           python - <<'PY'
           import json
           import os
@@ -170,6 +172,24 @@ jobs:
           dependencies = services["backend"].get("depends_on", {})
           if "livekit" not in dependencies:
               raise SystemExit("backend must start with the local LiveKit service")
+          lan_config = json.loads(Path(os.environ["RUNNER_TEMP"]).joinpath("compose-lan.json").read_text())
+          lan_services = lan_config["services"]
+          if "gateway" not in lan_services:
+              raise SystemExit("LAN Compose override must include the HTTPS gateway")
+          gateway_ports = lan_services["gateway"]["ports"]
+          if not any(
+              str(port.get("target")) == "8443"
+              and str(port.get("published")) == "8443"
+              and port.get("host_ip") == "0.0.0.0"
+              for port in gateway_ports
+          ):
+              raise SystemExit("LAN HTTPS gateway did not resolve to 0.0.0.0:8443")
+          lan_backend_environment = lan_services["backend"]["environment"]
+          if lan_backend_environment.get("ROADTALK_PTT_LIVEKIT_URL") != "wss://10.0.0.25:8443/livekit":
+              raise SystemExit("LAN backend must issue secure private-address LiveKit URLs")
+          livekit_command = lan_services["livekit"]["command"]
+          if "--node-ip" not in livekit_command or "10.0.0.25" not in livekit_command:
+              raise SystemExit("LAN LiveKit must advertise the explicit private host address")
           PY
       - name: Audit Python dependencies
         run: |

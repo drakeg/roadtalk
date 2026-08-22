@@ -10,6 +10,10 @@ Architecture Decision Records preserve important technical choices and their con
 - [ADR-0004: Realtime audio platform](0004-realtime-audio-platform.md)
 - [ADR-0005: AWS deployment strategy](0005-aws-deployment-strategy.md)
 
+## Proposed decisions
+
+- [ADR-0006: Opt-in local-network HTTPS testing](0006-local-network-https.md)
+
 ## Naming
 
 Use sequential filenames such as `0006-decision-title.md`.

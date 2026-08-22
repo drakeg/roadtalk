@@ -1,0 +1,15 @@
+{
+  auto_https disable_redirects
+}
+
+https://{$ROADTALK_LAN_HOST}:{$ROADTALK_LAN_HTTPS_PORT} {
+  tls internal
+
+  handle_path /livekit/* {
+    reverse_proxy livekit:7880
+  }
+
+  handle {
+    reverse_proxy backend:8000
+  }
+}
