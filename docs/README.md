@@ -21,7 +21,7 @@
 - [Sprint 6: Channels](sprints/sprint-6-channels.md) — APPROVED
 - [Sprint 6 readiness](sprints/sprint-6-readiness.md) — READY
 - [Sprint 6 traceability](sprints/sprint-6-traceability.md) — COMPLETE
-- [Sprint 6 review](sprints/sprint-6-review.md) — APPROVED BY MERGED PR #148
+- [Sprint 6 review](sprints/sprint-6-review.md) — APPROVED BY MERGED PR #149
 - [Sprint 6 synthetic channel evidence](evidence/sprint-6/README.md)
 - Product-owner approval recorded in [#129](https://github.com/drakeg/roadtalk/issues/129)
 - Implementation tracker [#139](https://github.com/drakeg/roadtalk/issues/139)
