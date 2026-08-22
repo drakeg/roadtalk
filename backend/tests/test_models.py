@@ -8,6 +8,7 @@ from app.db import Account, Base, ChannelMembership, ChannelSelection, Device, S
 def test_active_sprint_tables_are_registered() -> None:
     assert set(Base.metadata.tables) == {
         "account",
+        "account_route_mode",
         "channel",
         "channel_invite",
         "channel_membership",

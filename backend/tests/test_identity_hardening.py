@@ -40,6 +40,7 @@ def test_openapi_exposes_only_approved_contracts() -> None:
         "/api/v1/me/channel",
         "/api/v1/me/profile",
         "/api/v1/me/recovery-key",
+        "/api/v1/me/route-mode",
         "/api/v1/me/location",
         "/api/v1/me/location-consent",
         "/api/v1/nearby/summary",
