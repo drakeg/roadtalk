@@ -26,8 +26,16 @@ def settings() -> Settings:
 def authenticated_application() -> FastAPI:
     application = create_app(settings())
     account = Account(id=uuid.uuid4())
-    device = Device(id=uuid.uuid4(), account=account, platform="ios", installation_id="route-mode-synthetic")
-    session = Session(id=uuid.uuid4(), account=account, device=device, refresh_token_hash="synthetic-hash", expires_at=datetime(2026, 9, 1))
+    device = Device(
+        id=uuid.uuid4(), account=account, platform="ios", installation_id="route-mode-synthetic"
+    )
+    session = Session(
+        id=uuid.uuid4(),
+        account=account,
+        device=device,
+        refresh_token_hash="synthetic-hash",
+        expires_at=datetime(2026, 9, 1),
+    )
     current = AuthenticatedSession(account=account, device=device, session=session)
     db = cast(AsyncSession, MagicMock())
 
@@ -43,7 +51,12 @@ def authenticated_application() -> FastAPI:
 
 
 def receipt(mode: str = "nearby", version: int = 1) -> RouteModeReceipt:
-    return RouteModeReceipt(mode, version, datetime(2026, 8, 22, 12, tzinfo=UTC), "available" if mode == "nearby" else "unavailable")
+    return RouteModeReceipt(
+        mode,
+        version,
+        datetime(2026, 8, 22, 12, tzinfo=UTC),
+        "available" if mode == "nearby" else "unavailable",
+    )
 
 
 def test_route_mode_openapi_is_exact_authenticated_and_non_disclosing() -> None:
@@ -54,49 +67,85 @@ def test_route_mode_openapi_is_exact_authenticated_and_non_disclosing() -> None:
     assert update["security"] == [{"HTTPBearer": []}]
     assert read["tags"] == update["tags"] == ["route-mode"]
     components = schema["components"]["schemas"]
-    assert set(components["RouteModeResponse"]["properties"]) == {"mode", "version", "selected_at", "availability"}
+    assert set(components["RouteModeResponse"]["properties"]) == {
+        "mode",
+        "version",
+        "selected_at",
+        "availability",
+    }
     assert set(components["RouteModeUpdateRequest"]["properties"]) == {"mode", "expected_version"}
     serialized = str(components).lower()
-    for forbidden in ("route_name", "road", "corridor", "provider", "direction", "coordinate", "audience"):
+    for forbidden in (
+        "route_name",
+        "road",
+        "corridor",
+        "provider",
+        "direction",
+        "coordinate",
+        "audience",
+    ):
         assert forbidden not in serialized
 
 
 def test_route_mode_routes_require_authentication() -> None:
     with TestClient(create_app(settings()), raise_server_exceptions=False) as client:
-        responses = (client.get("/api/v1/me/route-mode"), client.put("/api/v1/me/route-mode", json={"mode": "nearby", "expected_version": 1}))
+        responses = (
+            client.get("/api/v1/me/route-mode"),
+            client.put("/api/v1/me/route-mode", json={"mode": "nearby", "expected_version": 1}),
+        )
     assert {response.status_code for response in responses} == {401}
 
 
 def test_route_mode_read_and_update_return_semantic_state(monkeypatch: pytest.MonkeyPatch) -> None:
     async def read(*args: object, **kwargs: object) -> RouteModeReceipt:
         return receipt()
+
     async def update(*args: object, **kwargs: object) -> RouteModeReceipt:
         return receipt("same_road", 2)
+
     monkeypatch.setattr(route_mode_api, "get_route_mode", read)
     monkeypatch.setattr(route_mode_api, "set_route_mode", update)
     with TestClient(authenticated_application()) as client:
         current = client.get("/api/v1/me/route-mode")
-        changed = client.put("/api/v1/me/route-mode", json={"mode": "same_road", "expected_version": 1})
+        changed = client.put(
+            "/api/v1/me/route-mode", json={"mode": "same_road", "expected_version": 1}
+        )
     assert current.json()["mode"] == "nearby"
-    assert changed.json() == {"mode": "same_road", "version": 2, "selected_at": "2026-08-22T12:00:00Z", "availability": "unavailable"}
+    assert changed.json() == {
+        "mode": "same_road",
+        "version": 2,
+        "selected_at": "2026-08-22T12:00:00Z",
+        "availability": "unavailable",
+    }
 
 
 def test_route_mode_rejects_overposting_and_invalid_modes(monkeypatch: pytest.MonkeyPatch) -> None:
     async def update(*args: object, **kwargs: object) -> RouteModeReceipt:
         return receipt()
+
     monkeypatch.setattr(route_mode_api, "set_route_mode", update)
     with TestClient(authenticated_application()) as client:
-        extra = client.put("/api/v1/me/route-mode", json={"mode": "nearby", "expected_version": 1, "road": "secret"})
-        invalid = client.put("/api/v1/me/route-mode", json={"mode": "automatic", "expected_version": 1})
+        extra = client.put(
+            "/api/v1/me/route-mode",
+            json={"mode": "nearby", "expected_version": 1, "road": "secret"},
+        )
+        invalid = client.put(
+            "/api/v1/me/route-mode", json={"mode": "automatic", "expected_version": 1}
+        )
     assert extra.status_code == invalid.status_code == 422
 
 
 def test_route_mode_conflict_is_stable_and_non_disclosing(monkeypatch: pytest.MonkeyPatch) -> None:
     async def reject(*args: object, **kwargs: object) -> RouteModeReceipt:
-        raise RouteModeError("ROUTE_MODE_VERSION_CONFLICT", "The route mode changed; reload it before retrying.")
+        raise RouteModeError(
+            "ROUTE_MODE_VERSION_CONFLICT", "The route mode changed; reload it before retrying."
+        )
+
     monkeypatch.setattr(route_mode_api, "set_route_mode", reject)
     with TestClient(authenticated_application()) as client:
-        response = client.put("/api/v1/me/route-mode", json={"mode": "same_road", "expected_version": 1})
+        response = client.put(
+            "/api/v1/me/route-mode", json={"mode": "same_road", "expected_version": 1}
+        )
     assert response.status_code == 409
     assert response.json()["code"] == "ROUTE_MODE_VERSION_CONFLICT"
     for forbidden in ("road", "corridor", "provider", "direction", "location", "audience"):
