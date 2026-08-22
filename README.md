@@ -10,8 +10,8 @@ with named exceptions that must close before the first field test.
 
 Sprint 4 — Push-to-Talk and Sprint 5 — Proximity Engine are complete and accepted.
 Sprint 6 — Channels is complete and accepted by merged review PR #149. Sprint 7 —
-Route Awareness is proposed for product-owner review and remains **not authorized for
-implementation**. The proposal keeps Nearby as the default, makes Same road an explicit
+Route Awareness is approved for locked local/CI implementation in tracker #173. The
+approved scope keeps Nearby as the default, makes Same road an explicit
 restrictive mode, and excludes destinations, navigation, maps, external routing calls,
 datasets, AWS/LiveKit Cloud activation, paid plans, recurring spend, production/public
 beta, and field-test claims.
@@ -24,8 +24,8 @@ beta, and field-test claims.
 | `backend/` | FastAPI modular-monolith API, migrations, and backend tests | Sprint 6 channel, membership, invite, selection, proximity/media authorization, and reconciliation are implemented; no live adapter is active |
 | `infrastructure/` | Terraform bootstrap, environment roots, and reusable modules | Remains disabled by default; Sprint 6 adds no AWS resource |
 | `scripts/` | Cross-project developer and operational helper scripts | Sprint 6 privacy, hardening, and final-review gates are enforced |
-| `docs/` | Architecture, sprint records, ADRs, security, privacy, design, evidence, and runbooks | Sprint 7 route-awareness specification/readiness is proposed; implementation remains blocked |
-| `.github/` | Pull-request, issue, CI, quality, and security workflows | Existing gates plus the proposed Sprint 7 planning boundary are enforced |
+| `docs/` | Architecture, sprint records, ADRs, security, privacy, design, evidence, and runbooks | Sprint 7 route-awareness specification/readiness is approved; tracker #173 locks implementation |
+| `.github/` | Pull-request, issue, CI, quality, and security workflows | Existing gates plus the approved Sprint 7 planning boundary are enforced |
 
 ## Start here
 
