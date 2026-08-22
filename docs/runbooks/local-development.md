@@ -161,6 +161,24 @@ make backend-run
 `make backend-run` uses the same `BACKEND_PORT` value as Compose. Do not run the
 containerized backend and host backend simultaneously on the same host port.
 
+## Repairing an older persistent database
+
+Some development database volumes created while Sprint 6 channel work was still in
+progress can report revision `0010` while missing the final channel idempotency
+columns. The visible symptom is a `500` response from `GET /api/v1/channels` with
+`UndefinedColumn: channel.create_idempotency_hash does not exist`.
+
+Migration `0011` reconciles that known drift without deleting accounts, profiles,
+locations, channel selections, or other local data. Pull the fixed image and restart:
+
+```sh
+docker compose up --build
+```
+
+The backend runs `alembic upgrade head` before serving and applies the repair
+automatically. Do not run `make reset` for this error unless you intentionally want
+to erase all local development data.
+
 ## Data safety
 
 - Named volumes persist across `make down`.
