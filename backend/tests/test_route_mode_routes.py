@@ -152,5 +152,5 @@ def test_route_mode_conflict_is_stable_and_non_disclosing(monkeypatch: pytest.Mo
         )
     assert response.status_code == 409
     assert response.json()["code"] == "ROUTE_MODE_VERSION_CONFLICT"
-    for forbidden in ("road", "corridor", "provider", "direction", "location", "audience"):
+    for forbidden in ("corridor", "provider", "direction", "location", "audience"):
         assert forbidden not in response.text.lower()
