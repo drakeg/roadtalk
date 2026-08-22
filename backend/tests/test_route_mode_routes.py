@@ -20,7 +20,9 @@ from app.route_mode.service import RouteModeError, RouteModeReceipt
 
 
 def settings() -> Settings:
-    return Settings(environment="test", docs_enabled=True, log_level="CRITICAL", database_check_enabled=False)
+    return Settings(
+        environment="test", docs_enabled=True, log_level="CRITICAL", database_check_enabled=False
+    )
 
 
 def authenticated_application() -> FastAPI:
