@@ -4,6 +4,11 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
 
 ## Unreleased — Sprint 7: Route Awareness
 
+### Added
+
+- Versioned authenticated Nearby/Same-road route-mode persistence and exact GET/PUT API with Nearby-compatible defaults, optimistic conflicts, replay handling, and non-disclosing semantic availability.
+- Route-mode privacy/scope CI gate; no matching, provider, dataset, map, cloud resource, or spend.
+
 ### Planning
 
 - Proposed S07-R01–R12, S07-T01–T12 and S07-D01–D09 for an explicit Same-road
