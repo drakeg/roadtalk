@@ -12,8 +12,8 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
   maps, external routing calls, datasets and provider activation.
 - Defined current-only keyed corridor/direction context, deterministic provider fakes,
   fail-closed behavior, $0 implementation, and explicit ODbL/provider decision gates.
-- Sprint 7 implementation remains unauthorized until product-owner approval and a
-  locked tracker.
+- Product-owner approval is recorded by merged PR #164; tracker #173 locks delivery
+  issues #165–#172 for local/CI implementation with no provider activation or spend.
 
 ## Unreleased — Sprint 6: Channels
 
