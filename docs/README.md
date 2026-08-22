@@ -7,12 +7,21 @@
 - [Original RoadTalk Development Plan](reference/RoadTalk_Development_Plan.docx)
 - [Agile Workflow](AGILE_WORKFLOW.md)
 
-## Sprint 6 — Channels (implementation complete; acceptance upon review merge)
+## Sprint 7 — Route Awareness (proposed; not authorized to implement)
+
+- [Sprint 7: Route Awareness](sprints/sprint-7-route-awareness.md) — PROPOSED
+- [Sprint 7 readiness](sprints/sprint-7-readiness.md) — READY FOR PRODUCT-OWNER DECISION
+- Nearby remains default; Same road is an explicit restrictive mode
+- No destination, navigation, route history, map, provider activation, dataset download,
+  cloud resource, external routing call, or recurring spend is approved
+- Implementation remains blocked until planning approval and a locked tracker
+
+## Sprint 6 — Channels (complete and accepted)
 
 - [Sprint 6: Channels](sprints/sprint-6-channels.md) — APPROVED
 - [Sprint 6 readiness](sprints/sprint-6-readiness.md) — READY
-- [Sprint 6 traceability](sprints/sprint-6-traceability.md) — COMPLETE UPON REVIEW MERGE
-- [Sprint 6 review](sprints/sprint-6-review.md) — APPROVAL REQUESTED
+- [Sprint 6 traceability](sprints/sprint-6-traceability.md) — COMPLETE
+- [Sprint 6 review](sprints/sprint-6-review.md) — APPROVED BY MERGED PR #148
 - [Sprint 6 synthetic channel evidence](evidence/sprint-6/README.md)
 - Product-owner approval recorded in [#129](https://github.com/drakeg/roadtalk/issues/129)
 - Implementation tracker [#139](https://github.com/drakeg/roadtalk/issues/139)
