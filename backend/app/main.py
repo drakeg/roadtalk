@@ -26,6 +26,7 @@ from app.ptt.limiter import PttLimiter
 from app.ptt.provider import media_provider_from_settings
 from app.radio import router as radio_router
 from app.recovery.limiter import RecoveryLimiter
+from app.route_context.provider import build_route_context_provider
 from app.web import router as web_router
 
 
@@ -75,6 +76,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         transmit_window_seconds=resolved.ptt_transmit_grant_window_seconds,
     )
     app.state.media_provider = media_provider_from_settings(resolved)
+    app.state.route_context_provider = build_route_context_provider(resolved)
     if resolved.database_check_enabled:
         app.state.readiness.register("database", check_database)
     app.add_middleware(RequestContextMiddleware, settings=resolved)
