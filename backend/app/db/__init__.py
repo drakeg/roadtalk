@@ -14,6 +14,7 @@ from app.db.models import (
     RecoveryCredential,
     Session,
 )
+from app.route_context.models import CurrentRouteContext
 
 __all__ = [
     "Account",
@@ -24,6 +25,7 @@ __all__ = [
     "ChannelMembership",
     "ChannelSelection",
     "CurrentLocation",
+    "CurrentRouteContext",
     "Device",
     "LocationConsentEvent",
     "MediaGrant",
