@@ -19,6 +19,7 @@ from app.location.quality import (
     LocationSample,
     evaluate_location_sample,
 )
+from app.route_context.models import CurrentRouteContext
 
 
 @dataclass(frozen=True)
@@ -171,6 +172,9 @@ async def record_current_location(
         current.quality_state = decision.quality_state
         current.version += 1
 
+    await db.execute(
+        delete(CurrentRouteContext).where(CurrentRouteContext.account_id == account_id)
+    )
     try:
         await db.commit()
     except IntegrityError as exc:
