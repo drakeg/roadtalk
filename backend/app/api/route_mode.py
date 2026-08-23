@@ -1,6 +1,10 @@
-from fastapi import APIRouter, HTTPException, status
+from typing import cast
+
+from fastapi import APIRouter, HTTPException, Request, status
 
 from app.api.auth import CurrentSession, DatabaseSession
+from app.route_context.lifecycle import refresh_current_route_context
+from app.route_context.provider import RouteContextProvider
 from app.route_mode.schemas import RouteModeResponse, RouteModeUpdateRequest
 from app.route_mode.service import RouteModeError, get_route_mode, set_route_mode
 
@@ -27,6 +31,7 @@ async def read_route_mode(db: DatabaseSession, current: CurrentSession) -> Route
 
 @router.put("/me/route-mode", response_model=RouteModeResponse)
 async def update_route_mode(
+    request: Request,
     payload: RouteModeUpdateRequest,
     db: DatabaseSession,
     current: CurrentSession,
@@ -37,6 +42,12 @@ async def update_route_mode(
             account_id=current.account.id,
             mode=payload.mode,
             expected_version=payload.expected_version,
+            on_change=lambda session, account_id: refresh_current_route_context(
+                session,
+                account_id=account_id,
+                provider=cast(RouteContextProvider, request.app.state.route_context_provider),
+                settings=request.app.state.settings,
+            ),
         )
     except RouteModeError as exc:
         raise _route_mode_error(exc) from exc
