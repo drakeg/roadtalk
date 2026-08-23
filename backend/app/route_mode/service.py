@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
@@ -67,18 +68,21 @@ async def set_route_mode(
     account_id: uuid.UUID,
     mode: str,
     expected_version: int,
+    on_change: Callable[[AsyncSession, uuid.UUID], Awaitable[None]] | None = None,
     now: datetime | None = None,
 ) -> RouteModeReceipt:
     resolved_now = now or datetime.now(UTC)
     selection = await _locked_selection(db, account_id=account_id, now=resolved_now)
+    changed = False
     if expected_version == selection.version:
         if mode != selection.mode:
             selection.mode = mode
             selection.selected_at = resolved_now
             selection.version += 1
-            await db.commit()
-        else:
-            await db.commit()
+            changed = True
+        await db.commit()
+        if changed and on_change is not None:
+            await on_change(db, account_id)
         return _receipt(selection)
     if expected_version + 1 == selection.version and mode == selection.mode:
         await db.commit()
