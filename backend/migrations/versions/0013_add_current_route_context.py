@@ -30,36 +30,21 @@ def upgrade() -> None:
         sa.Column("version", sa.Integer(), server_default="1", nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
-        sa.CheckConstraint(
-            "length(corridor_digest) = 64",
-            name="ck_current_route_context_corridor_digest_length",
-        ),
+        sa.CheckConstraint("length(corridor_digest) = 64", name="corridor_digest_length"),
         sa.CheckConstraint(
             "direction IN ('north', 'northeast', 'east', 'southeast', 'south', "
             "'southwest', 'west', 'northwest', 'stationary', 'unknown')",
-            name="ck_current_route_context_direction_allowed",
+            name="direction_allowed",
         ),
-        sa.CheckConstraint(
-            "confidence = 'confident'",
-            name="ck_current_route_context_confidence_confident_only",
-        ),
+        sa.CheckConstraint("confidence = 'confident'", name="confidence_confident_only"),
         sa.CheckConstraint(
             "source_location_version >= 1",
-            name="ck_current_route_context_source_location_version_positive",
+            name="source_location_version_positive",
         ),
-        sa.CheckConstraint(
-            "length(provider_version) > 0",
-            name="ck_current_route_context_provider_version_present",
-        ),
-        sa.CheckConstraint(
-            "length(policy_version) > 0",
-            name="ck_current_route_context_policy_version_present",
-        ),
-        sa.CheckConstraint(
-            "expires_at > matched_at",
-            name="ck_current_route_context_expiry_after_match",
-        ),
-        sa.CheckConstraint("version >= 1", name="ck_current_route_context_version_positive"),
+        sa.CheckConstraint("length(provider_version) > 0", name="provider_version_present"),
+        sa.CheckConstraint("length(policy_version) > 0", name="policy_version_present"),
+        sa.CheckConstraint("expires_at > matched_at", name="expiry_after_match"),
+        sa.CheckConstraint("version >= 1", name="version_positive"),
         sa.ForeignKeyConstraint(
             ["account_id"],
             ["current_location.account_id"],
