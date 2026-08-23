@@ -224,6 +224,8 @@ jobs:
         run: python scripts/ci/check-sprint-7-planning.py
       - name: Check Sprint 7 route-mode privacy and scope
         run: python scripts/ci/check-route-mode-privacy.py
+      - name: Check Sprint 7 route-context provider boundary
+        run: python scripts/ci/check-route-context-provider.py
       - name: Check Sprint 6 channel privacy and scope
         run: python scripts/ci/check-channel-privacy.py
       - name: Check Sprint 6 channel hardening and evidence
