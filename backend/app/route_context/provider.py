@@ -163,7 +163,7 @@ class RouteContextMatcher:
                 self._provider.match(request),
                 timeout=self._timeout_seconds,
             )
-        except (TimeoutError, RouteContextProviderError, Exception):
+        except Exception:
             raise RouteContextProviderUnavailable("route context unavailable") from None
 
         now = self._clock().astimezone(UTC)
