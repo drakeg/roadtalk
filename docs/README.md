@@ -87,7 +87,7 @@
 ## Sprint 0 — Complete
 
 - [Sprint 0 specification](sprints/sprint-0-planning-architecture.md)
-- [Sprint 0 traceability](sprint-0-traceability.md)
+- [Sprint 0 traceability](sprints/sprint-0-traceability.md)
 - [Sprint 0 review record](sprints/sprint-0-review.md)
 
 ## Architecture
