@@ -77,6 +77,12 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     created_channels: Mapped[list["Channel"]] = relationship(
         back_populates="creator", cascade="all, delete-orphan"
     )
+    route_mode: Mapped["AccountRouteMode | None"] = relationship(
+        back_populates="account",
+        cascade="all, delete-orphan",
+        single_parent=True,
+        uselist=False,
+    )
 
 
 class Device(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -368,6 +374,25 @@ class ChannelSelection(TimestampMixin, Base):
 
     account: Mapped[Account] = relationship(back_populates="channel_selection")
     channel: Mapped[Channel] = relationship(back_populates="selections")
+
+
+class AccountRouteMode(TimestampMixin, Base):
+    __tablename__ = "account_route_mode"
+    __table_args__ = (
+        CheckConstraint("mode IN ('nearby', 'same_road')", name="mode_allowed"),
+        CheckConstraint("version >= 1", name="version_positive"),
+    )
+
+    account_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE"), primary_key=True
+    )
+    mode: Mapped[str] = mapped_column(String(16), default="nearby", server_default="nearby")
+    selected_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+
+    account: Mapped[Account] = relationship(back_populates="route_mode")
 
 
 class MediaGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):

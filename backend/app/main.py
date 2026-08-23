@@ -10,6 +10,7 @@ from app.api.location import nearby_router
 from app.api.location import router as location_router
 from app.api.ptt import router as ptt_router
 from app.api.recovery import router as recovery_router
+from app.api.route_mode import router as route_mode_router
 from app.api.system import router as system_router
 from app.channels.limiter import ChannelInviteLimiter
 from app.config import Settings, get_settings
@@ -86,6 +87,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(identity_router)
     app.include_router(recovery_router)
     app.include_router(channels_router)
+    app.include_router(route_mode_router)
     app.include_router(location_router)
     app.include_router(nearby_router)
     app.include_router(ptt_router)

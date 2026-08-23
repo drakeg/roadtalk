@@ -1,6 +1,7 @@
 from app.db.base import Base
 from app.db.models import (
     Account,
+    AccountRouteMode,
     Channel,
     ChannelInvite,
     ChannelMembership,
@@ -16,6 +17,7 @@ from app.db.models import (
 
 __all__ = [
     "Account",
+    "AccountRouteMode",
     "Base",
     "Channel",
     "ChannelInvite",
