@@ -163,12 +163,8 @@ class RouteContextMatcher:
                 self._provider.match(request),
                 timeout=self._timeout_seconds,
             )
-        except TimeoutError as exc:
-            raise RouteContextProviderUnavailable("route context unavailable") from exc
-        except RouteContextProviderError:
-            raise
-        except Exception as exc:
-            raise RouteContextProviderUnavailable("route context unavailable") from exc
+        except (TimeoutError, RouteContextProviderError, Exception):
+            raise RouteContextProviderUnavailable("route context unavailable") from None
 
         now = self._clock().astimezone(UTC)
         if result.source_location_version != request.source_location_version:
