@@ -106,7 +106,10 @@ class Settings(BaseSettings):
             raise ValueError(
                 "route_context_ttl_seconds must not exceed location_usable_ttl_seconds"
             )
-        if self.environment in {"field-test", "production"} and self.route_context_provider != "disabled":
+        if (
+            self.environment in {"field-test", "production"}
+            and self.route_context_provider != "disabled"
+        ):
             raise ValueError("route context provider must remain disabled outside local/test")
         if self.ptt_transmit_grant_ttl_seconds > self.ptt_receive_grant_ttl_seconds:
             raise ValueError(
