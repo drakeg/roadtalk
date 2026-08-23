@@ -66,6 +66,10 @@ class Settings(BaseSettings):
     location_nearby_read_window_seconds: int = Field(default=60, ge=1, le=3_600)
     location_nearby_radius_m: float = Field(default=5_000, gt=0, le=100_000)
     location_nearby_many_threshold: int = Field(default=5, ge=2, le=100)
+    route_context_provider: Literal["disabled", "fake"] = "disabled"
+    route_context_policy_version: str = Field(default="route-v1", min_length=1, max_length=32)
+    route_context_timeout_ms: int = Field(default=250, ge=10, le=2_000)
+    route_context_ttl_seconds: int = Field(default=60, ge=5, le=300)
     ptt_policy_version: str = Field(default="ptt-v1", min_length=1, max_length=32)
     ptt_receive_grant_ttl_seconds: int = Field(default=300, ge=30, le=900)
     ptt_transmit_grant_ttl_seconds: int = Field(default=30, ge=5, le=60)
@@ -98,6 +102,12 @@ class Settings(BaseSettings):
             raise ValueError(
                 "location_degraded_ttl_seconds must not exceed location_usable_ttl_seconds"
             )
+        if self.route_context_ttl_seconds > self.location_usable_ttl_seconds:
+            raise ValueError(
+                "route_context_ttl_seconds must not exceed location_usable_ttl_seconds"
+            )
+        if self.environment in {"field-test", "production"} and self.route_context_provider != "disabled":
+            raise ValueError("route context provider must remain disabled outside local/test")
         if self.ptt_transmit_grant_ttl_seconds > self.ptt_receive_grant_ttl_seconds:
             raise ValueError(
                 "ptt_transmit_grant_ttl_seconds must not exceed ptt_receive_grant_ttl_seconds"
