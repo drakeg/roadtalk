@@ -191,7 +191,7 @@ def test_route_context_provider_configuration_is_local_ci_only() -> None:
     assert isinstance(build_route_context_provider(fake_settings), FakeRouteContextProvider)
 
     with pytest.raises(ValidationError):
-        Settings(environment="test", route_context_provider="osrm")  # type: ignore[arg-type]
+        Settings(environment="test", route_context_provider="osrm")
     with pytest.raises(ValidationError, match="must remain disabled"):
         Settings(environment="production", route_context_provider="fake")
     with pytest.raises(ValidationError, match="must remain disabled"):
