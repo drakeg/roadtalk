@@ -11,10 +11,11 @@
 
 - [Sprint 7: Route Awareness](sprints/sprint-7-route-awareness.md) — APPROVED
 - [Sprint 7 readiness](sprints/sprint-7-readiness.md) — READY TO CODE WITHIN LOCKED BOUNDARY
+- [Route-context provider boundary](reference/route-context-provider.md) — S07-D03 internal provider contract
 - Nearby remains default; Same road is an explicit restrictive mode
 - No destination, navigation, route history, map, provider activation, dataset download,
   cloud resource, external routing call, or recurring spend is approved
-- Implementation remains blocked until planning approval and a locked tracker
+- S07-D02 is complete in PR #175; implementation continues in locked tracker #173 order
 
 ## Sprint 6 — Channels (complete and accepted)
 
@@ -86,7 +87,7 @@
 ## Sprint 0 — Complete
 
 - [Sprint 0 specification](sprints/sprint-0-planning-architecture.md)
-- [Sprint 0 traceability](sprints/sprint-0-traceability.md)
+- [Sprint 0 traceability](sprint-0-traceability.md)
 - [Sprint 0 review record](sprints/sprint-0-review.md)
 
 ## Architecture
