@@ -17,8 +17,8 @@ from app.db.models import AccountRouteMode, CurrentLocation
 from app.route_context.models import CurrentRouteContext
 from app.route_context.provider import (
     RouteContextConfidence,
-    RouteContextMatchRequest,
     RouteContextMatcher,
+    RouteContextMatchRequest,
     RouteContextProvider,
     RouteContextProviderUnavailable,
 )
