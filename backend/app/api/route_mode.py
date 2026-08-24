@@ -1,6 +1,8 @@
+import uuid
 from typing import cast
 
 from fastapi import APIRouter, HTTPException, Request, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import CurrentSession, DatabaseSession
 from app.route_context.lifecycle import refresh_current_route_context
@@ -36,10 +38,10 @@ async def update_route_mode(
     db: DatabaseSession,
     current: CurrentSession,
 ) -> RouteModeResponse:
-    async def reconcile_route_context(session: DatabaseSession, account_id: object) -> None:
+    async def reconcile_route_context(session: AsyncSession, account_id: uuid.UUID) -> None:
         await refresh_current_route_context(
             session,
-            account_id=current.account.id,
+            account_id=account_id,
             provider=cast(RouteContextProvider, request.app.state.route_context_provider),
             settings=request.app.state.settings,
         )
