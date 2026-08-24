@@ -33,11 +33,7 @@ class RouteContextReceipt:
 
 
 def corridor_digest(*, secret: str, provider_version: str, provider_corridor_ref: str) -> str:
-    message = (
-        "roadtalk-route-corridor-v1\0"
-        f"{provider_version}\0"
-        f"{provider_corridor_ref}"
-    ).encode()
+    message = (f"roadtalk-route-corridor-v1\0{provider_version}\0{provider_corridor_ref}").encode()
     return hmac.new(secret.encode(), message, hashlib.sha256).hexdigest()
 
 
