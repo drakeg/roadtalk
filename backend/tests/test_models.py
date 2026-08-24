@@ -14,6 +14,7 @@ def test_active_sprint_tables_are_registered() -> None:
         "channel_membership",
         "channel_selection",
         "current_location",
+        "current_route_context",
         "device",
         "location_consent_event",
         "media_grant",
