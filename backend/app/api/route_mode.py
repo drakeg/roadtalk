@@ -36,18 +36,21 @@ async def update_route_mode(
     db: DatabaseSession,
     current: CurrentSession,
 ) -> RouteModeResponse:
+    async def reconcile_route_context(session: DatabaseSession, account_id: object) -> None:
+        await refresh_current_route_context(
+            session,
+            account_id=current.account.id,
+            provider=cast(RouteContextProvider, request.app.state.route_context_provider),
+            settings=request.app.state.settings,
+        )
+
     try:
         receipt = await set_route_mode(
             db,
             account_id=current.account.id,
             mode=payload.mode,
             expected_version=payload.expected_version,
-            on_change=lambda session, account_id: refresh_current_route_context(
-                session,
-                account_id=account_id,
-                provider=cast(RouteContextProvider, request.app.state.route_context_provider),
-                settings=request.app.state.settings,
-            ),
+            on_change=reconcile_route_context,
         )
     except RouteModeError as exc:
         raise _route_mode_error(exc) from exc
