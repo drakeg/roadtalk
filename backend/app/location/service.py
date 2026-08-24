@@ -19,7 +19,6 @@ from app.location.quality import (
     LocationSample,
     evaluate_location_sample,
 )
-from app.route_context.models import CurrentRouteContext
 
 
 @dataclass(frozen=True)
@@ -172,20 +171,18 @@ async def record_current_location(
         current.quality_state = decision.quality_state
         current.version += 1
 
-    await db.execute(
-        delete(CurrentRouteContext).where(CurrentRouteContext.account_id == account_id)
-    )
     try:
-        await db.commit()
+        if on_change is None:
+            await db.commit()
+        else:
+            await db.flush()
+            await on_change(db, account_id)
     except IntegrityError as exc:
         await db.rollback()
         raise LocationPolicyError(
             "LOCATION_SAMPLE_CONFLICT",
             "A newer location sample is already current.",
         ) from exc
-
-    if on_change is not None:
-        await on_change(db, account_id)
 
     return LocationReceipt(
         accepted_sequence=current.client_sequence,
