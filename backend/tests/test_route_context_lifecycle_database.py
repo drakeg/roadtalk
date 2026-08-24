@@ -186,9 +186,12 @@ async def _route_context_lifecycle() -> None:
                 now=second_time + timedelta(seconds=2),
             )
             assert unavailable.available is False
-            assert await db.scalar(
-                select(CurrentRouteContext).where(CurrentRouteContext.account_id == account.id)
-            ) is None
+            assert (
+                await db.scalar(
+                    select(CurrentRouteContext).where(CurrentRouteContext.account_id == account.id)
+                )
+                is None
+            )
 
             restored = await refresh_current_route_context(
                 db,
@@ -199,8 +202,11 @@ async def _route_context_lifecycle() -> None:
             )
             assert restored.available is True
             assert await delete_current_location(db, account_id=account.id) is True
-            assert await db.scalar(
-                select(CurrentRouteContext).where(CurrentRouteContext.account_id == account.id)
-            ) is None
+            assert (
+                await db.scalar(
+                    select(CurrentRouteContext).where(CurrentRouteContext.account_id == account.id)
+                )
+                is None
+            )
     finally:
         await engine.dispose()
