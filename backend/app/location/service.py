@@ -172,16 +172,17 @@ async def record_current_location(
         current.version += 1
 
     try:
-        await db.commit()
+        if on_change is None:
+            await db.commit()
+        else:
+            await db.flush()
+            await on_change(db, account_id)
     except IntegrityError as exc:
         await db.rollback()
         raise LocationPolicyError(
             "LOCATION_SAMPLE_CONFLICT",
             "A newer location sample is already current.",
         ) from exc
-
-    if on_change is not None:
-        await on_change(db, account_id)
 
     return LocationReceipt(
         accepted_sequence=current.client_sequence,

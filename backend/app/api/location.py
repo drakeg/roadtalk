@@ -20,6 +20,8 @@ from app.location.schemas import (
 from app.location.service import delete_current_location, record_current_location
 from app.ptt.provider import MediaProvider
 from app.ptt.service import reconcile_proximity_delivery
+from app.route_context.lifecycle import refresh_current_route_context
+from app.route_context.provider import RouteContextProvider
 
 router = APIRouter(prefix="/api/v1/me", tags=["location"])
 nearby_router = APIRouter(prefix="/api/v1/nearby", tags=["location"])
@@ -30,6 +32,12 @@ async def _reconcile_location_change(
     db: DatabaseSession,
     account_id: uuid.UUID,
 ) -> None:
+    await refresh_current_route_context(
+        db,
+        account_id=account_id,
+        provider=cast(RouteContextProvider, request.app.state.route_context_provider),
+        settings=request.app.state.settings,
+    )
     await reconcile_proximity_delivery(
         db,
         provider=cast(MediaProvider, request.app.state.media_provider),

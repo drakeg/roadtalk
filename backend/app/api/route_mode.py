@@ -1,6 +1,12 @@
-from fastapi import APIRouter, HTTPException, status
+import uuid
+from typing import cast
+
+from fastapi import APIRouter, HTTPException, Request, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import CurrentSession, DatabaseSession
+from app.route_context.lifecycle import refresh_current_route_context
+from app.route_context.provider import RouteContextProvider
 from app.route_mode.schemas import RouteModeResponse, RouteModeUpdateRequest
 from app.route_mode.service import RouteModeError, get_route_mode, set_route_mode
 
@@ -27,16 +33,26 @@ async def read_route_mode(db: DatabaseSession, current: CurrentSession) -> Route
 
 @router.put("/me/route-mode", response_model=RouteModeResponse)
 async def update_route_mode(
+    request: Request,
     payload: RouteModeUpdateRequest,
     db: DatabaseSession,
     current: CurrentSession,
 ) -> RouteModeResponse:
+    async def reconcile_route_context(session: AsyncSession, account_id: uuid.UUID) -> None:
+        await refresh_current_route_context(
+            session,
+            account_id=account_id,
+            provider=cast(RouteContextProvider, request.app.state.route_context_provider),
+            settings=request.app.state.settings,
+        )
+
     try:
         receipt = await set_route_mode(
             db,
             account_id=current.account.id,
             mode=payload.mode,
             expected_version=payload.expected_version,
+            on_change=reconcile_route_context,
         )
     except RouteModeError as exc:
         raise _route_mode_error(exc) from exc
