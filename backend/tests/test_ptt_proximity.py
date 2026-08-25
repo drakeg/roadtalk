@@ -14,6 +14,8 @@ from app.config import Settings
 from app.ptt.proximity import (
     EligibleReceiveGrant,
     ProximityEligibilityError,
+    directions_compatible,
+    filter_same_road_receive_grants,
     find_eligible_receive_grants,
     proximity_policy_from_settings,
 )
@@ -76,7 +78,7 @@ async def _private_eligibility() -> None:
     recipient_account_id = uuid.uuid4()
     recipient_device_id = uuid.uuid4()
     sender_position = WKTElement("POINT(-75 40)", srid=4326)
-    result = SimpleNamespace(
+    proximity_result = SimpleNamespace(
         all=lambda: [
             (
                 receive_grant_id,
@@ -86,9 +88,10 @@ async def _private_eligibility() -> None:
             )
         ]
     )
+    nearby_modes = SimpleNamespace(all=lambda: [])
     db = AsyncMock()
     db.scalar.return_value = SimpleNamespace(position=sender_position)
-    db.execute.return_value = result
+    db.execute.side_effect = [proximity_result, nearby_modes]
 
     eligible = await find_eligible_receive_grants(
         db,
@@ -110,7 +113,7 @@ async def _private_eligibility() -> None:
         "participant_ref",
     }
 
-    statement = db.execute.await_args.args[0]
+    statement = db.execute.await_args_list[0].args[0]
     compiled = str(
         statement.compile(
             dialect=PGDialect(),  # type: ignore[no-untyped-call]
@@ -142,3 +145,122 @@ def test_eligible_receiver_shape_cannot_include_location_values() -> None:
         "participant_ref": str,
     }
     assert WKBElement not in annotations.values()
+
+
+def test_same_road_direction_policy_is_coarse_and_wraparound_safe() -> None:
+    assert directions_compatible("north", "north")
+    assert directions_compatible("north", "northeast")
+    assert directions_compatible("north", "northwest")
+    assert directions_compatible("northwest", "north")
+    assert not directions_compatible("north", "east")
+    assert not directions_compatible("north", "south")
+    assert not directions_compatible("stationary", "north")
+    assert not directions_compatible("unknown", "north")
+    assert not directions_compatible("stationary", "stationary")
+
+
+def test_same_road_filter_can_only_reduce_prior_eligibility() -> None:
+    asyncio.run(_same_road_filter_matrix())
+
+
+async def _same_road_filter_matrix() -> None:
+    sender_account_id = uuid.uuid4()
+    receiver_account_id = uuid.uuid4()
+    receiver = EligibleReceiveGrant(
+        receive_grant_id=uuid.uuid4(),
+        account_id=receiver_account_id,
+        device_id=uuid.uuid4(),
+        participant_ref="participant_receiver",
+    )
+    now = datetime(2026, 8, 25, 12, tzinfo=UTC)
+
+    async def evaluate(
+        *,
+        sender_mode: str,
+        receiver_mode: str,
+        sender_corridor: str | None,
+        receiver_corridor: str | None,
+        sender_direction: str = "north",
+        receiver_direction: str = "northwest",
+    ) -> tuple[EligibleReceiveGrant, ...]:
+        modes = SimpleNamespace(
+            all=lambda: [
+                (sender_account_id, sender_mode),
+                (receiver_account_id, receiver_mode),
+            ]
+        )
+        contexts = []
+        if sender_corridor is not None:
+            contexts.append(
+                SimpleNamespace(
+                    account_id=sender_account_id,
+                    corridor_digest=sender_corridor,
+                    direction=sender_direction,
+                )
+            )
+        if receiver_corridor is not None:
+            contexts.append(
+                SimpleNamespace(
+                    account_id=receiver_account_id,
+                    corridor_digest=receiver_corridor,
+                    direction=receiver_direction,
+                )
+            )
+        db = AsyncMock()
+        db.execute.return_value = modes
+        db.scalars.return_value = SimpleNamespace(all=lambda: contexts)
+        return await filter_same_road_receive_grants(
+            db,
+            sender_account_id=sender_account_id,
+            eligible_receivers=(receiver,),
+            now=now,
+        )
+
+    assert await evaluate(
+        sender_mode="nearby",
+        receiver_mode="nearby",
+        sender_corridor=None,
+        receiver_corridor=None,
+    ) == (receiver,)
+    assert await evaluate(
+        sender_mode="same_road",
+        receiver_mode="nearby",
+        sender_corridor="a" * 64,
+        receiver_corridor="a" * 64,
+    ) == (receiver,)
+    assert await evaluate(
+        sender_mode="nearby",
+        receiver_mode="same_road",
+        sender_corridor="a" * 64,
+        receiver_corridor="a" * 64,
+    ) == (receiver,)
+    assert await evaluate(
+        sender_mode="same_road",
+        receiver_mode="same_road",
+        sender_corridor="a" * 64,
+        receiver_corridor="b" * 64,
+    ) == ()
+    assert await evaluate(
+        sender_mode="same_road",
+        receiver_mode="same_road",
+        sender_corridor=None,
+        receiver_corridor="a" * 64,
+    ) == ()
+    assert await evaluate(
+        sender_mode="same_road",
+        receiver_mode="same_road",
+        sender_corridor="a" * 64,
+        receiver_corridor="a" * 64,
+        receiver_direction="unknown",
+    ) == ()
+
+    denied_before_route_filter: tuple[EligibleReceiveGrant, ...] = ()
+    db = AsyncMock()
+    assert await filter_same_road_receive_grants(
+        db,
+        sender_account_id=sender_account_id,
+        eligible_receivers=denied_before_route_filter,
+        now=now,
+    ) == ()
+    db.execute.assert_not_awaited()
+    db.scalars.assert_not_awaited()
