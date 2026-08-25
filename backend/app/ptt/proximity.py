@@ -11,6 +11,7 @@ from sqlalchemy.sql.elements import ColumnElement
 from app.config import Settings
 from app.db.models import (
     Account,
+    AccountRouteMode,
     Channel,
     ChannelMembership,
     ChannelSelection,
@@ -20,6 +21,7 @@ from app.db.models import (
     MediaGrant,
     Session,
 )
+from app.route_context.models import CurrentRouteContext
 
 
 class ProximityEligibilityError(ValueError):
@@ -45,6 +47,29 @@ class EligibleReceiveGrant:
     account_id: uuid.UUID
     device_id: uuid.UUID
     participant_ref: str
+
+
+_TRAVEL_DIRECTIONS = (
+    "north",
+    "northeast",
+    "east",
+    "southeast",
+    "south",
+    "southwest",
+    "west",
+    "northwest",
+)
+
+
+def directions_compatible(left: str, right: str) -> bool:
+    """Return deterministic coarse direction compatibility with circular wraparound."""
+    if left not in _TRAVEL_DIRECTIONS or right not in _TRAVEL_DIRECTIONS:
+        return False
+    left_index = _TRAVEL_DIRECTIONS.index(left)
+    right_index = _TRAVEL_DIRECTIONS.index(right)
+    distance = abs(left_index - right_index)
+    circular_distance = min(distance, len(_TRAVEL_DIRECTIONS) - distance)
+    return circular_distance <= 1
 
 
 def proximity_policy_from_settings(
@@ -164,6 +189,86 @@ def eligible_receive_grants_statement(
     )
 
 
+async def _route_modes(
+    db: AsyncSession,
+    account_ids: set[uuid.UUID],
+) -> dict[uuid.UUID, str]:
+    rows = await db.execute(
+        select(AccountRouteMode.account_id, AccountRouteMode.mode).where(
+            AccountRouteMode.account_id.in_(account_ids)
+        )
+    )
+    return {account_id: mode for account_id, mode in rows.all()}
+
+
+async def _fresh_route_contexts(
+    db: AsyncSession,
+    account_ids: set[uuid.UUID],
+    *,
+    now: datetime,
+) -> dict[uuid.UUID, CurrentRouteContext]:
+    contexts = await db.scalars(
+        select(CurrentRouteContext)
+        .join(CurrentLocation, CurrentLocation.account_id == CurrentRouteContext.account_id)
+        .where(
+            CurrentRouteContext.account_id.in_(account_ids),
+            CurrentRouteContext.expires_at > now,
+            CurrentRouteContext.confidence == "confident",
+            CurrentRouteContext.source_location_version == CurrentLocation.version,
+        )
+    )
+    return {context.account_id: context for context in contexts.all()}
+
+
+async def filter_same_road_receive_grants(
+    db: AsyncSession,
+    *,
+    sender_account_id: uuid.UUID,
+    eligible_receivers: tuple[EligibleReceiveGrant, ...],
+    now: datetime,
+) -> tuple[EligibleReceiveGrant, ...]:
+    """Restrict an already-authorized nearby candidate set; never add recipients."""
+    if not eligible_receivers:
+        return ()
+
+    receiver_account_ids = {receiver.account_id for receiver in eligible_receivers}
+    account_ids = {sender_account_id, *receiver_account_ids}
+    modes = await _route_modes(db, account_ids)
+    sender_mode = modes.get(sender_account_id, "nearby")
+    same_road_receivers = {
+        account_id
+        for account_id in receiver_account_ids
+        if modes.get(account_id, "nearby") == "same_road"
+    }
+    if sender_mode != "same_road" and not same_road_receivers:
+        return eligible_receivers
+
+    context_ids = set(same_road_receivers)
+    context_ids.add(sender_account_id)
+    if sender_mode == "same_road":
+        context_ids.update(receiver_account_ids)
+    contexts = await _fresh_route_contexts(db, context_ids, now=now)
+    sender_context = contexts.get(sender_account_id)
+
+    filtered: list[EligibleReceiveGrant] = []
+    for receiver in eligible_receivers:
+        receiver_mode = modes.get(receiver.account_id, "nearby")
+        if sender_mode != "same_road" and receiver_mode != "same_road":
+            filtered.append(receiver)
+            continue
+
+        receiver_context = contexts.get(receiver.account_id)
+        if sender_context is None or receiver_context is None:
+            continue
+        if sender_context.corridor_digest != receiver_context.corridor_digest:
+            continue
+        if not directions_compatible(sender_context.direction, receiver_context.direction):
+            continue
+        filtered.append(receiver)
+
+    return tuple(filtered)
+
+
 async def find_eligible_receive_grants(
     db: AsyncSession,
     *,
@@ -212,7 +317,7 @@ async def find_eligible_receive_grants(
             policy=policy,
         )
     )
-    return tuple(
+    eligible = tuple(
         EligibleReceiveGrant(
             receive_grant_id=receive_grant_id,
             account_id=account_id,
@@ -220,4 +325,10 @@ async def find_eligible_receive_grants(
             participant_ref=participant_ref,
         )
         for receive_grant_id, account_id, device_id, participant_ref in result.all()
+    )
+    return await filter_same_road_receive_grants(
+        db,
+        sender_account_id=sender_account_id,
+        eligible_receivers=eligible,
+        now=evaluated_at,
     )
