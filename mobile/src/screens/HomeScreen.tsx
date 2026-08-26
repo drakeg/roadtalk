@@ -17,8 +17,8 @@ export function HomeScreen({ navigation }: Props) {
         RoadTalk
       </Text>
       <Text style={styles.body}>
-        Set up a public pseudonymous identity now. Communication features arrive
-        in later approved sprints.
+        Choose a channel, control who you can hear, and use RoadTalk with a public
+        pseudonymous identity.
       </Text>
       <View accessibilityLiveRegion="polite" style={styles.status}>
         <Text style={styles.statusLabel}>Anonymous session</Text>
@@ -41,6 +41,16 @@ export function HomeScreen({ navigation }: Props) {
           style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
         >
           <Text style={styles.buttonText}>Channels</Text>
+        </Pressable>
+      ) : null}
+      {authenticated ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Choose Nearby or Same road audience mode"
+          onPress={() => navigation.navigate("RouteMode")}
+          style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+        >
+          <Text style={styles.buttonText}>Audience mode</Text>
         </Pressable>
       ) : null}
       {authenticated ? (
