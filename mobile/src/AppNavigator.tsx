@@ -8,6 +8,7 @@ import { IdentityScreen } from "./screens/IdentityScreen";
 import { LocationPermissionScreen } from "./screens/LocationPermissionScreen";
 import { MicrophonePermissionScreen } from "./screens/MicrophonePermissionScreen";
 import { RecoveryScreen } from "./screens/RecoveryScreen";
+import { RouteModeScreen } from "./screens/RouteModeScreen";
 import { colors } from "./theme";
 
 export type RootStackParamList = {
@@ -18,6 +19,7 @@ export type RootStackParamList = {
   LocationPermission: undefined;
   MicrophonePermission: undefined;
   Recovery: undefined;
+  RouteMode: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -47,6 +49,11 @@ export function AppNavigator() {
           component={ChannelScreen}
           name="Channels"
           options={{ title: "Channels" }}
+        />
+        <Stack.Screen
+          component={RouteModeScreen}
+          name="RouteMode"
+          options={{ title: "Audience mode" }}
         />
         <Stack.Screen
           component={LocationPermissionScreen}

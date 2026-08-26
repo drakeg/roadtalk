@@ -17,7 +17,7 @@ jest.mock("../session/SessionContext", () => ({
 }));
 
 describe("foundation screen", () => {
-  it("provides accessible identity and diagnostics navigation", async () => {
+  it("provides accessible radio, audience, identity, and diagnostics navigation", async () => {
     const navigate = jest.fn();
     const view = await render(
       <HomeScreen
@@ -31,6 +31,10 @@ describe("foundation screen", () => {
       view.getByRole("button", { name: "Choose a RoadTalk channel" }),
     );
     expect(navigate).toHaveBeenCalledWith("Channels");
+    await fireEvent.press(
+      view.getByRole("button", { name: "Choose Nearby or Same road audience mode" }),
+    );
+    expect(navigate).toHaveBeenCalledWith("RouteMode");
     await fireEvent.press(
       view.getByRole("button", { name: "Set up or edit identity" }),
     );
@@ -57,7 +61,7 @@ describe("foundation screen", () => {
     expect(navigate).toHaveBeenCalledWith("Diagnostics");
   });
 
-  it("does not expose later-sprint features", async () => {
+  it("presents the current RoadTalk communication capabilities", async () => {
     const view = await render(
       <HomeScreen
         navigation={{ navigate: jest.fn() } as never}
@@ -65,8 +69,10 @@ describe("foundation screen", () => {
       />,
     );
 
-    expect(view.queryByText(/push.to.talk/i)).not.toBeOnTheScreen();
-    expect(view.queryByText(/nearby/i)).not.toBeOnTheScreen();
+    expect(view.getByText(/control who you can hear/i)).toBeOnTheScreen();
+    expect(
+      view.getByRole("button", { name: "Choose Nearby or Same road audience mode" }),
+    ).toBeOnTheScreen();
     expect(view.getByRole("button", { name: "Choose a RoadTalk channel" })).toBeOnTheScreen();
   });
 });
