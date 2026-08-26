@@ -47,7 +47,7 @@ describe("Same-road mobile experience", () => {
   });
 
   it("keeps Nearby as the default and safely transitions into unavailable Same road", async () => {
-    const view = render(
+    const view = await render(
       <RouteModeScreen
         navigation={{} as never}
         route={{ key: "route-mode", name: "RouteMode" }}
@@ -70,11 +70,11 @@ describe("Same-road mobile experience", () => {
     expect(mockPrepareChannelTransition).toHaveBeenCalledTimes(1);
     expect(mockUpdate).toHaveBeenCalledWith("same_road", 1);
     expect(mockCompleteChannelTransition).toHaveBeenCalledTimes(1);
-    view.unmount();
+    await view.unmount();
   });
 
   it("does not expose route details in user-visible copy", async () => {
-    const view = render(
+    const view = await render(
       <RouteModeScreen
         navigation={{} as never}
         route={{ key: "route-mode", name: "RouteMode" }}
@@ -85,6 +85,6 @@ describe("Same-road mobile experience", () => {
     expect(view.queryByText(/provider/i)).not.toBeOnTheScreen();
     expect(view.queryByText(/corridor/i)).not.toBeOnTheScreen();
     expect(view.queryByText(/bearing/i)).not.toBeOnTheScreen();
-    view.unmount();
+    await view.unmount();
   });
 });
