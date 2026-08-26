@@ -143,7 +143,7 @@ def test_operational_metrics_returns_only_aggregate_counts() -> None:
 
     class Session:
         def __init__(self) -> None:
-            self.values = iter((12, 7, 4, 18, 3))
+            self.values = iter((12, 7, 4, 18, 3, 5, 2, 1))
 
         async def execute(self, statement: object) -> Result:
             del statement
@@ -165,7 +165,22 @@ def test_operational_metrics_returns_only_aggregate_counts() -> None:
         "enabled_channels": 4,
         "active_memberships": 18,
         "valid_media_grants": 3,
+        "fresh_route_contexts": 5,
+        "expired_route_contexts": 2,
+        "reconciling_media_grants": 1,
     }
+    encoded = response.text.lower()
+    for forbidden in (
+        "corridor",
+        "direction",
+        "latitude",
+        "longitude",
+        "participant",
+        "account_id",
+        "device_id",
+        "eligibility",
+    ):
+        assert forbidden not in encoded
 
 
 def test_docs_are_disabled_by_configuration() -> None:

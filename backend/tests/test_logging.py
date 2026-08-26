@@ -82,6 +82,46 @@ def test_json_formatter_rejects_unapproved_events_and_sensitive_extras() -> None
         assert private_value not in encoded
 
 
+def test_route_semantic_events_drop_sensitive_route_and_identity_fields() -> None:
+    record = logging.LogRecord(
+        name="roadtalk.route",
+        level=logging.WARNING,
+        pathname=__file__,
+        lineno=10,
+        msg="route_context.unavailable",
+        args=(),
+        exc_info=None,
+    )
+    account_id = str(uuid.uuid4())
+    device_id = str(uuid.uuid4())
+    record.corridor_digest = "a" * 64
+    record.provider_corridor_ref = "provider-road-17"
+    record.direction = "northwest"
+    record.latitude = 40.123456
+    record.longitude = -75.654321
+    record.__dict__["account_id"] = account_id
+    record.__dict__["device_id"] = device_id
+    record.participant_ref = "participant_opaque"
+    record.eligibility_reason = "same-road-mismatch"
+
+    payload = json.loads(JsonFormatter().format(record))
+    encoded = json.dumps(payload)
+
+    assert payload["event"] == "route_context.unavailable"
+    for private_value in (
+        "a" * 64,
+        "provider-road-17",
+        "northwest",
+        "40.123456",
+        "-75.654321",
+        account_id,
+        device_id,
+        "participant_opaque",
+        "same-road-mismatch",
+    ):
+        assert private_value not in encoded
+
+
 def test_request_logs_use_route_templates_not_concrete_identifiers(
     capsys: pytest.CaptureFixture[str],
 ) -> None:

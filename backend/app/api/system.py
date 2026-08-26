@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import Settings
 from app.db.models import Account, Channel, ChannelMembership, CurrentLocation, MediaGrant
 from app.db.session import get_session
+from app.route_context.models import CurrentRouteContext
 
 router = APIRouter(tags=["system"])
 DatabaseSession = Annotated[AsyncSession, Depends(get_session)]
@@ -41,6 +42,9 @@ class OperationalMetricsResponse(BaseModel):
     enabled_channels: int
     active_memberships: int
     valid_media_grants: int
+    fresh_route_contexts: int
+    expired_route_contexts: int
+    reconciling_media_grants: int
 
 
 @router.get("/health/live", response_model=StatusResponse, include_in_schema=False)
@@ -88,6 +92,15 @@ async def operational_metrics(session: DatabaseSession) -> OperationalMetricsRes
         select(func.count())
         .select_from(MediaGrant)
         .where(MediaGrant.revoked_at.is_(None), MediaGrant.expires_at > now),
+        select(func.count())
+        .select_from(CurrentRouteContext)
+        .where(CurrentRouteContext.expires_at > now),
+        select(func.count())
+        .select_from(CurrentRouteContext)
+        .where(CurrentRouteContext.expires_at <= now),
+        select(func.count())
+        .select_from(MediaGrant)
+        .where(MediaGrant.outcome_code == "delivery_reconciling"),
     )
     counts = [int((await session.execute(statement)).scalar_one()) for statement in statements]
     return OperationalMetricsResponse(
@@ -96,4 +109,7 @@ async def operational_metrics(session: DatabaseSession) -> OperationalMetricsRes
         enabled_channels=counts[2],
         active_memberships=counts[3],
         valid_media_grants=counts[4],
+        fresh_route_contexts=counts[5],
+        expired_route_contexts=counts[6],
+        reconciling_media_grants=counts[7],
     )
