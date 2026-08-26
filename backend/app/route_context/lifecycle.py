@@ -191,12 +191,27 @@ async def delete_expired_route_contexts(
     db: AsyncSession,
     *,
     now: datetime | None = None,
+    limit: int = 100,
 ) -> int:
+    if limit < 1 or limit > 1_000:
+        raise ValueError("route context cleanup limit must be between 1 and 1000")
+
     cutoff = (now or datetime.now(UTC)).astimezone(UTC)
-    deleted = await db.scalars(
-        delete(CurrentRouteContext)
-        .where(CurrentRouteContext.expires_at <= cutoff)
-        .returning(CurrentRouteContext.account_id)
+    account_ids = (
+        await db.scalars(
+            select(CurrentRouteContext.account_id)
+            .where(CurrentRouteContext.expires_at <= cutoff)
+            .order_by(CurrentRouteContext.expires_at, CurrentRouteContext.account_id)
+            .limit(limit)
+            .with_for_update(skip_locked=True)
+        )
+    ).all()
+    if not account_ids:
+        await db.commit()
+        return 0
+
+    await db.execute(
+        delete(CurrentRouteContext).where(CurrentRouteContext.account_id.in_(account_ids))
     )
     await db.commit()
-    return len(deleted.all())
+    return len(account_ids)
