@@ -92,13 +92,15 @@ def test_route_semantic_events_drop_sensitive_route_and_identity_fields() -> Non
         args=(),
         exc_info=None,
     )
+    account_id = str(uuid.uuid4())
+    device_id = str(uuid.uuid4())
     record.corridor_digest = "a" * 64
     record.provider_corridor_ref = "provider-road-17"
     record.direction = "northwest"
     record.latitude = 40.123456
     record.longitude = -75.654321
-    record.account_id = str(uuid.uuid4())
-    record.device_id = str(uuid.uuid4())
+    setattr(record, "account_id", account_id)
+    setattr(record, "device_id", device_id)
     record.participant_ref = "participant_opaque"
     record.eligibility_reason = "same-road-mismatch"
 
@@ -112,8 +114,8 @@ def test_route_semantic_events_drop_sensitive_route_and_identity_fields() -> Non
         "northwest",
         "40.123456",
         "-75.654321",
-        record.account_id,
-        record.device_id,
+        account_id,
+        device_id,
         "participant_opaque",
         "same-road-mismatch",
     ):
