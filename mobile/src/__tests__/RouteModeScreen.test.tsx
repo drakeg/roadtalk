@@ -2,36 +2,36 @@ import { fireEvent, render, waitFor } from "@testing-library/react-native";
 
 import { RouteModeScreen } from "../screens/RouteModeScreen";
 
-const current = jest.fn();
-const update = jest.fn();
-const prepareChannelTransition = jest.fn();
-const completeChannelTransition = jest.fn();
+const mockCurrent = jest.fn();
+const mockUpdate = jest.fn();
+const mockPrepareChannelTransition = jest.fn();
+const mockCompleteChannelTransition = jest.fn();
 
 jest.mock("../routeMode/api", () => {
   const actual = jest.requireActual("../routeMode/api");
   return {
     ...actual,
-    useRouteModeApi: () => ({ current, update }),
+    useRouteModeApi: () => ({ current: mockCurrent, update: mockUpdate }),
   };
 });
 
 jest.mock("../media/MediaLifecycleContext", () => ({
   useMediaLifecycle: () => ({
-    prepareChannelTransition,
-    completeChannelTransition,
+    prepareChannelTransition: mockPrepareChannelTransition,
+    completeChannelTransition: mockCompleteChannelTransition,
   }),
 }));
 
 describe("Same-road mobile experience", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    current.mockResolvedValue({
+    mockCurrent.mockResolvedValue({
       mode: "nearby",
       version: 1,
       selectedAt: "2026-08-26T03:30:00Z",
       availability: "available",
     });
-    update.mockResolvedValue({
+    mockUpdate.mockResolvedValue({
       mode: "same_road",
       version: 2,
       selectedAt: "2026-08-26T03:31:00Z",
@@ -60,9 +60,9 @@ describe("Same-road mobile experience", () => {
     await waitFor(() =>
       expect(view.getByText("Same road is unavailable right now.")).toBeOnTheScreen(),
     );
-    expect(prepareChannelTransition).toHaveBeenCalledTimes(1);
-    expect(update).toHaveBeenCalledWith("same_road", 1);
-    expect(completeChannelTransition).toHaveBeenCalledTimes(1);
+    expect(mockPrepareChannelTransition).toHaveBeenCalledTimes(1);
+    expect(mockUpdate).toHaveBeenCalledWith("same_road", 1);
+    expect(mockCompleteChannelTransition).toHaveBeenCalledTimes(1);
   });
 
   it("does not expose route details in user-visible copy", async () => {
