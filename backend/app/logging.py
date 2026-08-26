@@ -11,6 +11,12 @@ class JsonFormatter(logging.Formatter):
         "request.complete",
         "request.problem",
         "request.unhandled",
+        "route_context.available",
+        "route_context.unavailable",
+        "route_context.cleanup",
+        "route_delivery.reconciling",
+        "route_delivery.ready",
+        "route_delivery.ended",
     }
     _allowed_fields = {
         "duration_ms",
