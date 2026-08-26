@@ -99,8 +99,8 @@ def test_route_semantic_events_drop_sensitive_route_and_identity_fields() -> Non
     record.direction = "northwest"
     record.latitude = 40.123456
     record.longitude = -75.654321
-    setattr(record, "account_id", account_id)
-    setattr(record, "device_id", device_id)
+    record.__dict__["account_id"] = account_id
+    record.__dict__["device_id"] = device_id
     record.participant_ref = "participant_opaque"
     record.eligibility_reason = "same-road-mismatch"
 
