@@ -48,9 +48,10 @@ describe("Same-road mobile experience", () => {
     );
 
     await waitFor(() => expect(view.getByText("Nearby is active.")).toBeOnTheScreen());
-    expect(
-      view.getByRole("button", { name: "Use Nearby audience mode" }),
-    ).toHaveAccessibilityState({ selected: true });
+    const nearbyButton = view.getByRole("button", {
+      name: "Use Nearby audience mode",
+    });
+    expect(nearbyButton.props.accessibilityState?.selected).toBe(true);
 
     await fireEvent.press(
       view.getByRole("button", { name: "Use Same road audience mode" }),
