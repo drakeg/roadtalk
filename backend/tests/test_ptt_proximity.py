@@ -234,33 +234,45 @@ async def _same_road_filter_matrix() -> None:
         sender_corridor="a" * 64,
         receiver_corridor="a" * 64,
     ) == (receiver,)
-    assert await evaluate(
-        sender_mode="same_road",
-        receiver_mode="same_road",
-        sender_corridor="a" * 64,
-        receiver_corridor="b" * 64,
-    ) == ()
-    assert await evaluate(
-        sender_mode="same_road",
-        receiver_mode="same_road",
-        sender_corridor=None,
-        receiver_corridor="a" * 64,
-    ) == ()
-    assert await evaluate(
-        sender_mode="same_road",
-        receiver_mode="same_road",
-        sender_corridor="a" * 64,
-        receiver_corridor="a" * 64,
-        receiver_direction="unknown",
-    ) == ()
+    assert (
+        await evaluate(
+            sender_mode="same_road",
+            receiver_mode="same_road",
+            sender_corridor="a" * 64,
+            receiver_corridor="b" * 64,
+        )
+        == ()
+    )
+    assert (
+        await evaluate(
+            sender_mode="same_road",
+            receiver_mode="same_road",
+            sender_corridor=None,
+            receiver_corridor="a" * 64,
+        )
+        == ()
+    )
+    assert (
+        await evaluate(
+            sender_mode="same_road",
+            receiver_mode="same_road",
+            sender_corridor="a" * 64,
+            receiver_corridor="a" * 64,
+            receiver_direction="unknown",
+        )
+        == ()
+    )
 
     denied_before_route_filter: tuple[EligibleReceiveGrant, ...] = ()
     db = AsyncMock()
-    assert await filter_same_road_receive_grants(
-        db,
-        sender_account_id=sender_account_id,
-        eligible_receivers=denied_before_route_filter,
-        now=now,
-    ) == ()
+    assert (
+        await filter_same_road_receive_grants(
+            db,
+            sender_account_id=sender_account_id,
+            eligible_receivers=denied_before_route_filter,
+            now=now,
+        )
+        == ()
+    )
     db.execute.assert_not_awaited()
     db.scalars.assert_not_awaited()
