@@ -44,12 +44,16 @@ def test_fake_provider_is_deterministic_and_local_only() -> None:
         assert first.content_type == "image/svg+xml"
         assert first.attribution == "RoadTalk local map fixture"
         text = first.body.decode("utf-8")
+        lower = text.lower()
         assert "RoadTalk local fixture" in text
         assert "z7 / x33 / y48" in text
-        assert "http://" not in text
+        assert 'xmlns="http://www.w3.org/2000/svg"' in text
+        assert text.count("http://") == 1
         assert "https://" not in text
-        assert "api_key" not in text.lower()
-        assert "token" not in text.lower()
+        assert "href=" not in lower
+        assert "src=" not in lower
+        assert "api_key" not in lower
+        assert "token" not in lower
 
     asyncio.run(exercise())
 
