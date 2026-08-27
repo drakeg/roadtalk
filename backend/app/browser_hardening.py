@@ -137,7 +137,7 @@ _RADIO_HARDENING = r"""
 @router.get("/", response_class=HTMLResponse)
 async def hardened_radio_console() -> HTMLResponse:
     response = await radio_console()
-    html = response.body.decode("utf-8")
+    html = bytes(response.body).decode("utf-8")
     html = html.replace(
         '<div class="navlinks"><a class="button" href="/ops">Operations</a>',
         '<div class="navlinks"><a class="button" href="/audience">Audience</a><a class="button" href="/ops">Operations</a>',
@@ -150,7 +150,7 @@ async def hardened_radio_console() -> HTMLResponse:
 @router.get("/ops", response_class=HTMLResponse)
 async def hardened_operations_dashboard() -> HTMLResponse:
     response = await web_home()
-    html = response.body.decode("utf-8")
+    html = bytes(response.body).decode("utf-8")
     html = html.replace(
         '<div class="navlinks"><a class="button" href="/docs">Swagger</a>',
         '<div class="navlinks"><a class="button" href="/">Web Radio</a><a class="button" href="/audience">Audience Mode</a><a class="button" href="/docs">Swagger</a>',
