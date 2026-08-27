@@ -76,9 +76,9 @@ Normal CI and the dedicated Sprint 7 hardening workflow keep the existing authen
 location consent, PostGIS, channel/grant, dependency, secret, IaC and container gates in
 force. Sprint 7 adds explicit provider/config/schema/client/log/evidence boundary checks.
 
-The real route provider remains hard-disabled: configuration accepts only `disabled` or
-`fake`; no provider URL/key/secret/token is added; no OSRM/OSM network implementation or
-road dataset is present. Same-road failures deny delivery without exposing the denial
+The real routing provider remains hard-disabled: configuration accepts only `disabled`
+or `fake`; no provider URL/key/secret/token is added; no OSRM/OSM network implementation
+or road dataset is present. Same-road failures deny delivery without exposing the denial
 reason. Automatic subscription remains disabled.
 
 No new always-on worker, Redis/WebSocket service, cloud queue, routing container or
