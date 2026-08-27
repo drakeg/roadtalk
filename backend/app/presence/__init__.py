@@ -9,7 +9,11 @@ from app.presence.policy import (
     privacy_cell_center,
     privacy_cell_index,
 )
-from app.presence.schemas import NearbyPresenceQuery, NearbyPresenceResponse, PresenceCellResponse
+from app.presence.schemas import (
+    NearbyPresenceQuery,
+    NearbyPresenceResponse,
+    PresenceCellResponse,
+)
 
 __all__ = [
     "PRESENCE_CELL_SIZE_M",
