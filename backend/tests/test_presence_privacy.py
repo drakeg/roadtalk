@@ -13,7 +13,11 @@ from app.presence.policy import (
     privacy_cell_center,
     privacy_cell_index,
 )
-from app.presence.schemas import NearbyPresenceQuery, NearbyPresenceResponse, PresenceCellResponse
+from app.presence.schemas import (
+    NearbyPresenceQuery,
+    NearbyPresenceResponse,
+    PresenceCellResponse,
+)
 
 
 def points_in_same_cell(count: int) -> list[PresencePoint]:
@@ -22,8 +26,8 @@ def points_in_same_cell(count: int) -> list[PresencePoint]:
     return [
         PresencePoint(
             account_key=f"account-{index}",
-            latitude=latitude + index * 0.00001,
-            longitude=longitude + index * 0.00001,
+            latitude=latitude + 0.001 + index * 0.00001,
+            longitude=longitude + 0.001 + index * 0.00001,
         )
         for index in range(count)
     ]
