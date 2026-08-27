@@ -28,9 +28,7 @@ def test_tile_request_rejects_out_of_range_coordinates() -> None:
     with pytest.raises(ValidationError):
         MapTileRequest(zoom=2, x=0, y=4)
     with pytest.raises(ValidationError):
-        MapTileRequest.model_validate(
-            {"zoom": 1, "x": 0, "y": 0, "url": "https://example.com"}
-        )
+        MapTileRequest.model_validate({"zoom": 1, "x": 0, "y": 0, "url": "https://example.com"})
 
 
 def test_fake_provider_is_deterministic_and_local_only() -> None:
