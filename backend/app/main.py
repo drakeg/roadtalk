@@ -12,6 +12,7 @@ from app.api.ptt import router as ptt_router
 from app.api.recovery import router as recovery_router
 from app.api.route_mode import router as route_mode_router
 from app.api.system import router as system_router
+from app.browser_hardening import router as browser_hardening_router
 from app.channels.limiter import ChannelInviteLimiter
 from app.config import Settings, get_settings
 from app.db.session import check_database, dispose_database
@@ -82,6 +83,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.readiness.register("database", check_database)
     app.add_middleware(RequestContextMiddleware, settings=resolved)
     install_problem_handlers(app)
+    app.include_router(browser_hardening_router)
     app.include_router(radio_router)
     app.include_router(route_mode_web_router)
     app.include_router(profile_web_router)
