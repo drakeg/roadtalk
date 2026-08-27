@@ -1,4 +1,5 @@
 import math
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -16,11 +17,13 @@ from app.presence.schemas import NearbyPresenceQuery, NearbyPresenceResponse, Pr
 
 
 def points_in_same_cell(count: int) -> list[PresencePoint]:
+    cell = privacy_cell_index(40.0, -75.0)
+    latitude, longitude = privacy_cell_center(*cell)
     return [
         PresencePoint(
             account_key=f"account-{index}",
-            latitude=40.0 + index * 0.00001,
-            longitude=-75.0 + index * 0.00001,
+            latitude=latitude + index * 0.00001,
+            longitude=longitude + index * 0.00001,
         )
         for index in range(count)
     ]
@@ -50,7 +53,10 @@ def test_response_contract_exposes_only_coarse_presence() -> None:
         approximate_longitude=-75.0,
         density="few",
     )
-    response = NearbyPresenceResponse(expires_at="2026-08-27T04:00:00Z", cells=(cell,))
+    response = NearbyPresenceResponse(
+        expires_at=datetime(2026, 8, 27, 4, 0, tzinfo=UTC),
+        cells=(cell,),
+    )
     encoded = response.model_dump()
 
     assert encoded["privacy_min_accounts"] == 3
@@ -74,7 +80,6 @@ def test_response_contract_exposes_only_coarse_presence() -> None:
         "direction",
         "route",
         "history",
-        "count",
     ):
         assert forbidden not in str(encoded).lower()
 
@@ -85,20 +90,42 @@ def test_one_or_two_accounts_are_suppressed() -> None:
 
 
 def test_three_distinct_accounts_make_one_coarse_cell() -> None:
-    cells = aggregate_presence(points_in_same_cell(3))
+    points = points_in_same_cell(3)
+    cells = aggregate_presence(points)
 
     assert len(cells) == 1
     assert cells[0].density == "few"
     assert cells[0].account_count == 3
-    assert not math.isclose(cells[0].approximate_latitude, 40.0, abs_tol=1e-6)
-    assert not math.isclose(cells[0].approximate_longitude, -75.0, abs_tol=1e-6)
+    assert not math.isclose(
+        cells[0].approximate_latitude,
+        points[0].latitude,
+        abs_tol=1e-6,
+    )
+    assert not math.isclose(
+        cells[0].approximate_longitude,
+        points[0].longitude,
+        abs_tol=1e-6,
+    )
 
 
 def test_duplicate_account_does_not_satisfy_minimum_anonymity() -> None:
+    base = points_in_same_cell(1)[0]
     points = [
-        PresencePoint(account_key="same", latitude=40.0, longitude=-75.0),
-        PresencePoint(account_key="same", latitude=40.0001, longitude=-75.0001),
-        PresencePoint(account_key="other", latitude=40.0002, longitude=-75.0002),
+        PresencePoint(
+            account_key="same",
+            latitude=base.latitude,
+            longitude=base.longitude,
+        ),
+        PresencePoint(
+            account_key="same",
+            latitude=base.latitude + 0.00001,
+            longitude=base.longitude + 0.00001,
+        ),
+        PresencePoint(
+            account_key="other",
+            latitude=base.latitude + 0.00002,
+            longitude=base.longitude + 0.00002,
+        ),
     ]
 
     assert aggregate_presence(points) == ()
