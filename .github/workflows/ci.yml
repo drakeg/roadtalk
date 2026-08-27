@@ -4,7 +4,7 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -17,15 +17,22 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          ref: ${{ github.head_ref }}
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: "24"
       - name: Regenerate package lock
         working-directory: mobile
         run: npm install --package-lock-only --ignore-scripts
-      - name: Preserve regenerated lockfile
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: mobile-lock-refresh
-          path: mobile/package-lock.json
-          retention-days: 1
+      - name: Commit regenerated lockfile
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mobile/package-lock.json
+          if git diff --cached --quiet; then
+            echo "Lockfile already synchronized."
+          else
+            git commit -m "Refresh mobile dependency lock"
+            git push origin HEAD:${{ github.head_ref }}
+          fi
