@@ -17,14 +17,20 @@ from app.map_provider.provider import (
 
 
 def test_tile_request_rejects_out_of_range_coordinates() -> None:
-    assert MapTileRequest(zoom=0, x=0, y=0).model_dump() == {"zoom": 0, "x": 0, "y": 0}
+    assert MapTileRequest(zoom=0, x=0, y=0).model_dump() == {
+        "zoom": 0,
+        "x": 0,
+        "y": 0,
+    }
 
     with pytest.raises(ValidationError):
         MapTileRequest(zoom=2, x=4, y=0)
     with pytest.raises(ValidationError):
         MapTileRequest(zoom=2, x=0, y=4)
     with pytest.raises(ValidationError):
-        MapTileRequest.model_validate({"zoom": 1, "x": 0, "y": 0, "url": "https://example.com"})
+        MapTileRequest.model_validate(
+            {"zoom": 1, "x": 0, "y": 0, "url": "https://example.com"}
+        )
 
 
 def test_fake_provider_is_deterministic_and_local_only() -> None:
@@ -64,7 +70,7 @@ def test_builder_allows_only_disabled_or_fake() -> None:
     assert isinstance(build_map_provider("fake"), FakeMapTileProvider)
 
     with pytest.raises(MapProviderUnavailable, match="map provider unavailable"):
-        build_map_provider("public" )  # type: ignore[arg-type]
+        build_map_provider("public")  # type: ignore[arg-type]
 
 
 def test_fetcher_accepts_valid_local_fixture() -> None:
@@ -93,7 +99,10 @@ def test_fetcher_fails_closed_on_provider_error() -> None:
 
 def test_fetcher_rejects_oversized_tile_boundary() -> None:
     with pytest.raises(ValueError, match="approved local boundary"):
-        MapTileFetcher(FakeMapTileProvider(), max_tile_bytes=MAP_PROVIDER_MAX_TILE_BYTES + 1)
+        MapTileFetcher(
+            FakeMapTileProvider(),
+            max_tile_bytes=MAP_PROVIDER_MAX_TILE_BYTES + 1,
+        )
 
 
 def test_tile_schema_rejects_external_content_types_and_metadata() -> None:
