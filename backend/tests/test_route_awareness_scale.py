@@ -60,8 +60,8 @@ async def _exercise_scale() -> None:
     nearby_publisher_indexes = (40, 41, 42, 43, 44)
     same_road_publisher_indexes = (45, 46, 47, 48)
     denied_publisher_index = 49
-    publisher_indexes = nearby_publisher_indexes + same_road_publisher_indexes + (
-        denied_publisher_index,
+    publisher_indexes = (
+        nearby_publisher_indexes + same_road_publisher_indexes + (denied_publisher_index,)
     )
 
     accounts = [
