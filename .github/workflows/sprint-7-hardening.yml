@@ -55,3 +55,5 @@ jobs:
         run: pytest -q -s tests/test_route_awareness_scale.py
       - name: Check Sprint 7 route-awareness hardening and evidence
         run: python scripts/ci/check-route-awareness-hardening.py
+      - name: Check Sprint 7 final traceability and review
+        run: python scripts/ci/check-sprint-7-review.py
