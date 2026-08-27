@@ -58,17 +58,13 @@ def _to_mercator(latitude: float, longitude: float) -> tuple[float, float]:
     latitude = _clamp_latitude(latitude)
     longitude = _normalize_longitude(longitude)
     x = WEB_MERCATOR_RADIUS_M * math.radians(longitude)
-    y = WEB_MERCATOR_RADIUS_M * math.log(
-        math.tan(math.pi / 4 + math.radians(latitude) / 2)
-    )
+    y = WEB_MERCATOR_RADIUS_M * math.log(math.tan(math.pi / 4 + math.radians(latitude) / 2))
     return x, y
 
 
 def _from_mercator(x: float, y: float) -> tuple[float, float]:
     longitude = math.degrees(x / WEB_MERCATOR_RADIUS_M)
-    latitude = math.degrees(
-        2 * math.atan(math.exp(y / WEB_MERCATOR_RADIUS_M)) - math.pi / 2
-    )
+    latitude = math.degrees(2 * math.atan(math.exp(y / WEB_MERCATOR_RADIUS_M)) - math.pi / 2)
     return latitude, longitude
 
 
