@@ -31,7 +31,7 @@ class MapTile(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     content_type: Literal["image/svg+xml"] = "image/svg+xml"
-    provider_version: Literal["local-fixture-v1"] = MAP_PROVIDER_VERSION
+    provider_version: Literal["local-fixture-v1"] = "local-fixture-v1"
     attribution: Literal["RoadTalk local map fixture"] = "RoadTalk local map fixture"
     body: bytes = Field(min_length=1, max_length=MAP_PROVIDER_MAX_TILE_BYTES)
 
