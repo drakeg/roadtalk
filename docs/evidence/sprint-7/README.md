@@ -23,17 +23,20 @@ The route-aware database scale test uses a migrated disposable PostGIS database 
 - five route-denied receiver contexts using a different corridor or incompatible direction;
 - one Same-road publisher whose corridor has zero compatible recipients.
 
-CI emits and enforces these control-plane categories against **400 ms p95**:
+The first authoritative D08 hardening run was GitHub Actions **Sprint 7 hardening #1**
+(run `33035376277`) on 2026-08-27. Its measured control-plane p95 values were:
 
-- Nearby eligible lookup p95;
-- Same-road eligible lookup p95;
-- Same-road zero-recipient denial p95;
-- bounded publication/subscription reconciliation p95.
+- Nearby eligible lookup p95: **40.71 ms**;
+- Same-road eligible lookup p95: **24.03 ms**;
+- Same-road zero-recipient denial p95: **18.97 ms**;
+- bounded publication/subscription reconciliation p95: **160.94 ms**;
+- control-plane target: **400 ms p95**.
 
-The exact measured values are recorded from the authoritative D08 CI run before D08
-is closed. Synthetic timing proves only the tested database/control-plane path; it does
-not prove WebRTC media, routing-provider latency, device GPS quality, or production
-capacity.
+All measured categories were below the 400 ms target. The test and CI workflow enforce
+the ceiling on every future run; the values above are evidence from that named run,
+not a permanent benchmark claim. Synthetic timing proves only the tested disposable
+PostGIS/control-plane path; it does not prove WebRTC media, routing-provider latency,
+device GPS quality, or production capacity.
 
 ## Privacy and security evidence
 
