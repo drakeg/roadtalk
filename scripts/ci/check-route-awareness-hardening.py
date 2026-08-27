@@ -147,7 +147,11 @@ require(
     "live-provider, physical-device, and field status: **not performed**",
     "open database license (odbl) attribution obligations",
     "share-alike obligations",
-    "control-plane categories against **400 ms p95**",
+    "control-plane target: **400 ms p95**",
+    "nearby eligible lookup p95: **40.71 ms**",
+    "same-road eligible lookup p95: **24.03 ms**",
+    "same-road zero-recipient denial p95: **18.97 ms**",
+    "bounded publication/subscription reconciliation p95: **160.94 ms**",
     "no free public osm or osrm service is assumed to be production infrastructure",
     "cross-browser/physical-system verification remains a field exception",
 )
