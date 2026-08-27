@@ -60,7 +60,7 @@ for phrase in (
     if phrase not in review:
         fail(f"{review_path} is missing {phrase!r}")
 
-hardening = read("docs/evidence/sprint-7/readme.md")
+hardening = read("docs/evidence/sprint-7/README.md")
 for phrase in (
     "40.71 ms",
     "24.03 ms",
