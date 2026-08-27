@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable, Literal
+from typing import Literal
 
 WEB_MERCATOR_MAX_LATITUDE = 85.05112878
 WEB_MERCATOR_RADIUS_M = 6_378_137.0
