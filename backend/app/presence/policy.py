@@ -86,10 +86,18 @@ def privacy_cell_center(cell_x: int, cell_y: int) -> tuple[float, float]:
 def aggregate_presence(points: Iterable[PresencePoint]) -> tuple[PresenceCell, ...]:
     """Aggregate current candidates without exposing sparse or exact-account locations."""
 
-    cell_accounts: dict[tuple[int, int], set[str]] = {}
+    account_cells: dict[str, tuple[int, int] | None] = {}
     for point in points:
         cell = privacy_cell_index(point.latitude, point.longitude)
-        cell_accounts.setdefault(cell, set()).add(point.account_key)
+        if point.account_key not in account_cells:
+            account_cells[point.account_key] = cell
+        elif account_cells[point.account_key] != cell:
+            account_cells[point.account_key] = None
+
+    cell_accounts: dict[tuple[int, int], set[str]] = {}
+    for account_key, cell in account_cells.items():
+        if cell is not None:
+            cell_accounts.setdefault(cell, set()).add(account_key)
 
     visible: list[tuple[tuple[int, int], set[str]]] = [
         (cell, accounts)
