@@ -92,9 +92,9 @@ def aggregate_presence(points: Iterable[PresencePoint]) -> tuple[PresenceCell, .
             account_cells[point.account_key] = None
 
     cell_accounts: dict[tuple[int, int], set[str]] = {}
-    for account_key, cell in account_cells.items():
-        if cell is not None:
-            cell_accounts.setdefault(cell, set()).add(account_key)
+    for account_key, account_cell in account_cells.items():
+        if account_cell is not None:
+            cell_accounts.setdefault(account_cell, set()).add(account_key)
 
     visible: list[tuple[tuple[int, int], set[str]]] = [
         (cell, accounts)
