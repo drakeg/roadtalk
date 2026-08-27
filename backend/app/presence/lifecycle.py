@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from geoalchemy2 import Geometry
-from sqlalchemy import and_, cast as sql_cast, exists, func, select
+from sqlalchemy import cast as sql_cast
+from sqlalchemy import exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
@@ -32,7 +33,6 @@ async def current_presence_snapshot(
 
     current_time = (now or datetime.now(UTC)).astimezone(UTC)
     consent = aliased(LocationConsentEvent)
-    newer_consent = aliased(LocationConsentEvent)
     geometry = sql_cast(
         CurrentLocation.position,
         Geometry(geometry_type="POINT", srid=4326, spatial_index=False),
@@ -45,11 +45,17 @@ async def current_presence_snapshot(
             Session.expires_at > current_time,
         )
     )
-    no_newer_consent = ~exists(
-        select(newer_consent.id).where(
-            newer_consent.account_id == consent.account_id,
-            newer_consent.decided_at > consent.decided_at,
+    latest_consent_id = (
+        select(LocationConsentEvent.id)
+        .where(LocationConsentEvent.account_id == CurrentLocation.account_id)
+        .order_by(
+            LocationConsentEvent.decided_at.desc(),
+            LocationConsentEvent.created_at.desc(),
+            LocationConsentEvent.id.desc(),
         )
+        .limit(1)
+        .correlate(CurrentLocation)
+        .scalar_subquery()
     )
 
     rows = await db.execute(
@@ -60,7 +66,7 @@ async def current_presence_snapshot(
             func.ST_X(geometry).label("longitude"),
         )
         .join(Account, Account.id == CurrentLocation.account_id)
-        .join(consent, consent.account_id == CurrentLocation.account_id)
+        .join(consent, consent.id == latest_consent_id)
         .where(
             CurrentLocation.account_id != viewer_account_id,
             CurrentLocation.expires_at > current_time,
@@ -69,7 +75,6 @@ async def current_presence_snapshot(
             Account.status == "active",
             consent.decision == "granted",
             consent.policy_version == location_policy_version,
-            no_newer_consent,
             active_source_session,
         )
     )
