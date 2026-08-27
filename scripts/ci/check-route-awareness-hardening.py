@@ -172,15 +172,21 @@ unexpected = (backend_dependencies | mobile_dependencies) & prohibited_dependenc
 if unexpected:
     fail("unapproved route/cloud/later-sprint dependency: " + ", ".join(sorted(unexpected)))
 
-workflow = read(".github/workflows/ci.yml")
+hardening_workflow = read(".github/workflows/sprint-7-hardening.yml")
 for command in (
     "pytest -q -s tests/test_route_awareness_scale.py",
     "python scripts/ci/check-route-awareness-hardening.py",
+):
+    if command not in hardening_workflow:
+        fail(f"Sprint 7 hardening CI does not enforce {command!r}")
+
+normal_workflow = read(".github/workflows/ci.yml")
+for command in (
     "python scripts/ci/check-route-context-provider.py",
     "python scripts/ci/check-route-mode-privacy.py",
     "sh scripts/ci/validate-terraform.sh",
 ):
-    if command not in workflow:
-        fail(f"CI does not enforce {command!r}")
+    if command not in normal_workflow:
+        fail(f"normal CI does not enforce {command!r}")
 
 print("Sprint 7 route-awareness hardening gate: passed")
