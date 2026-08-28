@@ -148,15 +148,19 @@ async def create_registered_account(
     except ValueError as exc:
         raise AuthenticationError("INVALID_REGISTRATION", str(exc)) from exc
 
-    if await db.scalar(
-        select(RegisteredCredential.account_id).where(
-            RegisteredCredential.normalized_username == username
+    if (
+        await db.scalar(
+            select(RegisteredCredential.account_id).where(
+                RegisteredCredential.normalized_username == username
+            )
         )
-    ) is not None:
+        is not None
+    ):
         raise AuthenticationError("USERNAME_UNAVAILABLE", "That username is unavailable.")
-    if await db.scalar(
-        select(Device.id).where(Device.installation_id == payload.installation_id)
-    ) is not None:
+    if (
+        await db.scalar(select(Device.id).where(Device.installation_id == payload.installation_id))
+        is not None
+    ):
         raise AuthenticationError(
             "DEVICE_ALREADY_REGISTERED",
             "This installation is already attached to an account.",
@@ -183,7 +187,9 @@ async def create_registered_account(
         await db.commit()
     except IntegrityError as exc:
         await db.rollback()
-        raise AuthenticationError("REGISTRATION_CONFLICT", "Registration could not be completed.") from exc
+        raise AuthenticationError(
+            "REGISTRATION_CONFLICT", "Registration could not be completed."
+        ) from exc
     await db.refresh(session)
     return registered_response(session, refresh_token, settings)
 
@@ -202,11 +208,14 @@ async def promote_registered_account(
 
     if current.account.account_type == "registered":
         raise AuthenticationError("ALREADY_REGISTERED", "This account is already registered.")
-    if await db.scalar(
-        select(RegisteredCredential.account_id).where(
-            RegisteredCredential.normalized_username == username
+    if (
+        await db.scalar(
+            select(RegisteredCredential.account_id).where(
+                RegisteredCredential.normalized_username == username
+            )
         )
-    ) is not None:
+        is not None
+    ):
         raise AuthenticationError("USERNAME_UNAVAILABLE", "That username is unavailable.")
 
     current.account.account_type = "registered"
@@ -221,7 +230,9 @@ async def promote_registered_account(
         await db.commit()
     except IntegrityError as exc:
         await db.rollback()
-        raise AuthenticationError("REGISTRATION_CONFLICT", "Registration could not be completed.") from exc
+        raise AuthenticationError(
+            "REGISTRATION_CONFLICT", "Registration could not be completed."
+        ) from exc
 
 
 async def login_registered_account(
@@ -235,9 +246,7 @@ async def login_registered_account(
         username = "invalid"
 
     credential = await db.scalar(
-        select(RegisteredCredential).where(
-            RegisteredCredential.normalized_username == username
-        )
+        select(RegisteredCredential).where(RegisteredCredential.normalized_username == username)
     )
     encoded = credential.password_hash if credential is not None else DUMMY_PASSWORD_HASH
     valid = verify_password(payload.password, encoded)
