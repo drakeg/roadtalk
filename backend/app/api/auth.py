@@ -120,7 +120,8 @@ async def register_account(
     except AuthenticationError as exc:
         status_code = (
             status.HTTP_409_CONFLICT
-            if exc.code in {"USERNAME_UNAVAILABLE", "DEVICE_ALREADY_REGISTERED", "REGISTRATION_CONFLICT"}
+            if exc.code
+            in {"USERNAME_UNAVAILABLE", "DEVICE_ALREADY_REGISTERED", "REGISTRATION_CONFLICT"}
             else status.HTTP_422_UNPROCESSABLE_CONTENT
         )
         raise auth_error(exc, status_code) from exc
