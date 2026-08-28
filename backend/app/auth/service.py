@@ -8,7 +8,21 @@ from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.schemas import AnonymousSessionRequest, AnonymousSessionResponse, TokenPair
+from app.auth.credentials import RegisteredCredential
+from app.auth.passwords import (
+    DUMMY_PASSWORD_HASH,
+    hash_password,
+    normalize_username,
+    verify_password,
+)
+from app.auth.schemas import (
+    AnonymousSessionRequest,
+    AnonymousSessionResponse,
+    RegisteredAuthRequest,
+    RegisteredPromotionRequest,
+    RegisteredSessionResponse,
+    TokenPair,
+)
 from app.auth.security import hash_refresh_token, issue_access_token, new_refresh_token
 from app.channels.constants import GENERAL_CHANNEL_ID
 from app.config import Settings
@@ -47,6 +61,40 @@ def token_pair(session: Session, refresh_token: str, settings: Settings) -> Toke
     )
 
 
+def registered_response(
+    session: Session,
+    refresh_token: str,
+    settings: Settings,
+) -> RegisteredSessionResponse:
+    pair = token_pair(session, refresh_token, settings)
+    return RegisteredSessionResponse(
+        **pair.model_dump(),
+        account_id=session.account_id,
+        device_id=session.device_id,
+        session_id=session.id,
+    )
+
+
+async def _new_session_for_device(
+    db: AsyncSession,
+    *,
+    account: Account,
+    device: Device,
+    settings: Settings,
+) -> tuple[Session, str]:
+    refresh_token = new_refresh_token()
+    session = Session(
+        account=account,
+        device=device,
+        refresh_token_hash=hash_refresh_token(
+            refresh_token, settings.refresh_token_pepper.get_secret_value()
+        ),
+        expires_at=utcnow() + timedelta(seconds=settings.refresh_token_ttl_seconds),
+    )
+    db.add(session)
+    return session, refresh_token
+
+
 async def create_anonymous_session(
     db: AsyncSession, payload: AnonymousSessionRequest, settings: Settings
 ) -> AnonymousSessionResponse:
@@ -66,14 +114,8 @@ async def create_anonymous_session(
         installation_id=payload.installation_id,
         last_seen_at=utcnow(),
     )
-    refresh_token = new_refresh_token()
-    session = Session(
-        account=account,
-        device=device,
-        refresh_token_hash=hash_refresh_token(
-            refresh_token, settings.refresh_token_pepper.get_secret_value()
-        ),
-        expires_at=utcnow() + timedelta(seconds=settings.refresh_token_ttl_seconds),
+    session, refresh_token = await _new_session_for_device(
+        db, account=account, device=device, settings=settings
     )
     account.channel_selection = ChannelSelection(channel_id=GENERAL_CHANNEL_ID)
     db.add(account)
@@ -93,6 +135,148 @@ async def create_anonymous_session(
         device_id=device.id,
         session_id=session.id,
     )
+
+
+async def create_registered_account(
+    db: AsyncSession,
+    payload: RegisteredAuthRequest,
+    settings: Settings,
+) -> RegisteredSessionResponse:
+    try:
+        username = normalize_username(payload.username)
+        password_hash = hash_password(payload.password)
+    except ValueError as exc:
+        raise AuthenticationError("INVALID_REGISTRATION", str(exc)) from exc
+
+    if await db.scalar(
+        select(RegisteredCredential.account_id).where(
+            RegisteredCredential.normalized_username == username
+        )
+    ) is not None:
+        raise AuthenticationError("USERNAME_UNAVAILABLE", "That username is unavailable.")
+    if await db.scalar(
+        select(Device.id).where(Device.installation_id == payload.installation_id)
+    ) is not None:
+        raise AuthenticationError(
+            "DEVICE_ALREADY_REGISTERED",
+            "This installation is already attached to an account.",
+        )
+
+    account = Account(account_type="registered")
+    account.channel_selection = ChannelSelection(channel_id=GENERAL_CHANNEL_ID)
+    device = Device(
+        account=account,
+        platform=payload.platform,
+        installation_id=payload.installation_id,
+        last_seen_at=utcnow(),
+    )
+    credential = RegisteredCredential(
+        account_id=account.id,
+        normalized_username=username,
+        password_hash=password_hash,
+    )
+    session, refresh_token = await _new_session_for_device(
+        db, account=account, device=device, settings=settings
+    )
+    db.add_all((account, credential))
+    try:
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        raise AuthenticationError("REGISTRATION_CONFLICT", "Registration could not be completed.") from exc
+    await db.refresh(session)
+    return registered_response(session, refresh_token, settings)
+
+
+async def promote_registered_account(
+    db: AsyncSession,
+    *,
+    current: AuthenticatedSession,
+    payload: RegisteredPromotionRequest,
+) -> None:
+    try:
+        username = normalize_username(payload.username)
+        password_hash = hash_password(payload.password)
+    except ValueError as exc:
+        raise AuthenticationError("INVALID_REGISTRATION", str(exc)) from exc
+
+    if current.account.account_type == "registered":
+        raise AuthenticationError("ALREADY_REGISTERED", "This account is already registered.")
+    if await db.scalar(
+        select(RegisteredCredential.account_id).where(
+            RegisteredCredential.normalized_username == username
+        )
+    ) is not None:
+        raise AuthenticationError("USERNAME_UNAVAILABLE", "That username is unavailable.")
+
+    current.account.account_type = "registered"
+    db.add(
+        RegisteredCredential(
+            account_id=current.account.id,
+            normalized_username=username,
+            password_hash=password_hash,
+        )
+    )
+    try:
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        raise AuthenticationError("REGISTRATION_CONFLICT", "Registration could not be completed.") from exc
+
+
+async def login_registered_account(
+    db: AsyncSession,
+    payload: RegisteredAuthRequest,
+    settings: Settings,
+) -> RegisteredSessionResponse:
+    try:
+        username = normalize_username(payload.username)
+    except ValueError:
+        username = "invalid"
+
+    credential = await db.scalar(
+        select(RegisteredCredential).where(
+            RegisteredCredential.normalized_username == username
+        )
+    )
+    encoded = credential.password_hash if credential is not None else DUMMY_PASSWORD_HASH
+    valid = verify_password(payload.password, encoded)
+    if credential is None or not valid:
+        raise AuthenticationError("INVALID_LOGIN", "Username or password is invalid.")
+
+    account = await db.get(Account, credential.account_id)
+    if account is None or account.status != "active" or account.account_type != "registered":
+        raise AuthenticationError("INVALID_LOGIN", "Username or password is invalid.")
+
+    device = await db.scalar(
+        select(Device).where(Device.installation_id == payload.installation_id)
+    )
+    if device is not None and device.account_id != account.id:
+        raise AuthenticationError(
+            "DEVICE_ALREADY_REGISTERED",
+            "This browser installation is attached to another account.",
+        )
+    if device is None:
+        device = Device(
+            account=account,
+            platform=payload.platform,
+            installation_id=payload.installation_id,
+            last_seen_at=utcnow(),
+        )
+    else:
+        device.last_seen_at = utcnow()
+
+    session, refresh_token = await _new_session_for_device(
+        db, account=account, device=device, settings=settings
+    )
+    db.add(device)
+    try:
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        raise AuthenticationError("LOGIN_CONFLICT", "Login could not be completed.") from exc
+    await db.refresh(session)
+    return registered_response(session, refresh_token, settings)
 
 
 async def rotate_refresh_token(
