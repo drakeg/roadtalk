@@ -1,4 +1,3 @@
-from app.auth.credentials import RegisteredCredential
 from app.db.base import Base
 from app.db.models import (
     Account,
@@ -32,6 +31,5 @@ __all__ = [
     "MediaGrant",
     "Profile",
     "RecoveryCredential",
-    "RegisteredCredential",
     "Session",
 ]
