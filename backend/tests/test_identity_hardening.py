@@ -25,8 +25,11 @@ def test_openapi_exposes_only_approved_contracts() -> None:
     assert set(schema["paths"]) == {
         "/api/v1/auth/anonymous",
         "/api/v1/auth/devices/{device_id}",
+        "/api/v1/auth/login",
         "/api/v1/auth/logout",
+        "/api/v1/auth/promote",
         "/api/v1/auth/refresh",
+        "/api/v1/auth/register",
         "/api/v1/auth/session",
         "/api/v1/avatars",
         "/api/v1/callsigns/availability",
