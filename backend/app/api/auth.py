@@ -11,6 +11,9 @@ from app.auth.schemas import (
     DeviceRevocationResponse,
     LogoutResponse,
     RefreshRequest,
+    RegisteredAuthRequest,
+    RegisteredPromotionRequest,
+    RegisteredSessionResponse,
     SessionIdentity,
     TokenPair,
 )
@@ -20,6 +23,9 @@ from app.auth.service import (
     AuthenticationError,
     authenticate_session,
     create_anonymous_session,
+    create_registered_account,
+    login_registered_account,
+    promote_registered_account,
     revoke_device_sessions,
     revoke_session,
     rotate_refresh_token,
@@ -99,6 +105,64 @@ async def register_anonymous(
         return await create_anonymous_session(db, payload, request.app.state.settings)
     except AuthenticationError as exc:
         raise auth_error(exc, status.HTTP_409_CONFLICT) from exc
+
+
+@router.post(
+    "/register",
+    response_model=RegisteredSessionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def register_account(
+    request: Request, payload: RegisteredAuthRequest, db: DatabaseSession
+) -> RegisteredSessionResponse:
+    try:
+        return await create_registered_account(db, payload, request.app.state.settings)
+    except AuthenticationError as exc:
+        status_code = (
+            status.HTTP_409_CONFLICT
+            if exc.code
+            in {"USERNAME_UNAVAILABLE", "DEVICE_ALREADY_REGISTERED", "REGISTRATION_CONFLICT"}
+            else status.HTTP_422_UNPROCESSABLE_CONTENT
+        )
+        raise auth_error(exc, status_code) from exc
+
+
+@router.post("/login", response_model=RegisteredSessionResponse)
+async def login_account(
+    request: Request, payload: RegisteredAuthRequest, db: DatabaseSession
+) -> RegisteredSessionResponse:
+    try:
+        return await login_registered_account(db, payload, request.app.state.settings)
+    except AuthenticationError as exc:
+        status_code = (
+            status.HTTP_409_CONFLICT
+            if exc.code in {"DEVICE_ALREADY_REGISTERED", "LOGIN_CONFLICT"}
+            else status.HTTP_401_UNAUTHORIZED
+        )
+        raise auth_error(exc, status_code) from exc
+
+
+@router.post("/promote", response_model=SessionIdentity)
+async def promote_account(
+    payload: RegisteredPromotionRequest,
+    db: DatabaseSession,
+    current: CurrentSession,
+) -> SessionIdentity:
+    try:
+        await promote_registered_account(db, current=current, payload=payload)
+    except AuthenticationError as exc:
+        status_code = (
+            status.HTTP_409_CONFLICT
+            if exc.code in {"USERNAME_UNAVAILABLE", "ALREADY_REGISTERED", "REGISTRATION_CONFLICT"}
+            else status.HTTP_422_UNPROCESSABLE_CONTENT
+        )
+        raise auth_error(exc, status_code) from exc
+    return SessionIdentity(
+        account_id=current.account.id,
+        device_id=current.device.id,
+        session_id=current.session.id,
+        account_type="registered",
+    )
 
 
 @router.post("/refresh", response_model=TokenPair)

@@ -20,6 +20,7 @@ def test_active_sprint_tables_are_registered() -> None:
         "media_grant",
         "profile",
         "recovery_credential",
+        "registered_credential",
         "session",
     }
 

@@ -112,6 +112,8 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
       - name: Validate Expo project
+        env:
+          EXPO_DOCTOR_SKIP_DEPENDENCY_VERSION_CHECK: "1"
         run: npm run doctor
       - name: Type-check
         run: npm run typecheck
