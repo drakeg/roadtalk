@@ -35,6 +35,21 @@ def test_web_radio_includes_permission_preflight_and_navigation() -> None:
     assert 'href="/audience">Audience</a>' in response.text
 
 
+def test_web_radio_recovers_stale_access_with_saved_refresh_before_registering() -> None:
+    with client() as test_client:
+        response = test_client.get("/")
+
+    assert response.status_code == 200
+    html = response.text
+    assert "state.refresh = localStorage.getItem('rt_refresh')" in html
+    assert "if (state.refresh)" in html
+    assert "if (await refresh())" in html
+    assert "await api('/api/v1/auth/session')" in html
+    assert html.index("if (await refresh())") < html.index("fetch('/api/v1/auth/anonymous'")
+    assert "DEVICE_ALREADY_REGISTERED" in html
+    assert "saved session could not be recovered" in html
+
+
 def test_operations_dashboard_links_back_to_user_pages() -> None:
     with client() as test_client:
         response = test_client.get("/ops")
