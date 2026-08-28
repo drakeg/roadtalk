@@ -41,13 +41,18 @@ def test_web_radio_recovers_stale_access_with_saved_refresh_before_registering()
 
     assert response.status_code == 200
     html = response.text
-    assert "state.refresh = localStorage.getItem('rt_refresh')" in html
-    assert "if (state.refresh)" in html
-    assert "if (await refresh())" in html
-    assert "await api('/api/v1/auth/session')" in html
-    assert html.index("if (await refresh())") < html.index("fetch('/api/v1/auth/anonymous'")
-    assert "DEVICE_ALREADY_REGISTERED" in html
-    assert "saved session could not be recovered" in html
+    marker = '<script id="roadtalk-browser-hardening">'
+    assert marker in html
+    hardening = html[html.index(marker) :]
+    assert "state.refresh = localStorage.getItem('rt_refresh')" in hardening
+    assert "if (state.refresh)" in hardening
+    assert "if (await refresh())" in hardening
+    assert "await api('/api/v1/auth/session')" in hardening
+    assert hardening.index("if (await refresh())") < hardening.index(
+        "fetch('/api/v1/auth/anonymous'"
+    )
+    assert "DEVICE_ALREADY_REGISTERED" in hardening
+    assert "saved session could not be recovered" in hardening
 
 
 def test_operations_dashboard_links_back_to_user_pages() -> None:
