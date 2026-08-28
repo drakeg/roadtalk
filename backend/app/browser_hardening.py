@@ -100,13 +100,25 @@ _RADIO_HARDENING = r"""
       code = body.detail?.code ?? body.code ?? null;
       detail = body.detail?.detail ?? body.detail ?? body.title ?? detail;
     } catch {}
+    const error = new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
+    error.code = code;
     if (code === 'DEVICE_ALREADY_REGISTERED') {
-      return new Error('This browser is already registered, but its saved session could not be recovered. Use the saved account recovery key if this identity matters, or clear this site\'s RoadTalk browser data to start with a new anonymous identity.');
+      error.message = 'This browser is already registered, but its saved session could not be recovered.';
     }
-    return new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
+    return error;
   }
 
-  ensureSession = async function recoverBrowserSession() {
+  function resetBrowserIdentity() {
+    localStorage.removeItem('rt_access');
+    localStorage.removeItem('rt_refresh');
+    localStorage.removeItem('rt_install');
+    localStorage.removeItem('rt_location_seq');
+    state.access = null;
+    state.refresh = null;
+    state.seq = 0;
+  }
+
+  ensureSession = async function recoverBrowserSession(allowIdentityReset = true) {
     state.access = localStorage.getItem('rt_access');
     state.refresh = localStorage.getItem('rt_refresh');
     if (state.access) {
@@ -130,7 +142,20 @@ _RADIO_HARDENING = r"""
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ installation_id: install, platform: 'web' }),
     });
-    if (!response.ok) throw await browserSessionError(response);
+    if (!response.ok) {
+      const error = await browserSessionError(response);
+      if (error.code === 'DEVICE_ALREADY_REGISTERED' && allowIdentityReset) {
+        const startFresh = window.confirm(
+          'RoadTalk cannot recover this browser\'s saved anonymous identity. Press OK to start with a new anonymous identity on this browser. Press Cancel if you want to preserve the old identity and recover it with its saved account recovery key.'
+        );
+        if (startFresh) {
+          resetBrowserIdentity();
+          return recoverBrowserSession(false);
+        }
+        error.message = 'The existing browser identity was preserved. Use its saved account recovery key to recover it, or press Start RoadTalk again and choose OK to create a new anonymous identity.';
+      }
+      throw error;
+    }
     const body = await response.json();
     state.access = body.access_token;
     state.refresh = body.refresh_token;
