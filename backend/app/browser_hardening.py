@@ -92,6 +92,52 @@ _RADIO_HARDENING = r"""
     }
   }
 
+  async function browserSessionError(response) {
+    let detail = `HTTP ${response.status}`;
+    let code = null;
+    try {
+      const body = await response.json();
+      code = body.detail?.code ?? body.code ?? null;
+      detail = body.detail?.detail ?? body.detail ?? body.title ?? detail;
+    } catch {}
+    if (code === 'DEVICE_ALREADY_REGISTERED') {
+      return new Error('This browser is already registered, but its saved session could not be recovered. Use the saved account recovery key if this identity matters, or clear this site\'s RoadTalk browser data to start with a new anonymous identity.');
+    }
+    return new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
+  }
+
+  ensureSession = async function recoverBrowserSession() {
+    state.access = localStorage.getItem('rt_access');
+    state.refresh = localStorage.getItem('rt_refresh');
+    if (state.access) {
+      try {
+        await api('/api/v1/auth/session');
+        return;
+      } catch {}
+    }
+    if (state.refresh) {
+      try {
+        if (await refresh()) {
+          await api('/api/v1/auth/session');
+          return;
+        }
+      } catch {}
+    }
+    const install = localStorage.getItem('rt_install') || `web-${crypto.randomUUID()}`;
+    localStorage.setItem('rt_install', install);
+    const response = await fetch('/api/v1/auth/anonymous', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ installation_id: install, platform: 'web' }),
+    });
+    if (!response.ok) throw await browserSessionError(response);
+    const body = await response.json();
+    state.access = body.access_token;
+    state.refresh = body.refresh_token;
+    localStorage.setItem('rt_access', state.access);
+    localStorage.setItem('rt_refresh', state.refresh);
+  };
+
   getPosition = resilientPosition;
 
   startButton.addEventListener('click', async (event) => {
