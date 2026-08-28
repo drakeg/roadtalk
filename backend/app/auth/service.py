@@ -162,7 +162,7 @@ async def create_registered_account(
             "This installation is already attached to an account.",
         )
 
-    account = Account(account_type="registered")
+    account = Account(id=uuid.uuid4(), account_type="registered")
     account.channel_selection = ChannelSelection(channel_id=GENERAL_CHANNEL_ID)
     device = Device(
         account=account,
