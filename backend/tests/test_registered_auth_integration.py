@@ -75,7 +75,9 @@ async def _registered_lifecycle() -> None:
             restored = await db.get(Profile, logged_in.account_id)
             assert restored is not None
             assert restored.display_callsign == f"Driver-{suffix}"
-            assert (await db.get(Account, logged_in.account_id)).account_type == "registered"
+            restored_account = await db.get(Account, logged_in.account_id)
+            assert restored_account is not None
+            assert restored_account.account_type == "registered"
 
             account = await db.get(Account, created.account_id)
             assert account is not None
