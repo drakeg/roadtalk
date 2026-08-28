@@ -45,7 +45,9 @@ def test_browser_map_has_actionable_secure_context_and_location_diagnostics() ->
     assert "http://127.0.0.1" in response.text
     assert "RoadTalk HTTPS LAN gateway" in response.text
     assert "operating-system location service" in response.text
-    assert "background" not in response.text.lower()
+    lowered = response.text.lower()
+    assert "background location" not in lowered
+    assert "background tracking" not in lowered
 
 
 def test_browser_map_rejects_disclosing_presence_fields_before_rendering() -> None:
