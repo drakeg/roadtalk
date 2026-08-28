@@ -44,6 +44,7 @@ def test_openapi_exposes_only_approved_contracts() -> None:
         "/api/v1/me/location",
         "/api/v1/me/location-consent",
         "/api/v1/nearby/summary",
+        "/api/v1/presence/nearby",
         "/api/v1/ptt/grants",
         "/api/v1/ptt/grants/{grant_id}",
         "/api/v1/ptt/grants/{receive_grant_id}/transmit",
