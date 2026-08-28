@@ -182,8 +182,10 @@ async def create_registered_account(
     session, refresh_token = await _new_session_for_device(
         db, account=account, device=device, settings=settings
     )
-    db.add_all((account, credential))
     try:
+        db.add(account)
+        await db.flush()
+        db.add(credential)
         await db.commit()
     except IntegrityError as exc:
         await db.rollback()
