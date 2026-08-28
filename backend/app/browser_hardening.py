@@ -92,9 +92,6 @@ _RADIO_HARDENING = r"""
     }
   }
 
-  // The existing radio code calls getPosition() during startup and refresh. Replace
-  // that single brittle high-accuracy request with a bounded high-accuracy attempt
-  // followed by a cached/lower-power fallback. Permission denial never falls back.
   getPosition = resilientPosition;
 
   startButton.addEventListener('click', async (event) => {
@@ -111,7 +108,6 @@ _RADIO_HARDENING = r"""
     startButton.disabled = true;
     setMessage('Checking microphone and location permissions…');
     try {
-      // Keep both permission prompts directly inside the user's Start gesture.
       await microphonePreflight();
       await locationPreflight();
       await start();
@@ -140,7 +136,7 @@ async def hardened_radio_console() -> HTMLResponse:
     html = bytes(response.body).decode("utf-8")
     html = html.replace(
         '<div class="navlinks"><a class="button" href="/ops">Operations</a>',
-        '<div class="navlinks"><a class="button" href="/audience">Audience</a><a class="button" href="/ops">Operations</a>',
+        '<div class="navlinks"><a class="button" href="/map">Map</a><a class="button" href="/audience">Audience</a><a class="button" href="/ops">Operations</a>',
         1,
     )
     html = html.replace("</body>", f"{_RADIO_HARDENING}</body>", 1)
@@ -153,7 +149,7 @@ async def hardened_operations_dashboard() -> HTMLResponse:
     html = bytes(response.body).decode("utf-8")
     html = html.replace(
         '<div class="navlinks"><a class="button" href="/docs">Swagger</a>',
-        '<div class="navlinks"><a class="button" href="/">Web Radio</a><a class="button" href="/audience">Audience Mode</a><a class="button" href="/docs">Swagger</a>',
+        '<div class="navlinks"><a class="button" href="/">Web Radio</a><a class="button" href="/map">Map Awareness</a><a class="button" href="/audience">Audience Mode</a><a class="button" href="/docs">Swagger</a>',
         1,
     )
     return HTMLResponse(html)
