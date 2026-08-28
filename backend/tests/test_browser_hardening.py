@@ -55,7 +55,7 @@ def test_web_radio_recovers_stale_access_with_saved_refresh_before_registering()
     assert "saved session could not be recovered" in hardening
 
 
-def test_web_radio_offers_explicit_new_identity_recovery_for_registered_browser() -> None:
+def test_web_radio_keeps_guest_reset_as_explicit_account_aware_fallback() -> None:
     with client() as test_client:
         response = test_client.get("/")
 
@@ -64,8 +64,8 @@ def test_web_radio_offers_explicit_new_identity_recovery_for_registered_browser(
     marker = '<script id="roadtalk-browser-hardening">'
     hardening = html[html.index(marker) :]
     assert "window.confirm(" in hardening
-    assert "Press OK to start with a new anonymous identity" in hardening
-    assert "Press Cancel if you want to preserve the old identity" in hardening
+    assert "Press OK to start a new guest identity" in hardening
+    assert "Cancel and use Account to log in to your persistent RoadTalk account" in hardening
     assert "localStorage.removeItem('rt_access')" in hardening
     assert "localStorage.removeItem('rt_refresh')" in hardening
     assert "localStorage.removeItem('rt_install')" in hardening
