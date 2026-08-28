@@ -9,6 +9,18 @@ class AnonymousSessionRequest(BaseModel):
     platform: Literal["android", "ios", "web"]
 
 
+class RegisteredAuthRequest(BaseModel):
+    username: str = Field(min_length=3, max_length=64)
+    password: str = Field(min_length=12, max_length=256)
+    installation_id: str = Field(min_length=16, max_length=255)
+    platform: Literal["android", "ios", "web"]
+
+
+class RegisteredPromotionRequest(BaseModel):
+    username: str = Field(min_length=3, max_length=64)
+    password: str = Field(min_length=12, max_length=256)
+
+
 class RefreshRequest(BaseModel):
     refresh_token: str = Field(min_length=32, max_length=512)
 
@@ -24,6 +36,13 @@ class AnonymousSessionResponse(TokenPair):
     account_id: uuid.UUID
     device_id: uuid.UUID
     session_id: uuid.UUID
+
+
+class RegisteredSessionResponse(TokenPair):
+    account_id: uuid.UUID
+    device_id: uuid.UUID
+    session_id: uuid.UUID
+    account_type: Literal["registered"] = "registered"
 
 
 class SessionIdentity(BaseModel):
