@@ -4,7 +4,7 @@ from typing import Any
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from app.auth.credentials import RegisteredCredential
+import app.auth.credentials  # noqa: F401
 from app.config import get_settings
 from app.db import Base
 
@@ -14,7 +14,6 @@ if config.config_file_name is not None:
 
 config.set_main_option("sqlalchemy.url", get_settings().database_url.get_secret_value())
 target_metadata = Base.metadata
-assert RegisteredCredential.__table__ is not None
 
 
 def include_name(
