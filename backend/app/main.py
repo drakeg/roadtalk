@@ -21,6 +21,7 @@ from app.health import ReadinessRegistry
 from app.identity.callsigns import CallsignAvailabilityLimiter
 from app.location.limiter import LocationLimiter
 from app.logging import configure_logging
+from app.map_web import router as map_web_router
 from app.middleware import RequestContextMiddleware
 from app.problems import install_problem_handlers
 from app.profile_web import router as profile_web_router
@@ -87,6 +88,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(browser_hardening_router)
     app.include_router(radio_router)
     app.include_router(route_mode_web_router)
+    app.include_router(map_web_router)
     app.include_router(profile_web_router)
     app.include_router(web_router)
     app.include_router(system_router)
