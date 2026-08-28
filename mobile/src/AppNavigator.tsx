@@ -6,6 +6,7 @@ import { ChannelScreen } from "./screens/ChannelScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { IdentityScreen } from "./screens/IdentityScreen";
 import { LocationPermissionScreen } from "./screens/LocationPermissionScreen";
+import { MapAwarenessScreen } from "./screens/MapAwarenessScreen";
 import { MicrophonePermissionScreen } from "./screens/MicrophonePermissionScreen";
 import { RecoveryScreen } from "./screens/RecoveryScreen";
 import { RouteModeScreen } from "./screens/RouteModeScreen";
@@ -17,6 +18,7 @@ export type RootStackParamList = {
   Diagnostics: undefined;
   Identity: undefined;
   LocationPermission: undefined;
+  MapAwareness: undefined;
   MicrophonePermission: undefined;
   Recovery: undefined;
   RouteMode: undefined;
@@ -54,6 +56,11 @@ export function AppNavigator() {
           component={RouteModeScreen}
           name="RouteMode"
           options={{ title: "Audience mode" }}
+        />
+        <Stack.Screen
+          component={MapAwarenessScreen}
+          name="MapAwareness"
+          options={{ title: "Map awareness" }}
         />
         <Stack.Screen
           component={LocationPermissionScreen}
