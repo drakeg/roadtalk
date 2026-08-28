@@ -29,7 +29,10 @@ def test_browser_map_exposes_privacy_safe_awareness_surface() -> None:
     assert "/api/v1/presence/nearby" in response.text
     assert "privacy_min_accounts!==3" in response.text
     assert "cell.cell_size_m!==2000" in response.text
-    assert "No public map, tile, geocoding, routing, or traffic service is contacted." in response.text
+    assert (
+        "No public map, tile, geocoding, routing, or traffic service is contacted."
+        in response.text
+    )
     assert "Your exact position is shown only to you on this page." in response.text
 
 
@@ -79,7 +82,11 @@ def test_browser_navigation_connects_radio_map_audience_and_operations() -> None
         operations = test_client.get("/ops")
 
     assert 'href="/map">Map</a>' in radio.text
-    for target in ('href="/">Web Radio</a>', 'href="/audience">Audience</a>', 'href="/ops">Operations</a>'):
+    for target in (
+        'href="/">Web Radio</a>',
+        'href="/audience">Audience</a>',
+        'href="/ops">Operations</a>',
+    ):
         assert target in map_page.text
     assert 'href="/map">Map</a>' in audience.text
     assert 'href="/map">Map Awareness</a>' in operations.text
