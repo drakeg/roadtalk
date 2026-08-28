@@ -19,7 +19,7 @@ Sprint 8 map presence is an awareness aid, not a people-tracking or authorizatio
 
 ## Prohibited client selectors
 
-The client presence-query contract is intentionally empty. A caller cannot request or override an account/device, coordinate, radius, privacy cell, route, provider, audience, channel, precision, threshold, or TTL. Unexpected fields are rejected by schema validation.
+`GET /api/v1/presence/nearby` accepts no query parameters or request body. A caller cannot request or override an account/device, coordinate, radius, privacy cell, route, provider, audience, channel, precision, threshold, or TTL. Any query parameter is rejected before the presence query executes.
 
 ## Prohibited response data
 
@@ -37,15 +37,26 @@ The coarse cell center is an aggregate policy artifact and must never be describ
 
 ## Authorization separation
 
-`presence-v1` accepts only server-selected candidate points. It does not decide whether an account is eligible to communicate, receive, publish, join a channel, satisfy proximity, or satisfy Same-road. D04 must compose presence only after existing consent/current-location/proximity/channel/session/grant/route authorization and must prove presence cannot broaden those decisions.
+Presence is read-only derived awareness. It does not create, refresh, broaden, or alter receiver eligibility, publisher eligibility, media grants, channel membership/selection, sessions, proximity eligibility, or Same-road eligibility. The presence service does not call PTT, channel, proximity, route-mode, or media-provider authorization code. Existing communication authorization remains authoritative and independent of whether a presence cell is visible.
 
-## Lifecycle boundary
+## Current-only lifecycle
 
-This deliverable defines no durable presence-history table. D04 must derive current presence only from accepted current location state, bound its expiry to authoritative freshness, and ensure pause, consent withdrawal, stale location, logout, deletion, and device/session revocation remove eligibility within bounded time.
+There is no presence table, history row, breadcrumb, replay record, or presence-specific coordinate persistence. Every response is derived from the existing authoritative `current_location` row at read time.
+
+A candidate is eligible only while all of the following remain true:
+
+- the account is active;
+- its current location is `usable`, unexpired, and on the current location-policy version;
+- the latest foreground-location consent decision is `granted` for that policy version;
+- the device that supplied the current location still has an active, unrevoked, unexpired session.
+
+The authenticated viewer is excluded from other-user aggregation. Response expiry is bounded by the earliest contributing current-location expiry. If fewer than three eligible accounts remain in a cell, the cell disappears completely.
+
+Existing lifecycle operations therefore fail closed without a new retention surface: pausing location deletes `current_location`; consent withdrawal deletes it and records revoked consent; stale location fails the expiry predicate; logout/session revocation invalidates a source with no active source-device session; device revocation invalidates that device's source session; account deletion cascades current location; disabled/deleted accounts are excluded. No fabricated or last-known position is substituted.
 
 ## Provider independence
 
-The 2 km cell policy is independent of any map/tile provider. D03 may add only a deterministic/local rendering/provider boundary under the approved $0 policy. Changing providers must not change the privacy cell or anonymity semantics without a new versioned privacy-policy decision.
+The 2 km cell policy is independent of any map/tile provider. D03's deterministic local provider does not receive presence data. Changing providers must not change the privacy cell or anonymity semantics without a new versioned privacy-policy decision.
 
 ## Known limitation
 
