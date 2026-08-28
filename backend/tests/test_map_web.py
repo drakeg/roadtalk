@@ -30,8 +30,7 @@ def test_browser_map_exposes_privacy_safe_awareness_surface() -> None:
     assert "privacy_min_accounts!==3" in response.text
     assert "cell.cell_size_m!==2000" in response.text
     assert (
-        "No public map, tile, geocoding, routing, or traffic service is contacted."
-        in response.text
+        "No public map, tile, geocoding, routing, or traffic service is contacted." in response.text
     )
     assert "Your exact position is shown only to you on this page." in response.text
 
