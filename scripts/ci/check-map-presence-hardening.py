@@ -138,7 +138,7 @@ for path in (
     "backend/tests/test_presence_database.py",
     "backend/tests/test_presence_routes.py",
     "backend/tests/test_map_provider.py",
-    "backend/tests/test_map_page.py",
+    "backend/tests/test_map_web.py",
     "mobile/src/__tests__/MapAwarenessScreen.test.tsx",
 ):
     if not (ROOT / path).is_file():
