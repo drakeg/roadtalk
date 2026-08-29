@@ -39,6 +39,8 @@ export type LocalLocationState =
   | { status: "waiting" }
   | {
       status: "current" | "stale";
+      latitude: number;
+      longitude: number;
       horizontalAccuracyM: number;
       headingDeg: number | null;
       speedMps: number | null;

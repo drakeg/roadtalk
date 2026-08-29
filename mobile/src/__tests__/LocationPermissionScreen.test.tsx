@@ -101,6 +101,8 @@ describe("foreground location purpose screen", () => {
       upload: "current",
       local: {
         status: "current",
+        latitude: 40.7934,
+        longitude: -77.86,
         horizontalAccuracyM: 24.6,
         headingDeg: 91,
         speedMps: 4,
@@ -189,6 +191,8 @@ describe("foreground location purpose screen", () => {
           upload: "current",
           local: {
             status: "stale",
+            latitude: 40.7934,
+            longitude: -77.86,
             horizontalAccuracyM: 50,
             headingDeg: null,
             speedMps: null,

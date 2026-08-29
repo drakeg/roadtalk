@@ -21,7 +21,7 @@ export function HomeScreen({ navigation }: Props) {
         pseudonymous identity.
       </Text>
       <View accessibilityLiveRegion="polite" style={styles.status}>
-        <Text style={styles.statusLabel}>Anonymous session</Text>
+        <Text style={styles.statusLabel}>RoadTalk session</Text>
         <Text style={styles.statusValue}>
           {snapshot.status === "loading"
             ? "Connecting securely…"
@@ -33,6 +33,16 @@ export function HomeScreen({ navigation }: Props) {
           <Text style={styles.message}>{snapshot.message}</Text>
         ) : null}
       </View>
+      {authenticated ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open map awareness"
+          onPress={() => navigation.navigate("MapAwareness")}
+          style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+        >
+          <Text style={styles.buttonText}>Map awareness</Text>
+        </Pressable>
+      ) : null}
       {authenticated ? (
         <Pressable
           accessibilityRole="button"

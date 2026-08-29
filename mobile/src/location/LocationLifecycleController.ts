@@ -242,6 +242,8 @@ export class LocationLifecycleController implements LocationLifecycleControl {
     this.local = {
       status:
         now - fix.observedAtMs >= this.localFreshnessMs ? "stale" : "current",
+      latitude: fix.latitude,
+      longitude: fix.longitude,
       horizontalAccuracyM: fix.horizontalAccuracyM,
       headingDeg: this.optionalHeading(fix.headingDeg),
       speedMps: this.optionalNonnegative(fix.speedMps),
