@@ -28,7 +28,8 @@ describe("MapAwarenessScreen accessibility contract", () => {
     expect(source).toContain("Expired nearby activity is hidden until refreshed");
     expect(source).toContain("Prior nearby activity is hidden");
     expect(source).not.toContain("distance_m");
-    expect(source).not.toContain("bearing");
+    expect(source).not.toContain("bearing_deg");
     expect(source).not.toContain("callsign");
+    expect(source).toContain("distance, bearing, heading, speed, or identity is shown here");
   });
 });
