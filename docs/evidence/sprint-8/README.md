@@ -13,10 +13,12 @@ The migrated disposable PostGIS matrix contains:
 - **10 active publishers** with current foreground-approved usable locations
 - five repeated refresh rounds across all viewers
 
-`backend/tests/test_presence_scale.py` prints the named-run metrics as `Presence synthetic scale: {...}` and fails when either measured p95 exceeds the locked target. The measured values from the authoritative GitHub run will be recorded here before D09 is accepted.
+`backend/tests/test_presence_scale.py` prints the named-run metrics as `Presence synthetic scale: {...}` and fails when either measured p95 exceeds the locked target. The authoritative GitHub Sprint 8 hardening run #3 reported:
 
-- lookup/aggregation p95: **PENDING NAMED CI RUN**
-- repeated refresh p95: **PENDING NAMED CI RUN**
+- lookup/aggregation p95: **3.44 ms**
+- repeated refresh p95: **2.30 ms**
+
+Both results are comfortably below the locked 400 ms p95 target.
 
 ## Privacy and lifecycle boundary
 
