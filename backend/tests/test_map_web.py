@@ -97,7 +97,9 @@ def test_browser_map_degraded_states_hide_prior_presence_and_false_precision() -
     assert response.status_code == 200
     assert "Prior nearby cells are hidden rather than displayed as current." in response.text
     assert "document.querySelectorAll('.cell').forEach(e=>e.remove())" in response.text
-    assert "Nearby activity is hidden rather than showing stale or false precision." in response.text
+    assert (
+        "Nearby activity is hidden rather than showing stale or false precision." in response.text
+    )
     assert "window.location.assign('/account?next=/map')" in response.text
 
 
