@@ -253,6 +253,8 @@ describe("foreground location lifecycle", () => {
       upload: "current",
       local: {
         status: "current",
+        latitude: 40,
+        longitude: -75,
         horizontalAccuracyM: 25,
         headingDeg: 90,
         speedMps: 4,
@@ -367,6 +369,8 @@ describe("foreground location lifecycle", () => {
       upload: "retrying",
       local: {
         status: "current",
+        latitude: 40,
+        longitude: -75,
         horizontalAccuracyM: 25,
         headingDeg: 90,
         speedMps: 4,
@@ -388,6 +392,8 @@ describe("foreground location lifecycle", () => {
       upload: "current",
       local: {
         status: "current",
+        latitude: 40,
+        longitude: -75,
         horizontalAccuracyM: 25,
         headingDeg: 90,
         speedMps: 4,
@@ -454,6 +460,8 @@ describe("foreground location lifecycle", () => {
       upload: "current",
       local: {
         status: "current",
+        latitude: 40,
+        longitude: -75,
         horizontalAccuracyM: 25,
         headingDeg: 90,
         speedMps: 4,
