@@ -121,6 +121,7 @@ export function MapAwarenessScreen({ lifecycle, navigation }: Props) {
   const pause = () => void ownedLifecycle.pause();
   const local = snapshot.status === "active" ? snapshot.local : null;
   const cells = presence.status === "current" ? presence.value.cells : [];
+  const summary = statusText(snapshot, presence);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -138,7 +139,12 @@ export function MapAwarenessScreen({ lifecycle, navigation }: Props) {
         </Text>
       </View>
 
-      <View accessibilityLabel="RoadTalk local awareness grid" style={styles.map}>
+      <View
+        accessible
+        accessibilityLabel="RoadTalk local awareness grid. The text awareness summary below contains the same essential information."
+        accessibilityRole="image"
+        style={styles.map}
+      >
         <View style={[styles.gridLine, styles.vertical]} />
         <View style={[styles.gridLine, styles.horizontal]} />
         {local !== null && local.status !== "waiting" ? (
@@ -158,25 +164,34 @@ export function MapAwarenessScreen({ lifecycle, navigation }: Props) {
         ) : null}
       </View>
 
-      <View accessibilityLiveRegion="polite" style={styles.statusCard}>
-        <Text style={styles.statusTitle}>{statusTitle(snapshot.status)}</Text>
-        <Text style={styles.body}>{statusText(snapshot, presence)}</Text>
+      <View
+        accessibilityLabel={`Text awareness summary. ${summary}`}
+        accessibilityLiveRegion="polite"
+        style={styles.statusCard}
+      >
+        <Text accessibilityRole="header" style={styles.statusTitle}>Text awareness summary</Text>
+        <Text style={styles.body}>{summary}</Text>
+        {cells.map((cell, index) => (
+          <Text key={`summary:${cell.approximateLatitude}:${cell.approximateLongitude}`} style={styles.summaryItem}>
+            {`Coarse activity area ${index + 1}: ${cell.density} RoadTalk activity; precision is limited to a 2 km privacy cell.`}
+          </Text>
+        ))}
       </View>
 
       {snapshot.status === "purpose" || snapshot.status === "paused" ||
       snapshot.status === "denied" || snapshot.status === "unavailable" ||
       snapshot.status === "error" ? (
-        <Pressable accessibilityRole="button" onPress={enable} style={styles.primaryButton}>
+        <Pressable accessibilityHint="Requests foreground location only while RoadTalk map awareness is active" accessibilityLabel="Enable foreground map awareness" accessibilityRole="button" onPress={enable} style={styles.primaryButton}>
           <Text style={styles.primaryText}>Enable foreground map awareness</Text>
         </Pressable>
       ) : null}
       {snapshot.status === "blocked" ? (
-        <Pressable accessibilityRole="button" onPress={() => void Linking.openSettings()} style={styles.primaryButton}>
+        <Pressable accessibilityHint="Opens system settings so you can change RoadTalk location permission" accessibilityLabel="Open location settings" accessibilityRole="button" onPress={() => void Linking.openSettings()} style={styles.primaryButton}>
           <Text style={styles.primaryText}>Open location settings</Text>
         </Pressable>
       ) : null}
       {snapshot.status === "active" ? (
-        <Pressable accessibilityRole="button" onPress={pause} style={styles.secondaryButton}>
+        <Pressable accessibilityHint="Stops foreground map awareness and hides nearby activity" accessibilityLabel="Pause map awareness" accessibilityRole="button" onPress={pause} style={styles.secondaryButton}>
           <Text style={styles.secondaryText}>Pause map awareness</Text>
         </Pressable>
       ) : null}
@@ -199,7 +214,8 @@ function PresenceMarker({
   const y = clamp(50 - (cell.approximateLatitude - latitude) * 650, 8, 92);
   return (
     <View
-      accessibilityLabel={`${cell.density} coarse RoadTalk activity cell`}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
       style={[styles.presenceMarker, { left: `${x}%`, top: `${y}%` }]}
     >
       <Text style={styles.presenceText}>{densityLabel(cell.density, index)}</Text>
@@ -236,20 +252,21 @@ function statusText(
   snapshot: ReturnType<LocationLifecycleControl["getSnapshot"]>,
   presence: PresenceState,
 ): string {
+  const title = statusTitle(snapshot.status);
   if (snapshot.status !== "active") {
-    return "Enable foreground location to display your position and request coarse nearby presence.";
+    return `${title}. Enable foreground location to display your position and request coarse nearby presence. Nearby activity remains hidden.`;
   }
-  if (snapshot.local.status === "waiting") return "Waiting for a foreground location sample.";
-  if (snapshot.local.status === "stale") return "Your last foreground location is stale; nearby cells are hidden.";
-  if (snapshot.upload === "retrying") return "Your location could not be refreshed; nearby cells are hidden until it succeeds.";
-  if (presence.status === "unavailable") return "Coarse nearby presence is temporarily unavailable.";
-  if (presence.status === "stale") return "Coarse nearby presence expired and is hidden until refreshed.";
+  if (snapshot.local.status === "waiting") return "Foreground awareness active. Waiting for a foreground location sample; nearby activity remains hidden.";
+  if (snapshot.local.status === "stale") return "Your last foreground location is stale; nearby activity is hidden rather than displayed with false precision.";
+  if (snapshot.upload === "retrying") return "Your location could not be refreshed; nearby activity is hidden until a current sample succeeds.";
+  if (presence.status === "unavailable") return "Your foreground location is current, but coarse nearby presence is temporarily unavailable. Prior nearby activity is hidden.";
+  if (presence.status === "stale") return "Your foreground location is current, but coarse nearby presence expired. Expired nearby activity is hidden until refreshed.";
   if (presence.status === "current") {
     return presence.value.cells.length === 0
-      ? "Your location is current. No privacy-qualified nearby cells are visible."
-      : `Your location is current. ${presence.value.cells.length} privacy-qualified coarse cells are visible.`;
+      ? "Your foreground location is current. No privacy-qualified nearby RoadTalk activity areas are visible."
+      : `Your foreground location is current. ${presence.value.cells.length} privacy-qualified coarse RoadTalk activity area${presence.value.cells.length === 1 ? " is" : "s are"} visible. No exact other-user location or identity is exposed.`;
   }
-  return "Your location is current. Loading privacy-qualified nearby presence.";
+  return "Your foreground location is current. Loading privacy-qualified nearby presence; no prior nearby activity is shown while waiting.";
 }
 
 const styles = StyleSheet.create({
@@ -268,6 +285,7 @@ const styles = StyleSheet.create({
   presenceText: { color: colors.primary, fontSize: 11, fontWeight: "700" },
   statusCard: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 12, borderWidth: 1, gap: spacing.small, padding: spacing.medium },
   statusTitle: { color: colors.text, fontSize: 18, fontWeight: "700" },
+  summaryItem: { color: colors.muted, fontSize: 14, lineHeight: 21 },
   primaryButton: { alignItems: "center", backgroundColor: colors.primary, borderRadius: 12, minHeight: 48, justifyContent: "center", paddingHorizontal: spacing.large },
   primaryText: { color: colors.surface, fontSize: 16, fontWeight: "700" },
   secondaryButton: { alignItems: "center", borderColor: colors.primary, borderRadius: 12, borderWidth: 2, minHeight: 48, justifyContent: "center", paddingHorizontal: spacing.large },
