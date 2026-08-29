@@ -38,7 +38,11 @@ def test_presence_at_100_25_10_scale() -> None:
 
 
 async def _exercise_scale() -> None:
-    settings = Settings(environment="test")
+    scale_policy_version = f"s08-scale-{uuid.uuid4().hex[:16]}"
+    settings = Settings(
+        environment="test",
+        location_policy_version=scale_policy_version,
+    )
     engine = create_async_engine(settings.database_url.get_secret_value())
     factory = async_sessionmaker(engine, expire_on_commit=False)
     now = datetime(2026, 8, 29, 4, 0, tzinfo=UTC)
