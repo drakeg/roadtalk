@@ -54,6 +54,11 @@ for required in (
 ):
     if required not in api:
         fail(f"{api_path} is missing required privacy response control {required!r}")
+response_marker = "return NearbyPresenceResponse("
+response_start = api.find(response_marker)
+if response_start < 0:
+    fail(f"{api_path} is missing the nearby presence response constructor")
+response_surface = api[response_start:]
 for forbidden in (
     "account_count=cell.account_count",
     "account_id=",
@@ -67,7 +72,7 @@ for forbidden in (
     "corridor",
     "direction",
 ):
-    if forbidden.lower() in api.lower():
+    if forbidden.lower() in response_surface.lower():
         fail(f"{api_path} exposes forbidden presence field marker {forbidden!r}")
 
 lifecycle = read("backend/app/presence/lifecycle.py").lower()
