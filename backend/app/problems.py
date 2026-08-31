@@ -43,6 +43,17 @@ def problem(
     }
 
 
+def validation_detail(errors: list[dict[str, Any]]) -> str:
+    if not errors:
+        return "One or more request fields are invalid."
+    first = errors[0]
+    location = [str(part) for part in first.get("location", [])]
+    field_parts = [part for part in location if part not in {"body", "query", "path", "header"}]
+    field = " ".join(field_parts).replace("_", " ").strip().title() or "Request"
+    message = str(first.get("message", "is invalid")).strip().rstrip(".")
+    return f"{field}: {message}."
+
+
 def install_problem_handlers(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
     async def validation_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
@@ -57,7 +68,7 @@ def install_problem_handlers(app: FastAPI) -> None:
                 status=422,
                 code="VALIDATION_ERROR",
                 title="Request validation failed",
-                detail="One or more request fields are invalid.",
+                detail=validation_detail(errors),
                 errors=errors,
             ),
         )
