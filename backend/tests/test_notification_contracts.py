@@ -44,7 +44,7 @@ def test_notification_classes_are_closed_and_ttl_bounded() -> None:
         expires_at=NOW + URGENT_ALERT_MAX_TTL,
     )
 
-    adapter = TypeAdapter(NotificationPayload)
+    adapter: TypeAdapter[NotificationPayload] = TypeAdapter(NotificationPayload)
     assert adapter.validate_python(account.model_dump()).notification_class == "account"
     assert adapter.validate_python(channel.model_dump()).notification_class == "channel_activity"
     assert adapter.validate_python(urgent.model_dump()).notification_class == "urgent_alert"
@@ -121,7 +121,7 @@ def test_public_notification_payloads_reject_sensitive_or_targeting_fields() -> 
         "issued_at": NOW,
         "expires_at": NOW + timedelta(minutes=5),
     }
-    adapter = TypeAdapter(NotificationPayload)
+    adapter: TypeAdapter[NotificationPayload] = TypeAdapter(NotificationPayload)
 
     for forbidden in sorted(PROHIBITED_NOTIFICATION_FIELDS):
         with pytest.raises(ValidationError):
