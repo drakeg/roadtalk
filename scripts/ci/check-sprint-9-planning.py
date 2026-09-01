@@ -41,7 +41,8 @@ for identifier in (
 
 require(
     spec,
-    "notifications are an awareness/delivery surface, not an authorization engine",
+    "awareness/delivery surface",
+    "not an authorization engine",
     "roadtalk is not an emergency service",
     "delivery is not guaranteed",
     "contact local emergency services directly",
