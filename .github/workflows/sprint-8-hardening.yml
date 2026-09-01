@@ -55,3 +55,5 @@ jobs:
         run: pytest -q -s tests/test_presence_scale.py
       - name: Check Sprint 8 map/presence hardening
         run: python scripts/ci/check-map-presence-hardening.py
+      - name: Check Sprint 8 final review and traceability
+        run: python scripts/ci/check-sprint-8-review.py
