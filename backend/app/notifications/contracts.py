@@ -12,12 +12,18 @@ CHANNEL_ACTIVITY_MAX_TTL = timedelta(hours=2)
 URGENT_ALERT_MAX_TTL = timedelta(minutes=10)
 URGENT_ALERT_MAX_MESSAGE_LENGTH = 280
 
-URGENT_ALERT_NOT_EMERGENCY_SERVICE = "RoadTalk is not an emergency service."
-URGENT_ALERT_DELIVERY_NOT_GUARANTEED = "Delivery is not guaranteed."
-URGENT_ALERT_EMERGENCY_SERVICES_GUIDANCE = (
-    "Contact local emergency services directly when emergency assistance is needed."
+URGENT_ALERT_NOT_EMERGENCY_SERVICE: Literal["RoadTalk is not an emergency service."] = (
+    "RoadTalk is not an emergency service."
 )
-URGENT_ALERT_UNVERIFIED = "This alert is user-generated and unverified."
+URGENT_ALERT_DELIVERY_NOT_GUARANTEED: Literal["Delivery is not guaranteed."] = (
+    "Delivery is not guaranteed."
+)
+URGENT_ALERT_EMERGENCY_SERVICES_GUIDANCE: Literal[
+    "Contact local emergency services directly when emergency assistance is needed."
+] = "Contact local emergency services directly when emergency assistance is needed."
+URGENT_ALERT_UNVERIFIED: Literal["This alert is user-generated and unverified."] = (
+    "This alert is user-generated and unverified."
+)
 
 
 class ClosedModel(BaseModel):
