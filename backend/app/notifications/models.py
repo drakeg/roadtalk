@@ -8,7 +8,7 @@ from app.db.base import Base, TimestampMixin
 
 
 class NotificationDeliveryReceipt(TimestampMixin, Base):
-    """Bounded idempotency tombstone without audience, message, or location history."""
+    """Bounded idempotency tombstone without audience or location history."""
 
     __tablename__ = "notification_delivery_receipt"
     __table_args__ = (
