@@ -1,12 +1,22 @@
 # Backend
 
-Sprint 6 active owner: S06-D02 Channel schema and public catalog.
-
 The backend is a Python/FastAPI modular-monolith control API.
 
 ## Sprint 7 route mode
 
 Authenticated accounts can read and conditionally update their explicit receive mode at `GET/PUT /api/v1/me/route-mode`. Nearby is the persisted default. Same-road selection is stored but reports unavailable until later locked deliverables add deterministic context matching. The request accepts only `mode` and `expected_version`; no route, road, provider, location, or audience data crosses this boundary.
+
+## Sprint 9 notifications
+
+Authenticated accounts own one notification-preferences row and a short-lived inbox.
+Preferences are read and conditionally updated at
+`GET/PUT /api/v1/me/notification-preferences`; the current inbox is read at
+`GET /api/v1/me/notifications`; and an item is marked read or dismissed at
+`PUT /api/v1/me/notifications/{notification_id}/state`. Expired items are deleted
+when the inbox is accessed, dismissed items are hidden, and account deletion cascades
+through both tables. Storage excludes recipient lists, credentials, device and
+provider tokens, and all coordinates or route history. Urgent-alert safety statements
+are fixed contract values reconstructed in responses rather than duplicated in rows.
 
 ## Current foundation
 
@@ -218,6 +228,10 @@ The API listens on `127.0.0.1:8000` by default.
 | `GET /api/v1/channels` | Return enabled General/RV plus only caller-authorized private channels. |
 | `GET /api/v1/me/channel` | Return the caller's semantic current selection. |
 | `POST /api/v1/channels/{channel_id}/select` | Idempotently select an available public or caller-member channel. |
+| `GET /api/v1/me/notification-preferences` | Read channel-activity and urgent-alert preferences. |
+| `PUT /api/v1/me/notification-preferences` | Conditionally update notification preferences. |
+| `GET /api/v1/me/notifications` | Read the current account-owned notification inbox. |
+| `PUT /api/v1/me/notifications/{notification_id}/state` | Mark an owned current notification read or dismissed. |
 | `POST /api/v1/channels/private` | Create a private channel and disclose its invite once. |
 | `POST /api/v1/channels/private/join` | Join a private channel using an invite without membership disclosure. |
 | `DELETE /api/v1/channels/{channel_id}/membership` | Leave a private channel and fall back to General when selected. |

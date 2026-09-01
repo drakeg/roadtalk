@@ -148,3 +148,25 @@ def test_urgent_alert_safety_fields_cannot_be_overridden() -> None:
                     field: value,
                 }
             )
+
+
+def test_notification_timestamps_require_explicit_timezone() -> None:
+    with pytest.raises(ValidationError):
+        AccountNotificationPayload(
+            priority="normal",
+            title="Session notice",
+            message="Your RoadTalk session changed.",
+            issued_at=NOW.replace(tzinfo=None),
+            expires_at=(NOW + timedelta(minutes=5)).replace(tzinfo=None),
+        )
+
+
+def test_urgent_alert_idempotency_key_is_transport_safe() -> None:
+    for invalid in ("contains spaces 0001", "contains/slash/0001", "contains\\nnewline0001"):
+        with pytest.raises(ValidationError):
+            UrgentAlertCommand(message="Use caution ahead.", idempotency_key=invalid)
+
+    accepted = UrgentAlertCommand(
+        message="Use caution ahead.", idempotency_key="urgent.alert_0001~retry"
+    )
+    assert accepted.idempotency_key == "urgent.alert_0001~retry"

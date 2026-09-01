@@ -2,6 +2,19 @@
 
 All notable RoadTalk changes are recorded here. The repository history and sprint review records remain the detailed source of truth.
 
+## Unreleased — Sprint 9: Notifications
+
+### Added
+
+- Account-owned, cascade-deleted notification preferences for channel activity and
+  urgent alerts, with optimistic version checks and replay-safe updates.
+- A bounded authenticated inbox for current, unexpired notifications with owner-only
+  read/dismiss mutations and automatic expired-row removal on access.
+- Minimal notification persistence that excludes credentials, provider tokens,
+  recipient lists, device identifiers, coordinates, routes, and location history.
+- Urgent-alert inbox responses reconstruct the fixed unverified and non-emergency
+  safety contract without duplicating that invariant copy in storage.
+
 ## Unreleased — Sprint 7: Route Awareness
 
 ### Added

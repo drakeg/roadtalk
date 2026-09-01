@@ -1,7 +1,7 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 NotificationClass = Literal["account", "channel_activity", "urgent_alert"]
 NotificationPriority = Literal["normal", "high", "urgent"]
@@ -36,8 +36,8 @@ class AccountNotificationPayload(ClosedModel):
     source: Literal["roadtalk_account"] = "roadtalk_account"
     title: Annotated[str, Field(min_length=1, max_length=96)]
     message: Annotated[str, Field(min_length=1, max_length=280)]
-    issued_at: datetime
-    expires_at: datetime
+    issued_at: AwareDatetime
+    expires_at: AwareDatetime
 
     @model_validator(mode="after")
     def validate_expiry(self) -> "AccountNotificationPayload":
@@ -52,8 +52,8 @@ class ChannelActivityNotificationPayload(ClosedModel):
     title: Annotated[str, Field(min_length=1, max_length=96)]
     message: Annotated[str, Field(min_length=1, max_length=280)]
     channel_label: Annotated[str, Field(min_length=1, max_length=64)]
-    issued_at: datetime
-    expires_at: datetime
+    issued_at: AwareDatetime
+    expires_at: AwareDatetime
 
     @model_validator(mode="after")
     def validate_expiry(self) -> "ChannelActivityNotificationPayload":
@@ -66,8 +66,8 @@ class UrgentAlertNotificationPayload(ClosedModel):
     priority: Literal["urgent"] = "urgent"
     source: Literal["user_generated_urgent"] = "user_generated_urgent"
     message: Annotated[str, Field(min_length=1, max_length=URGENT_ALERT_MAX_MESSAGE_LENGTH)]
-    issued_at: datetime
-    expires_at: datetime
+    issued_at: AwareDatetime
+    expires_at: AwareDatetime
     verified: Literal[False] = False
     emergency_service: Literal[False] = False
     delivery_guaranteed: Literal[False] = False
@@ -100,7 +100,9 @@ NotificationPayload = Annotated[
 
 class UrgentAlertCommand(ClosedModel):
     message: Annotated[str, Field(min_length=1, max_length=URGENT_ALERT_MAX_MESSAGE_LENGTH)]
-    idempotency_key: Annotated[str, Field(min_length=16, max_length=128)]
+    idempotency_key: Annotated[
+        str, Field(min_length=16, max_length=128, pattern=r"^[A-Za-z0-9._~-]+$")
+    ]
 
 
 PROHIBITED_NOTIFICATION_FIELDS = frozenset(
@@ -137,7 +139,9 @@ PROHIBITED_NOTIFICATION_FIELDS = frozenset(
 )
 
 
-def _validate_expiry(issued_at: datetime, expires_at: datetime, maximum: timedelta) -> None:
+def _validate_expiry(
+    issued_at: AwareDatetime, expires_at: AwareDatetime, maximum: timedelta
+) -> None:
     if expires_at <= issued_at:
         raise ValueError("expires_at must be after issued_at")
     if expires_at - issued_at > maximum:

@@ -26,14 +26,17 @@ Recipient selection is not part of this contract. Later Sprint 9 authorization w
 - Channel activity: at most 2 hours.
 - Urgent alerts: at most 10 minutes.
 
-Expiry must be after issue time. A retry or replay must never turn an old urgent alert into a fresh event; lifecycle/idempotency enforcement is implemented in later locked deliverables.
+Issue and expiry timestamps must include an explicit timezone. Expiry must be after issue
+time. A retry or replay must never turn an old urgent alert into a fresh event;
+lifecycle/idempotency enforcement is implemented in later locked deliverables.
 
 ## Urgent-alert command
 
 The user-initiated command accepts only:
 
 - a message of 1–280 characters; and
-- a 16–128 character idempotency key.
+- a 16–128 character transport-safe idempotency key using only letters, digits, `.\`,
+  `_\`, `~\`, and `-\`.
 
 There is deliberately no recipient, person, account, device, coordinate, radius, route, provider, or delivery control.
 
