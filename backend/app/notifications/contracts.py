@@ -65,18 +65,18 @@ class UrgentAlertNotificationPayload(ClosedModel):
     verified: Literal[False] = False
     emergency_service: Literal[False] = False
     delivery_guaranteed: Literal[False] = False
-    safety_not_emergency_service: Literal[
-        "RoadTalk is not an emergency service."
-    ] = URGENT_ALERT_NOT_EMERGENCY_SERVICE
-    safety_delivery_not_guaranteed: Literal[
-        "Delivery is not guaranteed."
-    ] = URGENT_ALERT_DELIVERY_NOT_GUARANTEED
+    safety_not_emergency_service: Literal["RoadTalk is not an emergency service."] = (
+        URGENT_ALERT_NOT_EMERGENCY_SERVICE
+    )
+    safety_delivery_not_guaranteed: Literal["Delivery is not guaranteed."] = (
+        URGENT_ALERT_DELIVERY_NOT_GUARANTEED
+    )
     safety_emergency_services_guidance: Literal[
         "Contact local emergency services directly when emergency assistance is needed."
     ] = URGENT_ALERT_EMERGENCY_SERVICES_GUIDANCE
-    safety_unverified: Literal[
-        "This alert is user-generated and unverified."
-    ] = URGENT_ALERT_UNVERIFIED
+    safety_unverified: Literal["This alert is user-generated and unverified."] = (
+        URGENT_ALERT_UNVERIFIED
+    )
 
     @model_validator(mode="after")
     def validate_expiry(self) -> "UrgentAlertNotificationPayload":
