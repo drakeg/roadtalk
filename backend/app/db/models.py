@@ -83,6 +83,15 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         single_parent=True,
         uselist=False,
     )
+    notification_preferences: Mapped["NotificationPreferences | None"] = relationship(
+        back_populates="account",
+        cascade="all, delete-orphan",
+        single_parent=True,
+        uselist=False,
+    )
+    notifications: Mapped[list["Notification"]] = relationship(
+        back_populates="account", cascade="all, delete-orphan"
+    )
 
 
 class Device(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -393,6 +402,65 @@ class AccountRouteMode(TimestampMixin, Base):
     version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
 
     account: Mapped[Account] = relationship(back_populates="route_mode")
+
+
+class NotificationPreferences(TimestampMixin, Base):
+    __tablename__ = "notification_preferences"
+    __table_args__ = (CheckConstraint("version >= 1", name="version_positive"),)
+
+    account_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE"), primary_key=True
+    )
+    channel_activity_enabled: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default="true"
+    )
+    urgent_alert_enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+
+    account: Mapped[Account] = relationship(back_populates="notification_preferences")
+
+
+class Notification(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "notification"
+    __table_args__ = (
+        CheckConstraint(
+            "notification_class IN ('account', 'channel_activity', 'urgent_alert')",
+            name="class_allowed",
+        ),
+        CheckConstraint("priority IN ('normal', 'high', 'urgent')", name="priority_allowed"),
+        CheckConstraint(
+            "source IN ('roadtalk_account', 'roadtalk_channel', 'user_generated_urgent')",
+            name="source_allowed",
+        ),
+        CheckConstraint("expires_at > issued_at", name="expiry_after_issue"),
+        CheckConstraint("version >= 1", name="version_positive"),
+        CheckConstraint(
+            "(notification_class = 'account' AND title IS NOT NULL "
+            "AND channel_label IS NULL) OR "
+            "(notification_class = 'channel_activity' AND title IS NOT NULL "
+            "AND channel_label IS NOT NULL) OR "
+            "(notification_class = 'urgent_alert' AND title IS NULL "
+            "AND channel_label IS NULL)",
+            name="class_fields_consistent",
+        ),
+        Index("ix_notification_account_expires", "account_id", "expires_at"),
+        Index("ix_notification_account_issued", "account_id", "issued_at"),
+    )
+
+    account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("account.id", ondelete="CASCADE"))
+    notification_class: Mapped[str] = mapped_column(String(32))
+    priority: Mapped[str] = mapped_column(String(16))
+    source: Mapped[str] = mapped_column(String(32))
+    title: Mapped[str | None] = mapped_column(String(96))
+    message: Mapped[str] = mapped_column(String(280))
+    channel_label: Mapped[str | None] = mapped_column(String(64))
+    issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    dismissed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+
+    account: Mapped[Account] = relationship(back_populates="notifications")
 
 
 class MediaGrant(UUIDPrimaryKeyMixin, TimestampMixin, Base):

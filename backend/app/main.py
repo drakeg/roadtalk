@@ -8,6 +8,7 @@ from app.api.channels import router as channels_router
 from app.api.identity import router as identity_router
 from app.api.location import nearby_router
 from app.api.location import router as location_router
+from app.api.notifications import router as notifications_router
 from app.api.presence import router as presence_router
 from app.api.ptt import router as ptt_router
 from app.api.recovery import router as recovery_router
@@ -101,6 +102,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(route_mode_router)
     app.include_router(location_router)
     app.include_router(nearby_router)
+    app.include_router(notifications_router)
     app.include_router(presence_router)
     app.include_router(ptt_router)
     return app
