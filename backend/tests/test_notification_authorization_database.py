@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import os
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -19,10 +20,7 @@ from app.db.models import (
 )
 from app.notifications.contracts import UrgentAlertNotificationPayload
 from app.notifications.models import NotificationDeliveryReceipt
-from app.notifications.service import (
-    NotificationError,
-    compose_authorized_notifications,
-)
+from app.notifications.service import NotificationError, compose_authorized_notifications
 from app.ptt.proximity import EligibleReceiveGrant
 
 
@@ -64,7 +62,9 @@ async def _authorization_lifecycle() -> None:
         channel_activity_enabled=True,
     )
 
-    async def authorized_subset(*args: object, **kwargs: object) -> tuple[EligibleReceiveGrant, ...]:
+    async def authorized_subset(
+        *args: object, **kwargs: object
+    ) -> tuple[EligibleReceiveGrant, ...]:
         del args, kwargs
         return (
             EligibleReceiveGrant(
@@ -158,7 +158,7 @@ async def _authorization_lifecycle() -> None:
             await db.commit()
             receipt = await db.get(
                 NotificationDeliveryReceipt,
-                (allowed.id, __import__("hashlib").sha256(key.encode()).hexdigest()),
+                (allowed.id, hashlib.sha256(key.encode()).hexdigest()),
             )
             assert receipt is not None
             assert receipt.notification_id is None
