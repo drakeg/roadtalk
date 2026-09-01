@@ -62,25 +62,6 @@ async def _authorization_lifecycle() -> None:
         channel_activity_enabled=True,
     )
 
-    async def authorized_subset(
-        *args: object, **kwargs: object
-    ) -> tuple[EligibleReceiveGrant, ...]:
-        del args, kwargs
-        return (
-            EligibleReceiveGrant(
-                receive_grant_id=uuid.uuid4(),
-                account_id=allowed.id,
-                device_id=uuid.uuid4(),
-                participant_ref="allowed-participant",
-            ),
-            EligibleReceiveGrant(
-                receive_grant_id=uuid.uuid4(),
-                account_id=opted_out.id,
-                device_id=uuid.uuid4(),
-                participant_ref="opted-out-participant",
-            ),
-        )
-
     payload = UrgentAlertNotificationPayload(
         message="Disabled vehicle ahead.",
         issued_at=now,
@@ -93,10 +74,36 @@ async def _authorization_lifecycle() -> None:
             db.add_all((sender, allowed, denied, opted_out, sender_session))
             await db.commit()
 
+            sender_id = sender.id
+            sender_device_id = sender_device.id
+            sender_session_id = sender_session.id
+            allowed_id = allowed.id
+            denied_id = denied.id
+            opted_out_id = opted_out.id
+
+            async def authorized_subset(
+                *args: object, **kwargs: object
+            ) -> tuple[EligibleReceiveGrant, ...]:
+                del args, kwargs
+                return (
+                    EligibleReceiveGrant(
+                        receive_grant_id=uuid.uuid4(),
+                        account_id=allowed_id,
+                        device_id=uuid.uuid4(),
+                        participant_ref="allowed-participant",
+                    ),
+                    EligibleReceiveGrant(
+                        receive_grant_id=uuid.uuid4(),
+                        account_id=opted_out_id,
+                        device_id=uuid.uuid4(),
+                        participant_ref="opted-out-participant",
+                    ),
+                )
+
             first = await compose_authorized_notifications(
                 db,
-                sender_account_id=sender.id,
-                sender_device_id=sender_device.id,
+                sender_account_id=sender_id,
+                sender_device_id=sender_device_id,
                 payload=payload,
                 idempotency_key=key,
                 settings=settings,
@@ -108,17 +115,17 @@ async def _authorization_lifecycle() -> None:
             allowed_rows = await db.scalar(
                 select(func.count())
                 .select_from(Notification)
-                .where(Notification.account_id == allowed.id)
+                .where(Notification.account_id == allowed_id)
             )
             denied_rows = await db.scalar(
                 select(func.count())
                 .select_from(Notification)
-                .where(Notification.account_id == denied.id)
+                .where(Notification.account_id == denied_id)
             )
             opted_out_rows = await db.scalar(
                 select(func.count())
                 .select_from(Notification)
-                .where(Notification.account_id == opted_out.id)
+                .where(Notification.account_id == opted_out_id)
             )
             assert allowed_rows == 1
             assert denied_rows == 0
@@ -126,8 +133,8 @@ async def _authorization_lifecycle() -> None:
 
             replay = await compose_authorized_notifications(
                 db,
-                sender_account_id=sender.id,
-                sender_device_id=sender_device.id,
+                sender_account_id=sender_id,
+                sender_device_id=sender_device_id,
                 payload=payload,
                 idempotency_key=key,
                 settings=settings,
@@ -144,8 +151,8 @@ async def _authorization_lifecycle() -> None:
             with pytest.raises(NotificationError) as collision:
                 await compose_authorized_notifications(
                     db,
-                    sender_account_id=sender.id,
-                    sender_device_id=sender_device.id,
+                    sender_account_id=sender_id,
+                    sender_device_id=sender_device_id,
                     payload=changed_payload,
                     idempotency_key=key,
                     settings=settings,
@@ -158,7 +165,7 @@ async def _authorization_lifecycle() -> None:
             await db.commit()
             receipt = await db.get(
                 NotificationDeliveryReceipt,
-                (allowed.id, hashlib.sha256(key.encode()).hexdigest()),
+                (allowed_id, hashlib.sha256(key.encode()).hexdigest()),
             )
             assert receipt is not None
             assert receipt.notification_id is None
@@ -166,8 +173,8 @@ async def _authorization_lifecycle() -> None:
             with pytest.raises(NotificationError) as deleted_replay:
                 await compose_authorized_notifications(
                     db,
-                    sender_account_id=sender.id,
-                    sender_device_id=sender_device.id,
+                    sender_account_id=sender_id,
+                    sender_device_id=sender_device_id,
                     payload=payload,
                     idempotency_key=key,
                     settings=settings,
@@ -184,8 +191,8 @@ async def _authorization_lifecycle() -> None:
             with pytest.raises(NotificationError) as stale:
                 await compose_authorized_notifications(
                     db,
-                    sender_account_id=sender.id,
-                    sender_device_id=sender_device.id,
+                    sender_account_id=sender_id,
+                    sender_device_id=sender_device_id,
                     payload=stale_payload,
                     idempotency_key="urgent-stale-idempotency-key",
                     settings=settings,
@@ -194,13 +201,15 @@ async def _authorization_lifecycle() -> None:
                 )
             assert stale.value.code == "NOTIFICATION_NOT_CURRENT"
 
-            sender_session.revoked_at = session_now
-            sender_session.revoke_reason = "test_revoked"
+            sender_session_row = await db.get(Session, sender_session_id)
+            assert sender_session_row is not None
+            sender_session_row.revoked_at = session_now
+            sender_session_row.revoke_reason = "test_revoked"
             await db.commit()
             revoked = await compose_authorized_notifications(
                 db,
-                sender_account_id=sender.id,
-                sender_device_id=sender_device.id,
+                sender_account_id=sender_id,
+                sender_device_id=sender_device_id,
                 payload=UrgentAlertNotificationPayload(
                     message="Should not deliver.",
                     issued_at=now,
@@ -213,12 +222,12 @@ async def _authorization_lifecycle() -> None:
             )
             assert revoked == ()
 
-            await db.execute(delete(Account).where(Account.id == allowed.id))
+            await db.execute(delete(Account).where(Account.id == allowed_id))
             await db.commit()
             remaining_receipts = await db.scalar(
                 select(func.count())
                 .select_from(NotificationDeliveryReceipt)
-                .where(NotificationDeliveryReceipt.account_id == allowed.id)
+                .where(NotificationDeliveryReceipt.account_id == allowed_id)
             )
             assert remaining_receipts == 0
     finally:
