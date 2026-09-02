@@ -24,6 +24,7 @@ from app.location.limiter import LocationLimiter
 from app.logging import configure_logging
 from app.map_web import router as map_web_router
 from app.middleware import RequestContextMiddleware
+from app.notifications_web import router as notifications_web_router
 from app.problems import install_problem_handlers
 from app.profile_web import router as profile_web_router
 from app.ptt.limiter import PttLimiter
@@ -89,6 +90,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     install_problem_handlers(app)
     app.include_router(web_radio_landing_router)
     app.include_router(browser_hardening_router)
+    app.include_router(notifications_web_router)
     app.include_router(radio_router)
     app.include_router(route_mode_web_router)
     app.include_router(map_web_router)
