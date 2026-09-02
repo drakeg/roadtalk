@@ -43,6 +43,15 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # Revision 0009 cannot represent browser-originated rows. A downgrade must
+    # remove those incompatible records before restoring the narrower checks;
+    # rewriting them as ios/android would falsify their platform provenance.
+    # Delete consent records first because their old platform constraint is
+    # restored before the device constraint below. Deleting web devices then
+    # lets the existing foreign-key delete behavior clean up device-owned state.
+    op.execute("DELETE FROM location_consent_event WHERE platform = 'web'")
+    op.execute("DELETE FROM device WHERE platform = 'web'")
+
     op.drop_constraint("platform_allowed", "location_consent_event", type_="check")
     op.create_check_constraint(
         "platform_allowed",
