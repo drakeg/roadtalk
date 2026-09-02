@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse
 
 router = APIRouter(include_in_schema=False)
 
-_NOTIFICATIONS_PAGE = r'''<!doctype html>
+_NOTIFICATIONS_PAGE = r"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RoadTalk | Notifications</title>
 <style>:root{color-scheme:dark;--bg:#07141b;--panel:#10232e;--text:#f2f7f9;--muted:#8fa7b2;--accent:#f2b84b;--green:#70da96;--red:#ff7979;--line:rgba(255,255,255,.1)}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}.wrap{width:min(900px,calc(100% - 28px));margin:auto}header{border-bottom:1px solid var(--line);padding:18px 0}.nav,.actions,.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.nav{justify-content:space-between}.links{display:flex;gap:8px;flex-wrap:wrap}a,button,textarea,input{font:inherit}a,button{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:rgba(255,255,255,.04);color:var(--text);text-decoration:none;cursor:pointer}button.primary{background:var(--accent);color:#172028;font-weight:900;border:0}main{padding:28px 0}.card{border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:20px;margin-bottom:16px}h1,h2,h3{margin-top:0}.muted{color:var(--muted)}.bad{color:var(--red)}.good{color:var(--green)}label{display:flex;gap:8px;align-items:center}textarea{width:100%;min-height:92px;background:#081820;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px}.notice{border-left:4px solid var(--accent);padding-left:12px}.item{border-top:1px solid var(--line);padding:16px 0}.item:first-child{border-top:0}.urgent{border-left:4px solid var(--red);padding-left:14px}.meta{font-size:.9rem;color:var(--muted);margin:.35rem 0}.warning{font-weight:800}.spacer{flex:1}</style></head>
 <body><header><div class="wrap nav"><strong>RoadTalk Notifications</strong><div class="links"><a href="/">Web Radio</a><a href="/map">Map</a><a href="/audience">Audience</a><a href="/account">Account</a></div></div></header><main class="wrap">
@@ -30,7 +30,7 @@ $('send-urgent').onclick=async()=>{try{const message=$('urgent-message').value.t
 $('refresh').onclick=()=>loadInbox().catch(e=>{$('status').textContent=e.message;$('status').className='bad'});
 $('inbox').onclick=async event=>{const button=event.target.closest('button[data-action]');if(!button)return;const item=button.closest('[data-id]');try{await api(`/api/v1/me/notifications/${item.dataset.id}/state`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:button.dataset.action,expected_version:Number(item.dataset.version)})});await loadInbox()}catch(e){$('status').textContent=e.message;$('status').className='bad'}};
 loadAll();setInterval(()=>{document.querySelectorAll('.item .meta').forEach(()=>{});},30000);
-</script></body></html>'''
+</script></body></html>"""
 
 
 @router.get("/notifications", response_class=HTMLResponse)
