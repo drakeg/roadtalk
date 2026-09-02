@@ -123,8 +123,16 @@ async def account_console() -> HTMLResponse:
 async def hardened_radio_console() -> HTMLResponse:
     response = await radio_console()
     html = bytes(response.body).decode("utf-8")
-    html = html.replace("<head>", "<head><script>if(!localStorage.getItem('rt_access')&&!localStorage.getItem('rt_refresh'))location.replace('/account');</script>", 1)
-    html = html.replace('<div class="navlinks"><a class="button" href="/ops">Operations</a>', '<div class="navlinks"><a class="button" href="/account">Account</a><a class="button" href="/notifications">Notifications</a><a class="button" href="/map">Map</a><a class="button" href="/audience">Audience</a><a class="button" href="/ops">Operations</a>', 1)
+    html = html.replace(
+        "<head>",
+        "<head><script>if(!localStorage.getItem('rt_access')&&!localStorage.getItem('rt_refresh'))location.replace('/account');</script>",
+        1,
+    )
+    html = html.replace(
+        '<div class="navlinks"><a class="button" href="/ops">Operations</a>',
+        '<div class="navlinks"><a class="button" href="/account">Account</a><a class="button" href="/notifications">Notifications</a><a class="button" href="/map">Map</a><a class="button" href="/audience">Audience</a><a class="button" href="/ops">Operations</a>',
+        1,
+    )
     html = html.replace("</body>", f"{_RADIO_HARDENING}</body>", 1)
     return HTMLResponse(html)
 
@@ -133,5 +141,9 @@ async def hardened_radio_console() -> HTMLResponse:
 async def hardened_operations_dashboard() -> HTMLResponse:
     response = await web_home()
     html = bytes(response.body).decode("utf-8")
-    html = html.replace('<div class="navlinks"><a class="button" href="/docs">Swagger</a>', '<div class="navlinks"><a class="button" href="/">Web Radio</a><a class="button" href="/account">Account</a><a class="button" href="/notifications">Notifications</a><a class="button" href="/map">Map Awareness</a><a class="button" href="/audience">Audience Mode</a><a class="button" href="/docs">Swagger</a>', 1)
+    html = html.replace(
+        '<div class="navlinks"><a class="button" href="/docs">Swagger</a>',
+        '<div class="navlinks"><a class="button" href="/">Web Radio</a><a class="button" href="/account">Account</a><a class="button" href="/notifications">Notifications</a><a class="button" href="/map">Map Awareness</a><a class="button" href="/audience">Audience Mode</a><a class="button" href="/docs">Swagger</a>',
+        1,
+    )
     return HTMLResponse(html)
