@@ -1,4 +1,7 @@
+import hashlib
+import json
 import uuid
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Literal
@@ -6,13 +9,32 @@ from typing import Literal
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import Account, Notification, NotificationPreferences
+from app.config import Settings
+from app.db.models import (
+    Account,
+    Channel,
+    ChannelSelection,
+    Notification,
+    NotificationPreferences,
+    Session,
+)
 from app.notifications.contracts import (
+    ACCOUNT_MAX_TTL,
     URGENT_ALERT_DELIVERY_NOT_GUARANTEED,
     URGENT_ALERT_EMERGENCY_SERVICES_GUIDANCE,
     URGENT_ALERT_NOT_EMERGENCY_SERVICE,
     URGENT_ALERT_UNVERIFIED,
+    ChannelActivityNotificationPayload,
     NotificationPayload,
+    UrgentAlertNotificationPayload,
+)
+from app.notifications.models import NotificationDeliveryReceipt
+from app.ptt.proximity import (
+    EligibleReceiveGrant,
+    ProximityEligibilityError,
+    ProximityPolicy,
+    find_eligible_receive_grants,
+    proximity_policy_from_settings,
 )
 
 INBOX_LIMIT = 50
@@ -55,6 +77,9 @@ class NotificationReceipt:
     safety_unverified: str | None
 
 
+EligibilityFinder = Callable[..., Awaitable[tuple[EligibleReceiveGrant, ...]]]
+
+
 def _preference_receipt(value: NotificationPreferences) -> PreferencesReceipt:
     return PreferencesReceipt(
         channel_activity_enabled=value.channel_activity_enabled,
@@ -88,6 +113,35 @@ def _notification_receipt(value: Notification) -> NotificationReceipt:
         ),
         safety_unverified=URGENT_ALERT_UNVERIFIED if urgent else None,
     )
+
+
+def _digest(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _payload_fingerprint(payload: NotificationPayload) -> str:
+    serialized = json.dumps(
+        payload.model_dump(mode="json"),
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return _digest(serialized)
+
+
+def _require_current_payload(payload: NotificationPayload, *, now: datetime) -> None:
+    if payload.issued_at > now or payload.expires_at <= now:
+        raise NotificationError(
+            "NOTIFICATION_NOT_CURRENT",
+            "The notification event is not current.",
+        )
+
+
+def _validate_idempotency_key(idempotency_key: str) -> None:
+    if not 16 <= len(idempotency_key) <= 128:
+        raise NotificationError(
+            "INVALID_NOTIFICATION_IDEMPOTENCY_KEY",
+            "Notification idempotency key is invalid.",
+        )
 
 
 async def _require_active_account(db: AsyncSession, *, account_id: uuid.UUID) -> None:
@@ -174,6 +228,241 @@ async def store_notification(
     return _notification_receipt(notification)
 
 
+async def store_notification_idempotent(
+    db: AsyncSession,
+    *,
+    account_id: uuid.UUID,
+    payload: NotificationPayload,
+    idempotency_key: str,
+    now: datetime | None = None,
+) -> NotificationReceipt:
+    """Store one current notification while retaining only a bounded replay tombstone."""
+    resolved_now = now or datetime.now(UTC)
+    _require_current_payload(payload, now=resolved_now)
+    _validate_idempotency_key(idempotency_key)
+    await _require_active_account(db, account_id=account_id)
+
+    key_hash = _digest(idempotency_key)
+    fingerprint = _payload_fingerprint(payload)
+    await db.execute(
+        delete(NotificationDeliveryReceipt).where(
+            NotificationDeliveryReceipt.account_id == account_id,
+            NotificationDeliveryReceipt.guard_expires_at <= resolved_now,
+        )
+    )
+    prior = await db.scalar(
+        select(NotificationDeliveryReceipt)
+        .where(
+            NotificationDeliveryReceipt.account_id == account_id,
+            NotificationDeliveryReceipt.idempotency_key_hash == key_hash,
+        )
+        .with_for_update()
+    )
+    if prior is not None:
+        if prior.request_fingerprint != fingerprint:
+            await db.rollback()
+            raise NotificationError(
+                "NOTIFICATION_IDEMPOTENCY_CONFLICT",
+                "The idempotency key was already used for a different notification.",
+            )
+        if prior.notification_id is None:
+            await db.rollback()
+            raise NotificationError(
+                "NOTIFICATION_REPLAY_NOT_AVAILABLE",
+                "The original notification is no longer available.",
+            )
+        existing = await db.scalar(
+            select(Notification).where(
+                Notification.id == prior.notification_id,
+                Notification.account_id == account_id,
+                Notification.expires_at > resolved_now,
+            )
+        )
+        if existing is None:
+            await db.rollback()
+            raise NotificationError(
+                "NOTIFICATION_REPLAY_NOT_AVAILABLE",
+                "The original notification is no longer available.",
+            )
+        await db.commit()
+        return _notification_receipt(existing)
+
+    values = payload.model_dump()
+    notification = Notification(
+        account_id=account_id,
+        notification_class=values["notification_class"],
+        priority=values["priority"],
+        source=values["source"],
+        title=values.get("title"),
+        message=values["message"],
+        channel_label=values.get("channel_label"),
+        issued_at=values["issued_at"],
+        expires_at=values["expires_at"],
+        version=1,
+    )
+    db.add(notification)
+    await db.flush()
+    db.add(
+        NotificationDeliveryReceipt(
+            account_id=account_id,
+            idempotency_key_hash=key_hash,
+            request_fingerprint=fingerprint,
+            notification_id=notification.id,
+            guard_expires_at=payload.issued_at + ACCOUNT_MAX_TTL,
+        )
+    )
+    await db.commit()
+    await db.refresh(notification)
+    return _notification_receipt(notification)
+
+
+async def _current_notification_policy(
+    db: AsyncSession,
+    *,
+    sender_account_id: uuid.UUID,
+    sender_device_id: uuid.UUID,
+    settings: Settings,
+    now: datetime,
+) -> tuple[ProximityPolicy, str] | None:
+    sender_active = await db.scalar(
+        select(Session.id)
+        .join(Account, Account.id == Session.account_id)
+        .where(
+            Session.account_id == sender_account_id,
+            Session.device_id == sender_device_id,
+            Session.revoked_at.is_(None),
+            Session.expires_at > now,
+            Account.status == "active",
+            Account.account_type == "registered",
+        )
+    )
+    if sender_active is None:
+        return None
+
+    row = await db.execute(
+        select(ChannelSelection.channel_id, Channel.provider_room_ref, Channel.display_label)
+        .join(Channel, Channel.id == ChannelSelection.channel_id)
+        .where(
+            ChannelSelection.account_id == sender_account_id,
+            Channel.enabled.is_(True),
+            Channel.closed_at.is_(None),
+        )
+    )
+    selected = row.one_or_none()
+    if selected is None:
+        return None
+    channel_id, room_ref, display_label = selected
+    return (
+        proximity_policy_from_settings(
+            settings,
+            channel_id=channel_id,
+            room_ref=room_ref,
+        ),
+        display_label,
+    )
+
+
+async def _notification_enabled_accounts(
+    db: AsyncSession,
+    *,
+    candidate_account_ids: set[uuid.UUID],
+    notification_class: Literal["channel_activity", "urgent_alert"],
+) -> tuple[uuid.UUID, ...]:
+    if not candidate_account_ids:
+        return ()
+    rows = await db.execute(
+        select(
+            Account.id,
+            NotificationPreferences.channel_activity_enabled,
+            NotificationPreferences.urgent_alert_enabled,
+        )
+        .outerjoin(NotificationPreferences, NotificationPreferences.account_id == Account.id)
+        .where(
+            Account.id.in_(candidate_account_ids),
+            Account.status == "active",
+            Account.account_type == "registered",
+        )
+        .order_by(Account.id)
+    )
+    enabled: list[uuid.UUID] = []
+    for account_id, channel_enabled, urgent_enabled in rows.all():
+        allowed = (
+            channel_enabled is not False
+            if notification_class == "channel_activity"
+            else urgent_enabled is not False
+        )
+        if allowed:
+            enabled.append(account_id)
+    return tuple(enabled)
+
+
+async def compose_authorized_notifications(
+    db: AsyncSession,
+    *,
+    sender_account_id: uuid.UUID,
+    sender_device_id: uuid.UUID,
+    payload: ChannelActivityNotificationPayload | UrgentAlertNotificationPayload,
+    idempotency_key: str,
+    settings: Settings,
+    now: datetime | None = None,
+    eligibility_finder: EligibilityFinder = find_eligible_receive_grants,
+) -> tuple[NotificationReceipt, ...]:
+    """Create notifications only for an already-authorized current audience."""
+    resolved_now = now or datetime.now(UTC)
+    _require_current_payload(payload, now=resolved_now)
+    _validate_idempotency_key(idempotency_key)
+
+    policy_context = await _current_notification_policy(
+        db,
+        sender_account_id=sender_account_id,
+        sender_device_id=sender_device_id,
+        settings=settings,
+        now=resolved_now,
+    )
+    if policy_context is None:
+        return ()
+    policy, channel_label = policy_context
+    if (
+        isinstance(payload, ChannelActivityNotificationPayload)
+        and payload.channel_label != channel_label
+    ):
+        raise NotificationError(
+            "NOTIFICATION_CHANNEL_MISMATCH",
+            "Notification channel context does not match the current authorized channel.",
+        )
+
+    try:
+        eligible = await eligibility_finder(
+            db,
+            sender_account_id=sender_account_id,
+            sender_device_id=sender_device_id,
+            policy=policy,
+            now=resolved_now,
+        )
+    except ProximityEligibilityError:
+        return ()
+
+    candidate_account_ids = {item.account_id for item in eligible}
+    recipient_account_ids = await _notification_enabled_accounts(
+        db,
+        candidate_account_ids=candidate_account_ids,
+        notification_class=payload.notification_class,
+    )
+
+    receipts: list[NotificationReceipt] = []
+    for account_id in recipient_account_ids:
+        receipts.append(
+            await store_notification_idempotent(
+                db,
+                account_id=account_id,
+                payload=payload,
+                idempotency_key=idempotency_key,
+                now=resolved_now,
+            )
+        )
+    return tuple(receipts)
+
+
 async def list_notifications(
     db: AsyncSession,
     *,
@@ -186,6 +475,12 @@ async def list_notifications(
         delete(Notification).where(
             Notification.account_id == account_id,
             Notification.expires_at <= resolved_now,
+        )
+    )
+    await db.execute(
+        delete(NotificationDeliveryReceipt).where(
+            NotificationDeliveryReceipt.account_id == account_id,
+            NotificationDeliveryReceipt.guard_expires_at <= resolved_now,
         )
     )
     rows = (
