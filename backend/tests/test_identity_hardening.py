@@ -50,6 +50,7 @@ def test_openapi_exposes_only_approved_contracts() -> None:
         "/api/v1/me/notifications",
         "/api/v1/me/notifications/{notification_id}/state",
         "/api/v1/nearby/summary",
+        "/api/v1/notifications/urgent-alerts",
         "/api/v1/presence/nearby",
         "/api/v1/ptt/grants",
         "/api/v1/ptt/grants/{grant_id}",
