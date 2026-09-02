@@ -4,7 +4,11 @@ from datetime import UTC, datetime, timedelta
 from fastapi import APIRouter, HTTPException, Request, status
 
 from app.api.auth import CurrentSession, DatabaseSession
-from app.notifications.contracts import URGENT_ALERT_MAX_TTL, UrgentAlertCommand, UrgentAlertNotificationPayload
+from app.notifications.contracts import (
+    URGENT_ALERT_MAX_TTL,
+    UrgentAlertCommand,
+    UrgentAlertNotificationPayload,
+)
 from app.notifications.schemas import (
     NotificationInboxResponse,
     NotificationPreferencesResponse,
