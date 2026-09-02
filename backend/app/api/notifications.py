@@ -1,17 +1,21 @@
 import uuid
+from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 
 from app.api.auth import CurrentSession, DatabaseSession
+from app.notifications.contracts import URGENT_ALERT_MAX_TTL, UrgentAlertCommand, UrgentAlertNotificationPayload
 from app.notifications.schemas import (
     NotificationInboxResponse,
     NotificationPreferencesResponse,
     NotificationPreferencesUpdateRequest,
     NotificationRecordResponse,
     NotificationStateUpdateRequest,
+    UrgentAlertCommandResponse,
 )
 from app.notifications.service import (
     NotificationError,
+    compose_authorized_notifications,
     get_preferences,
     list_notifications,
     update_notification_state,
@@ -24,7 +28,7 @@ router = APIRouter(prefix="/api/v1", tags=["notifications"])
 def _notification_error(exc: NotificationError) -> HTTPException:
     status_code = (
         status.HTTP_409_CONFLICT
-        if exc.code.endswith("VERSION_CONFLICT")
+        if exc.code.endswith("VERSION_CONFLICT") or exc.code.endswith("IDEMPOTENCY_CONFLICT")
         else status.HTTP_404_NOT_FOUND
     )
     return HTTPException(
@@ -103,3 +107,44 @@ async def write_notification_state(
     except NotificationError as exc:
         raise _notification_error(exc) from exc
     return NotificationRecordResponse(**receipt.__dict__)
+
+
+@router.post("/notifications/urgent-alerts", response_model=UrgentAlertCommandResponse)
+async def create_urgent_alert(
+    request: Request,
+    payload: UrgentAlertCommand,
+    db: DatabaseSession,
+    current: CurrentSession,
+) -> UrgentAlertCommandResponse:
+    if current.account.account_type != "registered":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "REGISTERED_ACCOUNT_REQUIRED",
+                "detail": "A persistent registered account is required to send an urgent alert.",
+            },
+        )
+    now = datetime.now(UTC)
+    event = UrgentAlertNotificationPayload(
+        message=payload.message,
+        issued_at=now,
+        expires_at=now + min(URGENT_ALERT_MAX_TTL, timedelta(minutes=10)),
+    )
+    try:
+        receipts = await compose_authorized_notifications(
+            db,
+            sender_account_id=current.account.id,
+            sender_device_id=current.device.id,
+            payload=event,
+            idempotency_key=payload.idempotency_key,
+            settings=request.app.state.settings,
+            now=now,
+        )
+    except NotificationError as exc:
+        raise _notification_error(exc) from exc
+    return UrgentAlertCommandResponse(
+        accepted=True,
+        recipient_count=len(receipts),
+        issued_at=event.issued_at,
+        expires_at=event.expires_at,
+    )
