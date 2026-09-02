@@ -16,6 +16,7 @@ from app.config import Settings
 from app.db.models import Account, Device, Session
 from app.db.session import get_session
 from app.main import create_app
+from app.notifications.contracts import UrgentAlertNotificationPayload
 from app.notifications.service import NotificationError, NotificationReceipt, PreferencesReceipt
 
 NOW = datetime(2026, 9, 1, 12, tzinfo=UTC)
@@ -27,9 +28,9 @@ def settings() -> Settings:
     )
 
 
-def authenticated_application() -> FastAPI:
+def authenticated_application(*, account_type: str = "registered") -> FastAPI:
     application = create_app(settings())
-    account = Account(id=uuid.uuid4())
+    account = Account(id=uuid.uuid4(), account_type=account_type)
     device = Device(
         id=uuid.uuid4(),
         account=account,
@@ -89,11 +90,11 @@ def test_notification_openapi_is_authenticated_exact_and_non_disclosing() -> Non
         ("/api/v1/me/notification-preferences", "put"),
         ("/api/v1/me/notifications", "get"),
         ("/api/v1/me/notifications/{notification_id}/state", "put"),
+        ("/api/v1/notifications/urgent-alerts", "post"),
     ):
         operation = paths[path][method]
         assert operation["security"] == [{"HTTPBearer": []}]
         assert operation["tags"] == ["notifications"]
-
     components = schema["components"]["schemas"]
     assert set(components["NotificationPreferencesUpdateRequest"]["properties"]) == {
         "channel_activity_enabled",
@@ -104,6 +105,7 @@ def test_notification_openapi_is_authenticated_exact_and_non_disclosing() -> Non
         "state",
         "expected_version",
     }
+    assert set(components["UrgentAlertCommand"]["properties"]) == {"message", "idempotency_key"}
     exposed = str(
         {
             name: components[name]
@@ -111,6 +113,8 @@ def test_notification_openapi_is_authenticated_exact_and_non_disclosing() -> Non
                 "NotificationPreferencesResponse",
                 "NotificationRecordResponse",
                 "NotificationInboxResponse",
+                "UrgentAlertCommand",
+                "UrgentAlertCommandResponse",
             )
         }
     ).lower()
@@ -123,6 +127,10 @@ def test_notification_openapi_is_authenticated_exact_and_non_disclosing() -> Non
         "longitude",
         "provider_ref",
         "recipient_id",
+        "device_id",
+        "radius_m",
+        "corridor",
+        "destination",
     ):
         assert forbidden not in exposed
 
@@ -135,6 +143,13 @@ def test_notification_routes_require_authentication() -> None:
             client.put(
                 f"/api/v1/me/notifications/{uuid.uuid4()}/state",
                 json={"state": "read", "expected_version": 1},
+            ),
+            client.post(
+                "/api/v1/notifications/urgent-alerts",
+                json={
+                    "message": "Disabled vehicle ahead.",
+                    "idempotency_key": "browser-route-key-1234",
+                },
             ),
         )
     assert {response.status_code for response in responses} == {401}
@@ -161,7 +176,6 @@ def test_notification_preferences_and_inbox_use_semantic_fields(
     monkeypatch.setattr(notifications_api, "update_preferences", update)
     monkeypatch.setattr(notifications_api, "list_notifications", inbox)
     monkeypatch.setattr(notifications_api, "update_notification_state", state)
-
     with TestClient(authenticated_application()) as client:
         current = client.get("/api/v1/me/notification-preferences")
         changed = client.put(
@@ -177,7 +191,6 @@ def test_notification_preferences_and_inbox_use_semantic_fields(
             f"/api/v1/me/notifications/{item.id}/state",
             json={"state": "read", "expected_version": 1},
         )
-
     assert current.json() == {
         "channel_activity_enabled": True,
         "urgent_alert_enabled": True,
@@ -186,6 +199,48 @@ def test_notification_preferences_and_inbox_use_semantic_fields(
     assert changed.json()["version"] == 2
     assert listed.json()["items"][0]["channel_label"] == "General"
     assert marked.json()["read_at"] == "2026-09-01T12:00:00Z"
+
+
+def test_urgent_alert_command_uses_server_authorized_composition(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    async def compose(*args: object, **kwargs: object) -> tuple[NotificationReceipt, ...]:
+        captured.update(kwargs)
+        return (notification_receipt(),)
+
+    monkeypatch.setattr(notifications_api, "compose_authorized_notifications", compose)
+    with TestClient(authenticated_application()) as client:
+        response = client.post(
+            "/api/v1/notifications/urgent-alerts",
+            json={
+                "message": "Disabled vehicle ahead.",
+                "idempotency_key": "browser-route-key-1234",
+            },
+        )
+    assert response.status_code == 200
+    assert response.json()["accepted"] is True
+    assert response.json()["recipient_count"] == 1
+    payload = cast(UrgentAlertNotificationPayload, captured["payload"])
+    assert payload.notification_class == "urgent_alert"
+    assert payload.message == "Disabled vehicle ahead."
+    assert "recipient" not in captured
+    assert "radius" not in captured
+    assert "location" not in captured
+
+
+def test_urgent_alert_requires_registered_account() -> None:
+    with TestClient(authenticated_application(account_type="anonymous")) as client:
+        response = client.post(
+            "/api/v1/notifications/urgent-alerts",
+            json={
+                "message": "Disabled vehicle ahead.",
+                "idempotency_key": "browser-route-key-1234",
+            },
+        )
+    assert response.status_code == 403
+    assert response.json()["code"] == "REGISTERED_ACCOUNT_REQUIRED"
 
 
 def test_notification_routes_reject_overposting_and_conflicts(
@@ -216,6 +271,15 @@ def test_notification_routes_reject_overposting_and_conflicts(
                 "expected_version": 1,
             },
         )
+        targeted = client.post(
+            "/api/v1/notifications/urgent-alerts",
+            json={
+                "message": "Help",
+                "idempotency_key": "browser-route-key-1234",
+                "recipient_id": str(uuid.uuid4()),
+            },
+        )
     assert overposted.status_code == 422
     assert conflict.status_code == 409
     assert conflict.json()["code"] == "NOTIFICATION_PREFERENCES_VERSION_CONFLICT"
+    assert targeted.status_code == 422

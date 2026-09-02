@@ -53,3 +53,10 @@ class NotificationStateUpdateRequest(BaseModel):
 
     state: Literal["read", "dismissed"]
     expected_version: int = Field(ge=1)
+
+
+class UrgentAlertCommandResponse(BaseModel):
+    accepted: Literal[True] = True
+    recipient_count: int = Field(ge=0)
+    issued_at: datetime
+    expires_at: datetime
