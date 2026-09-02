@@ -16,6 +16,7 @@ from app.config import Settings
 from app.db.models import Account, Device, Session
 from app.db.session import get_session
 from app.main import create_app
+from app.notifications.contracts import UrgentAlertNotificationPayload
 from app.notifications.service import NotificationError, NotificationReceipt, PreferencesReceipt
 
 NOW = datetime(2026, 9, 1, 12, tzinfo=UTC)
@@ -221,7 +222,7 @@ def test_urgent_alert_command_uses_server_authorized_composition(
     assert response.status_code == 200
     assert response.json()["accepted"] is True
     assert response.json()["recipient_count"] == 1
-    payload = captured["payload"]
+    payload = cast(UrgentAlertNotificationPayload, captured["payload"])
     assert payload.notification_class == "urgent_alert"
     assert payload.message == "Disabled vehicle ahead."
     assert "recipient" not in captured
