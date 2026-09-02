@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail CI when the Sprint 9 notification persistence/authorization boundary broadens."""
+"""Fail CI when the Sprint 9 notification persistence/authorization/provider boundary broadens."""
 
 from __future__ import annotations
 
@@ -154,6 +154,39 @@ for forbidden in (
 ):
     if forbidden in contracts:
         fail(f"notification contract exposes targeting override {forbidden!r}")
+
+provider = read("backend/app/notifications/provider.py")
+for phrase in (
+    "class disablednotificationprovider",
+    "class fakenotificationprovider",
+    "class notificationdeliveryboundary",
+    'literal["disabled", "fake"]',
+    'provider_version="fake-v1"',
+    "asyncio.wait_for(",
+    'environment not in {"local", "test"}',
+):
+    if phrase not in provider:
+        fail(f"notification provider boundary is missing {phrase!r}")
+for forbidden in (
+    "apns",
+    "firebase",
+    "fcm",
+    "expo",
+    "sns",
+    "pinpoint",
+    "webpush",
+    "web_push",
+    "requests.",
+    "httpx.",
+    "boto3",
+    "api_key",
+    "push_token",
+    "provider_url",
+    "read_at",
+    "responded",
+):
+    if forbidden in provider:
+        fail(f"notification provider boundary introduces forbidden capability {forbidden!r}")
 
 workflow = read(".github/workflows/ci.yml")
 if "python scripts/ci/check-notification-privacy.py" not in workflow:
