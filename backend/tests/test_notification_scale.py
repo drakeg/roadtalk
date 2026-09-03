@@ -55,7 +55,9 @@ async def _exercise_scale() -> None:
 
     accounts = [Account(account_type="registered") for _ in range(REGISTERED_ACCOUNTS)]
     recipient_indexes = tuple(range(POTENTIAL_RECIPIENTS))
-    publisher_indexes = tuple(range(REGISTERED_ACCOUNTS - ALERT_PUBLISHERS, REGISTERED_ACCOUNTS))
+    publisher_indexes = tuple(
+        range(REGISTERED_ACCOUNTS - ALERT_PUBLISHERS, REGISTERED_ACCOUNTS)
+    )
     cleanup_account_ids: list[uuid.UUID] = []
 
     try:
@@ -156,7 +158,10 @@ async def _exercise_scale() -> None:
                 "external_push_provider": "disabled",
                 "incremental_recurring_cost_usd": 0,
             }
-            print("Notification synthetic scale: " + json.dumps(metrics, sort_keys=True))
+            print(
+                "Notification synthetic scale: "
+                + json.dumps(metrics, sort_keys=True)
+            )
             assert p95_ms <= TARGET_P95_MS
     finally:
         if cleanup_account_ids:
