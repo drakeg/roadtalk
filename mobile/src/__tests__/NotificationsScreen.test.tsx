@@ -147,7 +147,11 @@ describe("mobile notifications experience", () => {
       view.getByLabelText("Urgent alert message"),
       "Disabled vehicle ahead",
     );
-    await waitFor(() => expect(view.getByText("22/280")).toBeOnTheScreen());
+    await waitFor(() =>
+      expect(
+        view.getByRole("button", { name: "Send RoadTalk urgent alert" }).props.disabled,
+      ).toBe(false),
+    );
     fireEvent.press(
       view.getByRole("button", { name: "Send RoadTalk urgent alert" }),
     );
