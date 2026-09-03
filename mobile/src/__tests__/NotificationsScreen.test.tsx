@@ -108,7 +108,7 @@ describe("mobile notifications experience", () => {
     expect(view.getByRole("switch", { name: "Urgent alert notifications" })).toBeOnTheScreen();
   });
 
-  it("updates a preference and sends only message plus server-side targeting semantics", async () => {
+  it("updates a notification preference", async () => {
     const client = api();
     const view = await render(
       <NotificationsScreen
@@ -124,10 +124,22 @@ describe("mobile notifications experience", () => {
       "valueChange",
       false,
     );
+    await waitFor(() => expect(client.updatePreferences).toHaveBeenCalledTimes(1));
     await waitFor(() =>
       expect(view.getByText("Notification preferences saved.")).toBeOnTheScreen(),
     );
-    expect(client.updatePreferences).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends only the urgent message with server-side targeting semantics", async () => {
+    const client = api();
+    const view = await render(
+      <NotificationsScreen
+        api={client}
+        navigation={{} as never}
+        route={{ key: "notifications", name: "Notifications" }}
+      />,
+    );
+    await waitFor(() => expect(client.inbox).toHaveBeenCalledTimes(1));
 
     fireEvent.changeText(
       view.getByLabelText("Urgent alert message"),
