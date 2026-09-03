@@ -139,12 +139,15 @@ describe("mobile notifications experience", () => {
         route={{ key: "notifications", name: "Notifications" }}
       />,
     );
-    await waitFor(() => expect(client.inbox).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(view.getByText("1 current notification loaded.")).toBeOnTheScreen(),
+    );
 
     fireEvent.changeText(
       view.getByLabelText("Urgent alert message"),
       "Disabled vehicle ahead",
     );
+    await waitFor(() => expect(view.getByText("22/280")).toBeOnTheScreen());
     fireEvent.press(
       view.getByRole("button", { name: "Send RoadTalk urgent alert" }),
     );
