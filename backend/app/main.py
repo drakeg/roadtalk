@@ -24,6 +24,7 @@ from app.location.limiter import LocationLimiter
 from app.logging import configure_logging
 from app.map_web import router as map_web_router
 from app.middleware import RequestContextMiddleware
+from app.notifications.limiter import UrgentAlertLimiter
 from app.notifications_web import router as notifications_web_router
 from app.problems import install_problem_handlers
 from app.profile_web import router as profile_web_router
@@ -81,6 +82,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         receive_window_seconds=resolved.ptt_receive_grant_window_seconds,
         transmit_limit=resolved.ptt_transmit_grant_limit,
         transmit_window_seconds=resolved.ptt_transmit_grant_window_seconds,
+    )
+    app.state.urgent_alert_limiter = UrgentAlertLimiter(
+        account_limit=6,
+        device_limit=6,
+        peer_limit=20,
+        event_limit=3,
+        window_seconds=60,
     )
     app.state.media_provider = media_provider_from_settings(resolved)
     app.state.route_context_provider = build_route_context_provider(resolved)
