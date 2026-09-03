@@ -31,7 +31,7 @@ notification_files = {
         "backend/app/notifications/service.py",
         "backend/app/notifications/schemas.py",
         "backend/app/notifications/limiter.py",
-        "mobile/src/api/notifications.ts",
+        "mobile/src/notifications/api.ts",
     )
 }
 combined = "\n".join(notification_files.values())
