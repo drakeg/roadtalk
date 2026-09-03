@@ -1,5 +1,7 @@
+import time
 import uuid
 from datetime import UTC, datetime, timedelta
+from typing import cast
 
 from fastapi import APIRouter, HTTPException, Request, status
 
@@ -9,6 +11,7 @@ from app.notifications.contracts import (
     UrgentAlertCommand,
     UrgentAlertNotificationPayload,
 )
+from app.notifications.limiter import UrgentAlertLimiter, UrgentAlertRateLimitError
 from app.notifications.schemas import (
     NotificationInboxResponse,
     NotificationPreferencesResponse,
@@ -39,6 +42,33 @@ def _notification_error(exc: NotificationError) -> HTTPException:
         status_code=status_code,
         detail={"code": exc.code, "detail": exc.detail},
     )
+
+
+def _check_urgent_alert_limit(
+    request: Request,
+    current: CurrentSession,
+    *,
+    event_key: str,
+) -> None:
+    limiter = cast(UrgentAlertLimiter, request.app.state.urgent_alert_limiter)
+    peer = request.client.host if request.client is not None else "unknown"
+    try:
+        limiter.check(
+            peer=peer,
+            account_id=str(current.account.id),
+            device_id=str(current.device.id),
+            event_key=event_key,
+            now=time.monotonic(),
+        )
+    except UrgentAlertRateLimitError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "code": "URGENT_ALERT_RATE_LIMITED",
+                "detail": "Urgent alert is temporarily unavailable.",
+            },
+            headers={"Retry-After": str(exc.retry_after)},
+        ) from exc
 
 
 @router.get(
@@ -128,6 +158,7 @@ async def create_urgent_alert(
                 "detail": "A persistent registered account is required to send an urgent alert.",
             },
         )
+    _check_urgent_alert_limit(request, current, event_key=payload.idempotency_key)
     now = datetime.now(UTC)
     event = UrgentAlertNotificationPayload(
         message=payload.message,
