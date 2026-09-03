@@ -1,3 +1,4 @@
+import hashlib
 from collections import deque
 from math import ceil
 
@@ -38,11 +39,12 @@ class UrgentAlertLimiter:
         event_key: str,
         now: float,
     ) -> None:
+        event_key_hash = hashlib.sha256(event_key.encode("utf-8")).hexdigest()
         dimensions = (
             (("urgent-account", account_id), self.account_limit),
             (("urgent-device", device_id), self.device_limit),
             (("urgent-peer", peer), self.peer_limit),
-            (("urgent-event", f"{account_id}:{event_key}"), self.event_limit),
+            (("urgent-event", f"{account_id}:{event_key_hash}"), self.event_limit),
         )
         cutoff = now - self.window_seconds
         retry_after = 0
