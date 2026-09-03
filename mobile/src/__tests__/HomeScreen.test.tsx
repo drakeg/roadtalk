@@ -17,7 +17,7 @@ jest.mock("../session/SessionContext", () => ({
 }));
 
 describe("foundation screen", () => {
-  it("provides accessible map, radio, audience, identity, and diagnostics navigation", async () => {
+  it("provides accessible notifications, map, radio, audience, identity, and diagnostics navigation", async () => {
     const navigate = jest.fn();
     const view = await render(
       <HomeScreen
@@ -27,6 +27,8 @@ describe("foundation screen", () => {
     );
 
     expect(view.getByRole("header", { name: "RoadTalk" })).toBeOnTheScreen();
+    await fireEvent.press(view.getByRole("button", { name: "Open notifications" }));
+    expect(navigate).toHaveBeenCalledWith("Notifications");
     await fireEvent.press(view.getByRole("button", { name: "Open map awareness" }));
     expect(navigate).toHaveBeenCalledWith("MapAwareness");
     await fireEvent.press(
@@ -72,6 +74,7 @@ describe("foundation screen", () => {
     );
 
     expect(view.getByText(/control who you can hear/i)).toBeOnTheScreen();
+    expect(view.getByRole("button", { name: "Open notifications" })).toBeOnTheScreen();
     expect(view.getByRole("button", { name: "Open map awareness" })).toBeOnTheScreen();
     expect(
       view.getByRole("button", { name: "Choose Nearby or Same road audience mode" }),

@@ -36,6 +36,16 @@ export function HomeScreen({ navigation }: Props) {
       {authenticated ? (
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel="Open notifications"
+          onPress={() => navigation.navigate("Notifications")}
+          style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+        >
+          <Text style={styles.buttonText}>Notifications</Text>
+        </Pressable>
+      ) : null}
+      {authenticated ? (
+        <Pressable
+          accessibilityRole="button"
           accessibilityLabel="Open map awareness"
           onPress={() => navigation.navigate("MapAwareness")}
           style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
