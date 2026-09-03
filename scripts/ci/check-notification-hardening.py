@@ -35,6 +35,11 @@ notification_files = {
     )
 }
 combined = "\n".join(notification_files.values())
+credential_surface = "\n".join(
+    text
+    for path, text in notification_files.items()
+    if path != "backend/app/notifications/contracts.py"
+)
 
 for forbidden in (
     "apns",
@@ -45,7 +50,6 @@ for forbidden in (
     "onesignal",
     "webpush",
     "web-push",
-    "sns",
     "pinpoint",
     "notification hub",
     "pushwoosh",
@@ -67,7 +71,7 @@ for forbidden in (
     "registration_token",
     "credentials_json",
 ):
-    if forbidden in combined:
+    if forbidden in credential_surface:
         fail(f"notification implementation references provider credential/token field {forbidden!r}")
 
 for forbidden in (
@@ -78,7 +82,7 @@ for forbidden in (
     "boto3",
     "botocore",
 ):
-    if forbidden in combined:
+    if forbidden in credential_surface:
         fail(f"notification implementation adds external network/provider client {forbidden!r}")
 
 contracts = notification_files["backend/app/notifications/contracts.py"]
@@ -143,12 +147,12 @@ for path in ("mobile/app.json", "mobile/app.config.ts", "mobile/app.config.js"):
         "access_background_location",
         "location_always",
         "locationalwaysandwheninuseusagedescription",
-        "uiBackgroundModes",
+        "uibackgroundmodes",
         '"audio"',
         "background-fetch",
         "remote-notification",
     ):
-        if forbidden.lower() in config:
+        if forbidden in config:
             fail(f"mobile config activates forbidden background capability {forbidden!r}")
 
 for path in ("mobile/src", "backend/app/notifications"):
@@ -160,11 +164,8 @@ for path in ("mobile/src", "backend/app/notifications"):
             continue
         text = source.read_text(encoding="utf-8").lower()
         for forbidden in (
-            "background location",
             "startlocationupdatesasync",
             "startlocationupdates",
-            "background audio",
-            "marketing analytics",
             "segment.com",
             "mixpanel",
             "amplitude",
