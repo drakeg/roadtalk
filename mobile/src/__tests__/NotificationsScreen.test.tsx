@@ -124,13 +124,16 @@ describe("mobile notifications experience", () => {
       "valueChange",
       false,
     );
-    await waitFor(() => expect(client.updatePreferences).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(view.getByText("Notification preferences saved.")).toBeOnTheScreen(),
+    );
+    expect(client.updatePreferences).toHaveBeenCalledTimes(1);
 
     fireEvent.changeText(
       view.getByLabelText("Urgent alert message"),
       "Disabled vehicle ahead",
     );
-    await fireEvent.press(
+    fireEvent.press(
       view.getByRole("button", { name: "Send RoadTalk urgent alert" }),
     );
     await waitFor(() =>
@@ -150,7 +153,7 @@ describe("mobile notifications experience", () => {
     );
     await waitFor(() => expect(client.inbox).toHaveBeenCalledTimes(1));
 
-    await fireEvent.press(view.getByRole("button", { name: "Mark notification read" }));
+    fireEvent.press(view.getByRole("button", { name: "Mark notification read" }));
     await waitFor(() => expect(client.updateState).toHaveBeenCalledWith(urgent, "read"));
   });
 });
