@@ -44,17 +44,23 @@ def test_account_device_and_peer_dimensions_are_independent() -> None:
     account = limiter(account_limit=1)
     account.check(peer="peer-a", account_id="account-a", device_id="device-a", event_key="a", now=1)
     with pytest.raises(UrgentAlertRateLimitError):
-        account.check(peer="peer-b", account_id="account-a", device_id="device-b", event_key="b", now=2)
+        account.check(
+            peer="peer-b", account_id="account-a", device_id="device-b", event_key="b", now=2
+        )
 
     device = limiter(device_limit=1)
     device.check(peer="peer-a", account_id="account-a", device_id="device-a", event_key="a", now=1)
     with pytest.raises(UrgentAlertRateLimitError):
-        device.check(peer="peer-b", account_id="account-b", device_id="device-a", event_key="b", now=2)
+        device.check(
+            peer="peer-b", account_id="account-b", device_id="device-a", event_key="b", now=2
+        )
 
     peer = limiter(peer_limit=1)
     peer.check(peer="peer-a", account_id="account-a", device_id="device-a", event_key="a", now=1)
     with pytest.raises(UrgentAlertRateLimitError):
-        peer.check(peer="peer-a", account_id="account-b", device_id="device-b", event_key="b", now=2)
+        peer.check(
+            peer="peer-a", account_id="account-b", device_id="device-b", event_key="b", now=2
+        )
 
 
 def test_expired_buckets_release_capacity_and_storage_stays_bounded() -> None:
