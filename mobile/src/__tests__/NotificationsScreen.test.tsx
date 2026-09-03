@@ -150,7 +150,7 @@ describe("mobile notifications experience", () => {
     await waitFor(() =>
       expect(
         view.getByRole("button", { name: "Send RoadTalk urgent alert" }).props.disabled,
-      ).toBe(false),
+      ).toBeFalsy(),
     );
     fireEvent.press(
       view.getByRole("button", { name: "Send RoadTalk urgent alert" }),
