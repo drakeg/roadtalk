@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 import time
@@ -26,6 +27,26 @@ ALLOWED_ADVISORIES = {
 def fail(message: str) -> None:
     print(f"Mobile dependency audit: {message}", file=sys.stderr)
     raise SystemExit(1)
+
+
+def install_audit_is_clean(path: Path) -> bool:
+    if not path.is_file():
+        return False
+    output = path.read_text(encoding="utf-8", errors="replace").lower()
+    if "found 0 vulnerabilities" in output:
+        return True
+    match = re.search(r"(?:^|\n)\s*(\d+) vulnerabilities?\b", output)
+    if match:
+        print(
+            "Mobile dependency audit: npm ci reported findings; requesting detailed production audit",
+            file=sys.stderr,
+        )
+    else:
+        print(
+            "Mobile dependency audit: npm ci audit summary unavailable; requesting detailed production audit",
+            file=sys.stderr,
+        )
+    return False
 
 
 def load_audit() -> dict[str, Any]:
@@ -98,6 +119,10 @@ def main() -> None:
             "the image-size advisory exception expired on "
             f"{EXCEPTION_EXPIRES.isoformat()}"
         )
+
+    if len(sys.argv) > 1 and install_audit_is_clean(Path(sys.argv[1])):
+        print("Mobile dependency audit: passed with no vulnerabilities reported by npm ci")
+        return
 
     report = load_audit()
     vulnerabilities = report.get("vulnerabilities")
