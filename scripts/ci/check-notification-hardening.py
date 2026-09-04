@@ -22,6 +22,27 @@ def read(path: str) -> str:
     return target.read_text(encoding="utf-8").lower()
 
 
+def is_test_source(path: Path) -> bool:
+    """Return True for test-only source that may name forbidden APIs in assertions."""
+    if "__tests__" in path.parts:
+        return True
+    return any(part in {"tests", "test"} for part in path.parts) or any(
+        path.name.endswith(suffix)
+        for suffix in (
+            ".test.py",
+            ".test.ts",
+            ".test.tsx",
+            ".test.js",
+            ".test.jsx",
+            ".spec.py",
+            ".spec.ts",
+            ".spec.tsx",
+            ".spec.js",
+            ".spec.jsx",
+        )
+    )
+
+
 notification_files = {
     path: read(path)
     for path in (
@@ -179,6 +200,8 @@ for path in ("mobile/src", "backend/app/notifications"):
         continue
     for source in base.rglob("*"):
         if source.suffix.lower() not in {".py", ".ts", ".tsx", ".js", ".jsx"}:
+            continue
+        if is_test_source(source.relative_to(ROOT)):
             continue
         text = source.read_text(encoding="utf-8").lower()
         for forbidden in (
