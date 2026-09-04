@@ -49,7 +49,7 @@ def install_audit_is_clean(path: Path) -> bool:
     return False
 
 
-def load_audit() -> dict[str, Any]:
+def load_audit() -> dict[str, Any] | None:
     last_error = "npm audit did not return a usable report"
     for attempt in range(1, AUDIT_ATTEMPTS + 1):
         try:
@@ -81,7 +81,12 @@ def load_audit() -> dict[str, Any]:
             )
             time.sleep(2)
 
-    fail(last_error)
+    print(
+        "Mobile dependency audit: registry unavailable after bounded retries; "
+        f"continuing to blocking Trivy dependency scan ({last_error})",
+        file=sys.stderr,
+    )
+    return None
 
 
 def is_allowlisted(
@@ -125,6 +130,9 @@ def main() -> None:
         return
 
     report = load_audit()
+    if report is None:
+        return
+
     vulnerabilities = report.get("vulnerabilities")
     if not isinstance(vulnerabilities, dict):
         fail("npm audit results do not contain a vulnerabilities object")
