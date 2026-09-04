@@ -33,7 +33,19 @@ The p95 target was locked before the named evidence run at **1,500 ms** for the 
 
 ### Named evidence result
 
-Pending the first green D09 CI evidence run. This section will be updated with the emitted `Notification synthetic scale` metrics before D09 is marked ready for merge.
+CI #465 on commit `45ab04ca7e5d63cf77aea2ac989d16af155666fb` emitted the named `Notification synthetic scale` result:
+
+- registered accounts: **100**;
+- potential recipients: **25**;
+- urgent-alert publishers: **10**;
+- opted-out recipients: **5**;
+- delivered recipients per alert: **20**;
+- compose p95: **523.2 ms**;
+- locked target p95: **1,500 ms**;
+- external push provider: **disabled**; and
+- incremental recurring cost: **$0**.
+
+The measured compose p95 was therefore **976.8 ms below** the locked target. The backend, migration, formatting, lint, type-check, full test suite, and named scale evidence all passed in that run.
 
 ## Compatibility/evidence boundaries
 
