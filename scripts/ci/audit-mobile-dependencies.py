@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import time
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,8 @@ ROOT = Path(__file__).resolve().parents[2]
 MOBILE = ROOT / "mobile"
 BLOCKING_SEVERITIES = {"high", "critical"}
 EXCEPTION_EXPIRES = date(2026, 9, 30)
+AUDIT_ATTEMPTS = 2
+AUDIT_TIMEOUT_SECONDS = 90
 ALLOWED_ADVISORIES = {
     "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq",
     "https://github.com/advisories/GHSA-w3rx-r6r6-pgpr",
@@ -26,21 +29,38 @@ def fail(message: str) -> None:
 
 
 def load_audit() -> dict[str, Any]:
-    result = subprocess.run(
-        ["npm", "audit", "--omit=dev", "--audit-level=high", "--json"],
-        cwd=MOBILE,
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    try:
-        report = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        detail = result.stderr.strip() or "npm did not return valid JSON"
-        fail(f"could not read npm audit results: {detail}")
-    if "error" in report:
-        fail(f"npm audit failed: {report['error']}")
-    return report
+    last_error = "npm audit did not return a usable report"
+    for attempt in range(1, AUDIT_ATTEMPTS + 1):
+        try:
+            result = subprocess.run(
+                ["npm", "audit", "--omit=dev", "--audit-level=high", "--json"],
+                cwd=MOBILE,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=AUDIT_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired:
+            last_error = f"npm audit timed out after {AUDIT_TIMEOUT_SECONDS} seconds"
+        else:
+            try:
+                report = json.loads(result.stdout)
+            except json.JSONDecodeError:
+                last_error = result.stderr.strip() or "npm did not return valid JSON"
+            else:
+                error = report.get("error")
+                if error is None:
+                    return report
+                last_error = f"npm audit failed: {error}"
+
+        if attempt < AUDIT_ATTEMPTS:
+            print(
+                f"Mobile dependency audit: transient failure on attempt {attempt}; retrying",
+                file=sys.stderr,
+            )
+            time.sleep(2)
+
+    fail(last_error)
 
 
 def is_allowlisted(
