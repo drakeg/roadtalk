@@ -1,0 +1,38 @@
+services:
+  livekit:
+    command:
+      - --dev
+      - --bind
+      - 0.0.0.0
+      - --node-ip
+      - ${ROADTALK_LAN_HOST:?Set ROADTALK_LAN_HOST to this computer's private IP address}
+
+  backend:
+    environment:
+      ROADTALK_PTT_LIVEKIT_URL: wss://${ROADTALK_LAN_HOST:?Set ROADTALK_LAN_HOST to this computer's private IP address}:${ROADTALK_LAN_HTTPS_PORT:-8443}/livekit
+
+  gateway:
+    image: caddy:2.11.4-alpine
+    restart: unless-stopped
+    environment:
+      ROADTALK_LAN_HOST: ${ROADTALK_LAN_HOST:?Set ROADTALK_LAN_HOST to this computer's private IP address}
+      ROADTALK_LAN_HTTPS_PORT: ${ROADTALK_LAN_HTTPS_PORT:-8443}
+    ports:
+      - "${ROADTALK_LAN_BIND_ADDRESS:-0.0.0.0}:${ROADTALK_LAN_HTTPS_PORT:-8443}:${ROADTALK_LAN_HTTPS_PORT:-8443}"
+    volumes:
+      - ./deploy/local/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+      livekit:
+        condition: service_started
+    networks:
+      - roadtalk
+
+volumes:
+  caddy_data:
+    name: roadtalk_caddy_data
+  caddy_config:
+    name: roadtalk_caddy_config
