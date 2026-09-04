@@ -35,10 +35,14 @@ notification_files = {
     )
 }
 combined = "\n".join(notification_files.values())
+credential_guard_files = {
+    "backend/app/notifications/contracts.py",
+    "mobile/src/notifications/api.ts",
+}
 credential_surface = "\n".join(
     text
     for path, text in notification_files.items()
-    if path != "backend/app/notifications/contracts.py"
+    if path not in credential_guard_files
 )
 
 for forbidden in (
@@ -103,6 +107,20 @@ for forbidden in (
 ):
     if forbidden not in contracts:
         fail(f"notification prohibited-field contract no longer names {forbidden!r}")
+
+mobile_api = notification_files["mobile/src/notifications/api.ts"]
+for forbidden in (
+    "push_token",
+    "provider",
+    "provider_ref",
+    "provider_token",
+    "access_token",
+    "refresh_token",
+    "password",
+    "recovery_key",
+):
+    if forbidden not in mobile_api:
+        fail(f"mobile notification response guard no longer rejects {forbidden!r}")
 
 api = notification_files["backend/app/api/notifications.py"]
 for pattern in (
