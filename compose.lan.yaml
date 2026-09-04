@@ -1,18 +1,5 @@
 services:
-  database:
-    extends:
-      file: compose.yaml
-      service: database
-
-  redis:
-    extends:
-      file: compose.yaml
-      service: redis
-
   livekit:
-    extends:
-      file: compose.yaml
-      service: livekit
     command:
       - --dev
       - --bind
@@ -21,9 +8,6 @@ services:
       - ${ROADTALK_LAN_HOST:?Set ROADTALK_LAN_HOST to this computer's private IP address}
 
   backend:
-    extends:
-      file: compose.yaml
-      service: backend
     environment:
       ROADTALK_PTT_LIVEKIT_URL: wss://${ROADTALK_LAN_HOST:?Set ROADTALK_LAN_HOST to this computer's private IP address}:${ROADTALK_LAN_HTTPS_PORT:-8443}/livekit
 
@@ -48,15 +32,7 @@ services:
       - roadtalk
 
 volumes:
-  postgres_data:
-    name: roadtalk_postgres_data
-  redis_data:
-    name: roadtalk_redis_data
   caddy_data:
     name: roadtalk_caddy_data
   caddy_config:
     name: roadtalk_caddy_config
-
-networks:
-  roadtalk:
-    name: roadtalk_local
