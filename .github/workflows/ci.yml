@@ -162,10 +162,10 @@ jobs:
           if not any(
               str(port.get("target")) == "8000"
               and str(port.get("published")) == "18000"
-              and port.get("host_ip") == "127.0.0.1"
+              and port.get("host_ip") == "0.0.0.0"
               for port in ports
           ):
-              raise SystemExit("custom BACKEND_PORT did not resolve to loopback 127.0.0.1:18000 -> 8000")
+              raise SystemExit("custom BACKEND_PORT did not resolve to LAN-accessible 0.0.0.0:18000 -> 8000")
           services = config["services"]
           if "livekit" not in services:
               raise SystemExit("default Compose stack must include local LiveKit")
