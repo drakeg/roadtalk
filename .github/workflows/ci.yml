@@ -89,6 +89,9 @@ jobs:
       - name: Report Sprint 6 synthetic channel scale
         working-directory: backend
         run: pytest -q -s tests/test_channel_scale.py
+      - name: Report Sprint 9 synthetic notification scale
+        working-directory: backend
+        run: pytest -q -s tests/test_notification_scale.py
       - name: Verify downgrade and forward migration
         working-directory: backend
         run: |
@@ -230,6 +233,8 @@ jobs:
         run: python scripts/ci/check-route-context-provider.py
       - name: Check Sprint 9 notification privacy and scope
         run: python scripts/ci/check-notification-privacy.py
+      - name: Check Sprint 9 notification hardening and evidence
+        run: python scripts/ci/check-notification-hardening.py
       - name: Check Sprint 6 channel privacy and scope
         run: python scripts/ci/check-channel-privacy.py
       - name: Check Sprint 6 channel hardening and evidence

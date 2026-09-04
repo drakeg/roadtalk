@@ -38,6 +38,7 @@ def test_event_retries_are_bounded_without_exposing_recipient_state() -> None:
 
     assert str(limited.value) == "Urgent alert is temporarily unavailable."
     assert limited.value.retry_after == 58
+    assert all("event-a" not in key_value for _, key_value in value._events)
 
 
 def test_account_device_and_peer_dimensions_are_independent() -> None:

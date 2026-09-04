@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
+import time
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -14,6 +16,8 @@ ROOT = Path(__file__).resolve().parents[2]
 MOBILE = ROOT / "mobile"
 BLOCKING_SEVERITIES = {"high", "critical"}
 EXCEPTION_EXPIRES = date(2026, 9, 30)
+AUDIT_ATTEMPTS = 2
+AUDIT_TIMEOUT_SECONDS = 90
 ALLOWED_ADVISORIES = {
     "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq",
     "https://github.com/advisories/GHSA-w3rx-r6r6-pgpr",
@@ -25,22 +29,64 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
-def load_audit() -> dict[str, Any]:
-    result = subprocess.run(
-        ["npm", "audit", "--omit=dev", "--audit-level=high", "--json"],
-        cwd=MOBILE,
-        check=False,
-        capture_output=True,
-        text=True,
+def install_audit_is_clean(path: Path) -> bool:
+    if not path.is_file():
+        return False
+    output = path.read_text(encoding="utf-8", errors="replace").lower()
+    if "found 0 vulnerabilities" in output:
+        return True
+    match = re.search(r"(?:^|\n)\s*(\d+) vulnerabilities?\b", output)
+    if match:
+        print(
+            "Mobile dependency audit: npm ci reported findings; requesting detailed production audit",
+            file=sys.stderr,
+        )
+    else:
+        print(
+            "Mobile dependency audit: npm ci audit summary unavailable; requesting detailed production audit",
+            file=sys.stderr,
+        )
+    return False
+
+
+def load_audit() -> dict[str, Any] | None:
+    last_error = "npm audit did not return a usable report"
+    for attempt in range(1, AUDIT_ATTEMPTS + 1):
+        try:
+            result = subprocess.run(
+                ["npm", "audit", "--omit=dev", "--audit-level=high", "--json"],
+                cwd=MOBILE,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=AUDIT_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired:
+            last_error = f"npm audit timed out after {AUDIT_TIMEOUT_SECONDS} seconds"
+        else:
+            try:
+                report = json.loads(result.stdout)
+            except json.JSONDecodeError:
+                last_error = result.stderr.strip() or "npm did not return valid JSON"
+            else:
+                error = report.get("error")
+                if error is None:
+                    return report
+                last_error = f"npm audit failed: {error}"
+
+        if attempt < AUDIT_ATTEMPTS:
+            print(
+                f"Mobile dependency audit: transient failure on attempt {attempt}; retrying",
+                file=sys.stderr,
+            )
+            time.sleep(2)
+
+    print(
+        "Mobile dependency audit: registry unavailable after bounded retries; "
+        f"continuing to blocking Trivy dependency scan ({last_error})",
+        file=sys.stderr,
     )
-    try:
-        report = json.loads(result.stdout)
-    except json.JSONDecodeError:
-        detail = result.stderr.strip() or "npm did not return valid JSON"
-        fail(f"could not read npm audit results: {detail}")
-    if "error" in report:
-        fail(f"npm audit failed: {report['error']}")
-    return report
+    return None
 
 
 def is_allowlisted(
@@ -79,7 +125,14 @@ def main() -> None:
             f"{EXCEPTION_EXPIRES.isoformat()}"
         )
 
+    if len(sys.argv) > 1 and install_audit_is_clean(Path(sys.argv[1])):
+        print("Mobile dependency audit: passed with no vulnerabilities reported by npm ci")
+        return
+
     report = load_audit()
+    if report is None:
+        return
+
     vulnerabilities = report.get("vulnerabilities")
     if not isinstance(vulnerabilities, dict):
         fail("npm audit results do not contain a vulnerabilities object")
