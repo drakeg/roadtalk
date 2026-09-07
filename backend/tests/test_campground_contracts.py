@@ -44,7 +44,9 @@ def test_public_campground_contract_is_closed_and_source_is_deterministic() -> N
 def test_public_contract_rejects_sensitive_presence_and_authorization_fields() -> None:
     for forbidden in sorted(PROHIBITED_CAMPGROUND_FIELDS):
         with pytest.raises(ValidationError):
-            CampgroundPublicRecord.model_validate({**valid_record(), forbidden: "attacker-controlled"})
+            CampgroundPublicRecord.model_validate(
+                {**valid_record(), forbidden: "attacker-controlled"}
+            )
 
 
 def test_search_contract_is_bounded_and_has_no_location_or_provider_overrides() -> None:
