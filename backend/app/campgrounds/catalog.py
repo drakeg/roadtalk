@@ -3,13 +3,8 @@ from collections.abc import Iterable
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session
 
-from app.campgrounds.contracts import (
-    CampgroundAmenitySummary,
-    CampgroundPublicRecord,
-    CampgroundSearchQuery,
-)
+from app.campgrounds.contracts import CampgroundAmenitySummary, CampgroundPublicRecord, CampgroundSearchQuery
 from app.campgrounds.models import Campground
-
 
 DETERMINISTIC_CAMPGROUNDS: tuple[CampgroundPublicRecord, ...] = (
     CampgroundPublicRecord(
