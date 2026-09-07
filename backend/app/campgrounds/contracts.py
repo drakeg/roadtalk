@@ -100,16 +100,19 @@ class CampgroundSearchQuery(ClosedModel):
     query: str | None = Field(default=None, min_length=1, max_length=96)
     category: CampgroundCategory | None = None
     region: str | None = Field(default=None, min_length=1, max_length=64)
-    amenity: Literal[
-        "electric",
-        "water",
-        "sewer",
-        "dump_station",
-        "wifi",
-        "showers",
-        "laundry",
-        "pet_friendly",
-    ] | None = None
+    amenity: (
+        Literal[
+            "electric",
+            "water",
+            "sewer",
+            "dump_station",
+            "wifi",
+            "showers",
+            "laundry",
+            "pet_friendly",
+        ]
+        | None
+    ) = None
     limit: int = Field(default=25, ge=1, le=100)
 
 
