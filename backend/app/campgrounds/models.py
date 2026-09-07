@@ -12,7 +12,10 @@ class Campground(TimestampMixin, Base):
             "'county_municipal', 'other')",
             name="ck_campground_category_allowed",
         ),
-        CheckConstraint("country_code ~ '^[A-Z]{2}$'", name="ck_campground_country_code"),
+        CheckConstraint(
+            "length(country_code) = 2 AND upper(country_code) = country_code",
+            name="ck_campground_country_code",
+        ),
         CheckConstraint("latitude >= -90 AND latitude <= 90", name="ck_campground_latitude"),
         CheckConstraint("longitude >= -180 AND longitude <= 180", name="ck_campground_longitude"),
         CheckConstraint("source = 'deterministic_local'", name="ck_campground_source"),
