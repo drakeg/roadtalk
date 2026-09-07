@@ -43,7 +43,10 @@ def upgrade() -> None:
             "'county_municipal', 'other')",
             name="ck_campground_category_allowed",
         ),
-        sa.CheckConstraint("country_code ~ '^[A-Z]{2}$'", name="ck_campground_country_code"),
+        sa.CheckConstraint(
+            "length(country_code) = 2 AND upper(country_code) = country_code",
+            name="ck_campground_country_code",
+        ),
         sa.CheckConstraint("latitude >= -90 AND latitude <= 90", name="ck_campground_latitude"),
         sa.CheckConstraint("longitude >= -180 AND longitude <= 180", name="ck_campground_longitude"),
         sa.CheckConstraint("source = 'deterministic_local'", name="ck_campground_source"),
