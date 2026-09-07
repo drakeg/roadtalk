@@ -118,8 +118,7 @@ def _search_statement(query: CampgroundSearchQuery) -> Select[tuple[Campground]]
     if query.query:
         term = f"%{query.query.lower()}%"
         statement = statement.where(
-            func.lower(Campground.name).like(term)
-            | func.lower(Campground.locality).like(term)
+            func.lower(Campground.name).like(term) | func.lower(Campground.locality).like(term)
         )
     if query.category:
         statement = statement.where(Campground.category == query.category)
@@ -130,8 +129,6 @@ def _search_statement(query: CampgroundSearchQuery) -> Select[tuple[Campground]]
     return statement.order_by(Campground.name, Campground.campground_id).limit(query.limit)
 
 
-def search_catalog(
-    session: Session, query: CampgroundSearchQuery
-) -> list[CampgroundPublicRecord]:
+def search_catalog(session: Session, query: CampgroundSearchQuery) -> list[CampgroundPublicRecord]:
     rows = session.scalars(_search_statement(query)).all()
     return [_record_from_model(row) for row in rows]
