@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit mobile production dependencies with a narrow, expiring exception."""
+"""Audit mobile production dependencies with narrow, expiring exceptions."""
 
 from __future__ import annotations
 
@@ -16,11 +16,15 @@ ROOT = Path(__file__).resolve().parents[2]
 MOBILE = ROOT / "mobile"
 BLOCKING_SEVERITIES = {"high", "critical"}
 EXCEPTION_EXPIRES = date(2026, 9, 30)
+DEV_TOOLING_EXCEPTION_EXPIRES = date(2026, 9, 17)
 AUDIT_ATTEMPTS = 2
 AUDIT_TIMEOUT_SECONDS = 90
 ALLOWED_ADVISORIES = {
     "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq",
     "https://github.com/advisories/GHSA-w3rx-r6r6-pgpr",
+}
+DEV_TOOLING_ALLOWED_ADVISORIES = {
+    "https://github.com/advisories/GHSA-2883-xcg3-v3hh",
 }
 
 
@@ -89,10 +93,7 @@ def load_audit() -> dict[str, Any] | None:
     return None
 
 
-def is_allowlisted(
-    package: str,
-    vulnerabilities: dict[str, Any],
-) -> bool:
+def advisory_urls(package: str, vulnerabilities: dict[str, Any]) -> set[str] | None:
     pending = [package]
     visited: set[str] = set()
     advisories: set[str] = set()
@@ -104,7 +105,7 @@ def is_allowlisted(
         visited.add(current)
         finding = vulnerabilities.get(current)
         if not isinstance(finding, dict):
-            return False
+            return None
 
         for cause in finding.get("via", []):
             if isinstance(cause, str):
@@ -112,17 +113,41 @@ def is_allowlisted(
             elif isinstance(cause, dict) and cause.get("severity") in BLOCKING_SEVERITIES:
                 url = cause.get("url")
                 if not isinstance(url, str):
-                    return False
+                    return None
                 advisories.add(url)
 
+    return advisories
+
+
+def is_allowlisted(
+    package: str,
+    vulnerabilities: dict[str, Any],
+) -> bool:
+    advisories = advisory_urls(package, vulnerabilities)
     return bool(advisories) and advisories <= ALLOWED_ADVISORIES
 
 
+def is_dev_tooling_allowlisted(
+    package: str,
+    vulnerabilities: dict[str, Any],
+) -> bool:
+    if package != "js-yaml":
+        return False
+    advisories = advisory_urls(package, vulnerabilities)
+    return bool(advisories) and advisories <= DEV_TOOLING_ALLOWED_ADVISORIES
+
+
 def main() -> None:
-    if date.today() > EXCEPTION_EXPIRES:
+    today = date.today()
+    if today > EXCEPTION_EXPIRES:
         fail(
             "the image-size advisory exception expired on "
             f"{EXCEPTION_EXPIRES.isoformat()}"
+        )
+    if today > DEV_TOOLING_EXCEPTION_EXPIRES:
+        fail(
+            "the js-yaml development-tooling advisory exception expired on "
+            f"{DEV_TOOLING_EXCEPTION_EXPIRES.isoformat()}"
         )
 
     if len(sys.argv) > 1 and install_audit_is_clean(Path(sys.argv[1])):
@@ -143,6 +168,7 @@ def main() -> None:
         if isinstance(finding, dict)
         and finding.get("severity") in BLOCKING_SEVERITIES
         and not is_allowlisted(package, vulnerabilities)
+        and not is_dev_tooling_allowlisted(package, vulnerabilities)
     )
     if blocking:
         fail("unapproved high/critical findings: " + ", ".join(blocking))
@@ -152,13 +178,15 @@ def main() -> None:
         for package, finding in vulnerabilities.items()
         if isinstance(finding, dict)
         and finding.get("severity") in BLOCKING_SEVERITIES
-        and is_allowlisted(package, vulnerabilities)
+        and (
+            is_allowlisted(package, vulnerabilities)
+            or is_dev_tooling_allowlisted(package, vulnerabilities)
+        )
     )
     if excepted:
         print(
-            "Mobile dependency audit: passed with the approved image-size "
-            f"exception through {EXCEPTION_EXPIRES.isoformat()} "
-            f"({', '.join(excepted)})"
+            "Mobile dependency audit: passed with approved, expiring advisory "
+            f"exceptions ({', '.join(excepted)})"
         )
     else:
         print("Mobile dependency audit: passed with no high/critical findings")

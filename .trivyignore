@@ -1,0 +1,4 @@
+# Temporary exception for CVE-2026-84375 / GHSA-2883-xcg3-v3hh.
+# The affected js-yaml 3.15.1 entry is devOptional tooling, not RoadTalk runtime code.
+# scripts/ci/audit-mobile-dependencies.py hard-fails this exception after 2026-09-17.
+CVE-2026-84375
