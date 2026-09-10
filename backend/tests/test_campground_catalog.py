@@ -1,10 +1,16 @@
-from sqlalchemy import create_engine
+from typing import cast
+
+from sqlalchemy import Table, create_engine
 from sqlalchemy.orm import Session
 
 from app.campgrounds.catalog import search_catalog, seed_deterministic_catalog
 from app.campgrounds.contracts import CampgroundSearchQuery
 from app.campgrounds.models import Campground
 from app.db.base import Base
+
+
+def _campground_table() -> Table:
+    return cast(Table, Campground.__table__)
 
 
 def test_campground_model_contains_no_account_presence_or_provider_fields() -> None:
@@ -28,7 +34,7 @@ def test_campground_model_contains_no_account_presence_or_provider_fields() -> N
 
 def test_catalog_seed_is_deterministic_and_idempotent() -> None:
     engine = create_engine("sqlite+pysqlite:///:memory:")
-    Campground.__table__.create(engine)
+    _campground_table().create(engine)
 
     with Session(engine) as session:
         assert seed_deterministic_catalog(session) == 2
@@ -43,7 +49,7 @@ def test_catalog_seed_is_deterministic_and_idempotent() -> None:
 
 def test_catalog_search_is_bounded_and_filters_metadata_only() -> None:
     engine = create_engine("sqlite+pysqlite:///:memory:")
-    Campground.__table__.create(engine)
+    _campground_table().create(engine)
 
     with Session(engine) as session:
         seed_deterministic_catalog(session)
