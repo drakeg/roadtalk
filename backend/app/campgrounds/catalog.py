@@ -77,7 +77,7 @@ def _record_from_model(row: Campground) -> CampgroundPublicRecord:
     return CampgroundPublicRecord(
         campground_id=row.campground_id,
         name=row.name,
-        category=row.category,  # type: ignore[arg-type]
+        category=row.category,
         locality=row.locality,
         region=row.region,
         country_code=row.country_code,
