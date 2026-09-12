@@ -3,9 +3,10 @@ from datetime import UTC, datetime, timedelta
 from app.campgrounds.catalog import _model_from_record
 from app.campgrounds.context import AuthorizedCurrentPoint, match_current_campground
 from app.campgrounds.contracts import CampgroundAmenitySummary, CampgroundPublicRecord
+from app.campgrounds.models import Campground
 
 
-def _campground(*, campground_id: str, latitude: float, longitude: float):
+def _campground(*, campground_id: str, latitude: float, longitude: float) -> Campground:
     return _model_from_record(
         CampgroundPublicRecord(
             campground_id=campground_id,
