@@ -1,6 +1,3 @@
-from app.campgrounds.contracts import PROHIBITED_CAMPGROUND_FIELDS
-
-
 FORBIDDEN_PROVIDER_TERMS = {
     "google_maps_api_key",
     "mapbox_access_token",
@@ -20,6 +17,8 @@ FORBIDDEN_PRIVACY_FIELDS = {
 
 
 def test_d09_prohibited_contract_fields_cover_privacy_evidence_boundary() -> None:
+    from app.campgrounds.contracts import PROHIBITED_CAMPGROUND_FIELDS
+
     assert FORBIDDEN_PRIVACY_FIELDS <= PROHIBITED_CAMPGROUND_FIELDS
 
 
