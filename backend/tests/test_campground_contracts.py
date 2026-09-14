@@ -1,10 +1,15 @@
+import inspect
+
 import pytest
 from pydantic import ValidationError
 
+from app.api.campgrounds import read_current_campground_context
+from app.campgrounds.context import AuthorizedCurrentPoint
 from app.campgrounds.contracts import (
     PROHIBITED_CAMPGROUND_FIELDS,
     CampgroundAmenitySummary,
     CampgroundCommunicationContext,
+    CampgroundContextLabel,
     CampgroundPublicRecord,
     CampgroundSearchQuery,
 )
@@ -105,3 +110,23 @@ def test_campground_contract_does_not_expose_campsite_or_occupancy_semantics() -
         "departure_at",
         "visit_history",
     }.intersection(public_fields)
+
+
+def test_current_context_http_contract_has_no_client_selector() -> None:
+    assert set(inspect.signature(read_current_campground_context).parameters) == {
+        "request",
+        "db",
+        "current",
+    }
+
+
+def test_current_point_remains_ephemeral_and_not_replayable_context() -> None:
+    assert set(AuthorizedCurrentPoint.__dataclass_fields__) == {
+        "latitude",
+        "longitude",
+        "expires_at",
+    }
+
+
+def test_context_label_has_no_membership_history_or_version_fields() -> None:
+    assert set(CampgroundContextLabel.model_fields) == {"campground_id", "name", "state"}
