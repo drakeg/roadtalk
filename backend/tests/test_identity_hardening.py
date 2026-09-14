@@ -33,6 +33,8 @@ def test_openapi_exposes_only_approved_contracts() -> None:
         "/api/v1/auth/session",
         "/api/v1/avatars",
         "/api/v1/callsigns/availability",
+        "/api/v1/campgrounds/catalog",
+        "/api/v1/campgrounds/context",
         "/api/v1/channels",
         "/api/v1/channels/private",
         "/api/v1/channels/private/join",

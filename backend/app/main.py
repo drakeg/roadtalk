@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api.auth import router as auth_router
+from app.api.campgrounds import router as campgrounds_router
 from app.api.channels import router as channels_router
 from app.api.identity import router as identity_router
 from app.api.location import nearby_router
@@ -15,6 +16,7 @@ from app.api.recovery import router as recovery_router
 from app.api.route_mode import router as route_mode_router
 from app.api.system import router as system_router
 from app.browser_hardening import router as browser_hardening_router
+from app.campgrounds_web import router as campgrounds_web_router
 from app.channels.limiter import ChannelInviteLimiter
 from app.config import Settings, get_settings
 from app.db.session import check_database, dispose_database
@@ -102,6 +104,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(radio_router)
     app.include_router(route_mode_web_router)
     app.include_router(map_web_router)
+    app.include_router(campgrounds_web_router)
     app.include_router(profile_web_router)
     app.include_router(web_router)
     app.include_router(system_router)
@@ -114,6 +117,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(nearby_router)
     app.include_router(notifications_router)
     app.include_router(presence_router)
+    app.include_router(campgrounds_router)
     app.include_router(ptt_router)
     return app
 
