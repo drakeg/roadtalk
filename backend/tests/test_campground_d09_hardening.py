@@ -38,10 +38,7 @@ def test_d09_runtime_has_no_external_campground_provider_credentials() -> None:
 
 def test_d09_locked_targets_exist_before_named_run() -> None:
     targets = (
-        Path(__file__).parents[2]
-        / "docs"
-        / "evidence"
-        / "sprint-10-d09-targets.md"
+        Path(__file__).parents[2] / "docs" / "evidence" / "sprint-10-d09-targets.md"
     ).read_text(encoding="utf-8")
     assert "100 accounts" in targets
     assert "25 accounts with valid current campground context" in targets
