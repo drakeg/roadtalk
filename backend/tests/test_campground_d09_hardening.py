@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from app.campgrounds.contracts import PROHIBITED_CAMPGROUND_FIELDS
 
 
@@ -26,6 +24,8 @@ def test_d09_prohibited_contract_fields_cover_privacy_evidence_boundary() -> Non
 
 
 def test_d09_runtime_has_no_external_campground_provider_credentials() -> None:
+    from pathlib import Path
+
     app_root = Path(__file__).parents[1] / "app"
     runtime = "\n".join(
         path.read_text(encoding="utf-8").lower()
@@ -37,6 +37,8 @@ def test_d09_runtime_has_no_external_campground_provider_credentials() -> None:
 
 
 def test_d09_locked_targets_exist_before_named_run() -> None:
+    from pathlib import Path
+
     targets = (
         Path(__file__).parents[2] / "docs" / "evidence" / "sprint-10-d09-targets.md"
     ).read_text(encoding="utf-8")
