@@ -1,6 +1,7 @@
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
+import { CampgroundsScreen } from "./screens/CampgroundsScreen";
 import { DiagnosticsScreen } from "./screens/DiagnosticsScreen";
 import { ChannelScreen } from "./screens/ChannelScreen";
 import { HomeScreen } from "./screens/HomeScreen";
@@ -15,6 +16,7 @@ import { colors } from "./theme";
 
 export type RootStackParamList = {
   Foundation: undefined;
+  Campgrounds: undefined;
   Channels: undefined;
   Diagnostics: undefined;
   Identity: undefined;
@@ -49,56 +51,17 @@ export function AppNavigator() {
           headerTitleStyle: { fontWeight: "600" },
         }}
       >
-        <Stack.Screen
-          component={ChannelScreen}
-          name="Channels"
-          options={{ title: "Channels" }}
-        />
-        <Stack.Screen
-          component={RouteModeScreen}
-          name="RouteMode"
-          options={{ title: "Audience mode" }}
-        />
-        <Stack.Screen
-          component={MapAwarenessScreen}
-          name="MapAwareness"
-          options={{ title: "Map awareness" }}
-        />
-        <Stack.Screen
-          component={LocationPermissionScreen}
-          name="LocationPermission"
-          options={{ title: "Location privacy" }}
-        />
-        <Stack.Screen
-          component={MicrophonePermissionScreen}
-          name="MicrophonePermission"
-          options={{ title: "Microphone and live audio" }}
-        />
-        <Stack.Screen
-          component={NotificationsScreen}
-          name="Notifications"
-          options={{ title: "Notifications" }}
-        />
-        <Stack.Screen
-          component={HomeScreen}
-          name="Foundation"
-          options={{ title: "RoadTalk" }}
-        />
-        <Stack.Screen
-          component={IdentityScreen}
-          name="Identity"
-          options={{ title: "Identity" }}
-        />
-        <Stack.Screen
-          component={RecoveryScreen}
-          name="Recovery"
-          options={{ title: "Account recovery" }}
-        />
-        <Stack.Screen
-          component={DiagnosticsScreen}
-          name="Diagnostics"
-          options={{ title: "Diagnostics" }}
-        />
+        <Stack.Screen component={CampgroundsScreen} name="Campgrounds" options={{ title: "Campgrounds" }} />
+        <Stack.Screen component={ChannelScreen} name="Channels" options={{ title: "Channels" }} />
+        <Stack.Screen component={RouteModeScreen} name="RouteMode" options={{ title: "Audience mode" }} />
+        <Stack.Screen component={MapAwarenessScreen} name="MapAwareness" options={{ title: "Map awareness" }} />
+        <Stack.Screen component={LocationPermissionScreen} name="LocationPermission" options={{ title: "Location privacy" }} />
+        <Stack.Screen component={MicrophonePermissionScreen} name="MicrophonePermission" options={{ title: "Microphone and live audio" }} />
+        <Stack.Screen component={NotificationsScreen} name="Notifications" options={{ title: "Notifications" }} />
+        <Stack.Screen component={HomeScreen} name="Foundation" options={{ title: "RoadTalk" }} />
+        <Stack.Screen component={IdentityScreen} name="Identity" options={{ title: "Identity" }} />
+        <Stack.Screen component={RecoveryScreen} name="Recovery" options={{ title: "Account recovery" }} />
+        <Stack.Screen component={DiagnosticsScreen} name="Diagnostics" options={{ title: "Diagnostics" }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
