@@ -8,24 +8,26 @@ Sprint 0 — Planning & Architecture, Sprint 1 — Project Foundation, Sprint 2 
 Identity, and Sprint 3 — Location are complete. Sprint 1 is conditionally accepted
 with named exceptions that must close before the first field test.
 
-Sprint 4 — Push-to-Talk and Sprint 5 — Proximity Engine are complete and accepted.
-Sprint 6 — Channels is complete and accepted by merged review PR #149. Sprint 7 —
-Route Awareness is approved for locked local/CI implementation in tracker #173. The
-approved scope keeps Nearby as the default, makes Same road an explicit
-restrictive mode, and excludes destinations, navigation, maps, external routing calls,
-datasets, AWS/LiveKit Cloud activation, paid plans, recurring spend, production/public
-beta, and field-test claims.
+Sprints 4–10 are complete and accepted: Push-to-Talk, Proximity Engine, Channels,
+Route Awareness, Map & Presence, Notifications, and Campgrounds. Sprint 10 acceptance
+is recorded by merged PR #267. Sprint 11 implementation is not authorized without a
+separate planning/readiness decision.
+
+All accepted work remains within the local/GitHub-CI boundary. External data and
+notification providers, AWS and LiveKit Cloud activation, production/public beta,
+background location/audio, payment methods, and recurring spend remain unauthorized
+unless a later written decision explicitly approves them.
 
 ## Repository layout
 
 | Path | Purpose | Current boundary |
 |---|---|---|
-| `mobile/` | React Native, Expo development-build, and TypeScript mobile application | Sprint 6 channel catalog, switching, and private-channel management are implemented synthetically; physical-device/live evidence remains pending |
-| `backend/` | FastAPI modular-monolith API, migrations, and backend tests | Sprint 6 channel, membership, invite, selection, proximity/media authorization, and reconciliation are implemented; no live adapter is active |
-| `infrastructure/` | Terraform bootstrap, environment roots, and reusable modules | Remains disabled by default; Sprint 6 adds no AWS resource |
-| `scripts/` | Cross-project developer and operational helper scripts | Sprint 6 privacy, hardening, and final-review gates are enforced |
-| `docs/` | Architecture, sprint records, ADRs, security, privacy, design, evidence, and runbooks | Sprint 7 route-awareness specification/readiness is approved; tracker #173 locks implementation |
-| `.github/` | Pull-request, issue, CI, quality, and security workflows | Existing gates plus the approved Sprint 7 planning boundary are enforced |
+| `mobile/` | React Native, Expo development-build, and TypeScript mobile application | Accepted channel, route, map/presence, notification, and deterministic campground experiences; named physical-device/provider evidence remains pending |
+| `backend/` | FastAPI modular-monolith API, migrations, and backend tests | Accepted identity through campground contracts and composition; external notification/campground providers remain disabled |
+| `infrastructure/` | Terraform bootstrap, environment roots, and reusable modules | Disabled by default; no Sprint 7–10 AWS resource or recurring spend |
+| `scripts/` | Cross-project developer and operational helper scripts | Privacy, hardening, scale, provider, and review gates through Sprint 10 |
+| `docs/` | Architecture, sprint records, ADRs, security, privacy, design, evidence, and runbooks | Accepted sprint evidence through Sprint 10 and explicit named limitations |
+| `.github/` | Pull-request, issue, CI, quality, and security workflows | Main CI plus route-awareness, map/presence, and notification boundary workflows |
 
 ## Start here
 
@@ -49,10 +51,10 @@ S04-D08 operations preserve lower controlled-test stops of 3,000 participant-min
 cost. Crossing any stop pauses testing; budgets, CI checks, and provider quotas never
 authorize automatic upgrade or continued spend.
 
-Sprint 4 is accepted by merged PR #108 and Sprint 5 by merged PR #127. Sprint 6 was
-approved for implementation on 2026-08-14 through issue #129; D01–D08 are merged and
-D09 is the acceptance review. Field testing, cloud/provider activation, and spend
-remain blocked unless separately approved.
+Sprint 4 is accepted by merged PR #108, Sprint 5 by PR #127, Sprint 6 by PR #149,
+Sprint 7 by PR #185, Sprint 8 by PR #219, Sprint 9 by PR #244, and Sprint 10 by
+PR #267. Field testing, cloud/provider activation, and spend remain blocked unless
+separately approved.
 
 ## Source of truth
 

@@ -7,15 +7,45 @@
 - [Original RoadTalk Development Plan](reference/RoadTalk_Development_Plan.docx)
 - [Agile Workflow](AGILE_WORKFLOW.md)
 
-## Sprint 7 — Route Awareness (approved; locked local/CI implementation)
+## Sprint 10 — Campgrounds (complete and accepted)
 
-- [Sprint 7: Route Awareness](sprints/sprint-7-route-awareness.md) — APPROVED
-- [Sprint 7 readiness](sprints/sprint-7-readiness.md) — READY TO CODE WITHIN LOCKED BOUNDARY
+- [Sprint 10: Campgrounds](sprints/sprint-10-campgrounds.md)
+- [Sprint 10 readiness](sprints/sprint-10-readiness.md)
+- [Sprint 10 final evidence and review](evidence/sprint-10-d10-final-review.md)
+- Accepted by merged PR #267; deterministic local/CI catalog only
+- External campground/place/reservation providers, live-data claims, booking,
+  campsite-level presence, occupancy/member enumeration, and recurring spend remain
+  unauthorized
+
+## Sprint 9 — Notifications (complete and accepted)
+
+- [Sprint 9: Notifications](sprints/sprint-9-notifications.md)
+- [Sprint 9 readiness](sprints/sprint-9-readiness.md)
+- [Sprint 9 final evidence and review](evidence/sprint-9-d10-final-review.md)
+- Accepted by merged PR #244; in-app deterministic/disabled provider boundary only
+- External notification providers, guaranteed/emergency delivery claims, background
+  location/audio, and recurring spend remain unauthorized
+
+## Sprint 8 — Map & Presence (complete and accepted)
+
+- [Sprint 8: Map Experience](sprints/sprint-8-map-experience.md)
+- [Sprint 8 readiness](sprints/sprint-8-readiness.md)
+- [Sprint 8 traceability](sprints/sprint-8-traceability.md)
+- [Sprint 8 review](sprints/sprint-8-review.md)
+- Accepted by merged PR #219; provider behavior remains deterministic and local/CI
+
+## Sprint 7 — Route Awareness (complete and accepted)
+
+- [Sprint 7: Route Awareness](sprints/sprint-7-route-awareness.md)
+- [Sprint 7 readiness](sprints/sprint-7-readiness.md)
+- [Sprint 7 traceability](sprints/sprint-7-traceability.md)
+- [Sprint 7 review](sprints/sprint-7-review.md)
+- [Sprint 7 evidence index](evidence/sprint-7/README.md)
 - [Route-context provider boundary](reference/route-context-provider.md) — S07-D03 internal provider contract
-- Nearby remains default; Same road is an explicit restrictive mode
-- No destination, navigation, route history, map, provider activation, dataset download,
-  cloud resource, external routing call, or recurring spend is approved
-- S07-D02 is complete in PR #175; implementation continues in locked tracker #173 order
+- Accepted by merged PR #185; Nearby remains the default and Same road remains an
+  explicit restrictive mode
+- No destination/navigation history, external routing provider activation, cloud
+  resource, or recurring spend was authorized
 
 ## Sprint 6 — Channels (complete and accepted)
 
