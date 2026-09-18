@@ -2,20 +2,24 @@
 
 ## Active scope
 
-Sprint 1 — Project Foundation is active. The approved specification is `docs/sprints/sprint-1-project-foundation.md`.
+RoadTalk has accepted Sprints 0–10. The current repository `main` branch is the source of truth for accepted behavior.
 
-Do not implement profile/callsign, continuous location, PTT, proximity, channels, maps, notifications, or any later-sprint behavior.
+Sprint 11 implementation is not authorized merely because Sprint 10 is complete. A new sprint begins only after its specification/readiness gate is approved. Corrective or backlog work outside a new sprint must be tied to an existing approved issue or an explicit planning decision and must preserve accepted sprint privacy, authorization, provider, compatibility, and cost boundaries.
 
 ## Required workflow
 
-1. Select an open Sprint 1 issue from tracker #33.
-2. Confirm dependencies and acceptance tests.
-3. Branch from current `main` using `sprint/1-<description>`.
-4. Keep the change limited to one coherent deliverable or reviewable dependency slice.
-5. Run every check documented by the component.
-6. Open a pull request that links the issue, requirements, tests, and evidence.
-7. Merge only after required checks and review pass.
-8. Update tracker/evidence; do not close dependent work prematurely.
+1. Start from current `main`.
+2. Select an approved sprint/tracker issue or separately approved corrective/backlog issue.
+3. Confirm dependencies, acceptance criteria, privacy/security boundaries, and cost/provider constraints.
+4. Create a focused branch.
+5. Keep the change limited to one coherent deliverable or reviewable dependency slice.
+6. Update implementation, automated tests, and affected documentation together.
+7. Run every check documented by the affected component plus relevant regression/privacy/security gates.
+8. Open a pull request that links the issue, requirements, tests, documentation, and evidence.
+9. Merge only after required checks and review pass.
+10. Update tracker/evidence records when applicable; do not close dependent work prematurely.
+
+Do not begin a later sprint from roadmap position alone. The sprint-specific planning/readiness record controls authorization.
 
 ## Local dependencies
 
@@ -53,16 +57,19 @@ optional for that command.
 
 ## Repository quality
 
-All text uses UTF-8 and LF line endings. Formatters and linters introduced by later Sprint 1 deliverables must respect `.editorconfig`.
+All text uses UTF-8 and LF line endings. Formatters and linters must respect `.editorconfig`.
 
 Generated dependencies, build output, local runtime data, reports, populated environment files, and Terraform state are excluded by `.gitignore`.
 
+For every behavioral change, review the affected API/browser/mobile/operator documentation and regression tests. Update them in the same pull request whenever behavior, routes, contracts, configuration, operational steps, or acceptance evidence changed.
+
 ## Definition of done for a change
 
-- linked Sprint 1 requirement and deliverable
+- linked approved sprint/tracker requirement or corrective/backlog issue
 - scoped implementation
-- acceptance and regression tests
-- documentation updated
-- security/privacy impact reviewed
-- no later-sprint feature leakage
+- acceptance and regression tests updated and passing
+- affected documentation updated and checked for stale references
+- security/privacy/provider/cost impact reviewed
+- no unauthorized later-sprint feature leakage
+- tracker/evidence updated when applicable
 - pull request approved and merged
