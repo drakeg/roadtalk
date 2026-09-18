@@ -3,9 +3,9 @@ from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func, or_, select, update
-from sqlalchemy.sql.elements import ColumnElement
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.auth.service import AuthenticatedSession
 from app.db.models import Account, AdminAuditEvent, Device, Profile, Session
