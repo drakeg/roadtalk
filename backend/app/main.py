@@ -19,6 +19,7 @@ from app.browser_hardening import router as browser_hardening_router
 from app.campgrounds_web import router as campgrounds_web_router
 from app.channels.limiter import ChannelInviteLimiter
 from app.config import Settings, get_settings
+from app.dashboard_web import router as dashboard_web_router
 from app.db.session import check_database, dispose_database
 from app.health import ReadinessRegistry
 from app.identity.callsigns import CallsignAvailabilityLimiter
@@ -36,7 +37,6 @@ from app.radio import router as radio_router
 from app.recovery.limiter import RecoveryLimiter
 from app.route_context.provider import build_route_context_provider
 from app.route_mode_web import router as route_mode_web_router
-from app.web import router as web_router
 from app.web_radio_landing import router as web_radio_landing_router
 
 
@@ -98,6 +98,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.readiness.register("database", check_database)
     app.add_middleware(RequestContextMiddleware, settings=resolved)
     install_problem_handlers(app)
+    app.include_router(dashboard_web_router)
     app.include_router(web_radio_landing_router)
     app.include_router(browser_hardening_router)
     app.include_router(notifications_web_router)
@@ -106,7 +107,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(map_web_router)
     app.include_router(campgrounds_web_router)
     app.include_router(profile_web_router)
-    app.include_router(web_router)
     app.include_router(system_router)
     app.include_router(auth_router)
     app.include_router(identity_router)

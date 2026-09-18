@@ -20,7 +20,7 @@ def client() -> TestClient:
 
 def test_desktop_web_radio_explains_product_before_console() -> None:
     with client() as test_client:
-        response = test_client.get("/")
+        response = test_client.get("/radio")
 
     assert response.status_code == 200
     html = response.text
@@ -37,7 +37,7 @@ def test_desktop_web_radio_explains_product_before_console() -> None:
 
 def test_desktop_welcome_preserves_mobile_radio_priority() -> None:
     with client() as test_client:
-        response = test_client.get("/")
+        response = test_client.get("/radio")
 
     assert response.status_code == 200
     html = response.text
@@ -49,7 +49,7 @@ def test_desktop_welcome_preserves_mobile_radio_priority() -> None:
 
 def test_desktop_landing_preserves_browser_hardening() -> None:
     with client() as test_client:
-        response = test_client.get("/")
+        response = test_client.get("/radio")
 
     assert response.status_code == 200
     html = response.text

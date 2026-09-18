@@ -94,7 +94,7 @@ _RADIO_HARDENING = r"""
 _ACCOUNT_PAGE = r"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RoadTalk | Account</title>
 <style>:root{color-scheme:dark;--bg:#07141b;--panel:#10232e;--text:#f2f7f9;--muted:#8fa7b2;--accent:#f2b84b;--green:#70da96;--red:#ff7979;--line:rgba(255,255,255,.1)}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}.wrap{width:min(780px,calc(100% - 28px));margin:auto}header{border-bottom:1px solid var(--line);padding:18px 0}.nav{display:flex;justify-content:space-between;align-items:center;gap:12px}.links{display:flex;gap:8px;flex-wrap:wrap}a,button,input{font:inherit}a,button{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:rgba(255,255,255,.04);color:var(--text);text-decoration:none;cursor:pointer}button.primary{background:var(--accent);color:#172028;font-weight:900;border:0}main{padding:36px 0}.card{border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:22px;margin-bottom:16px}h1{margin-top:0}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{display:grid;gap:6px;color:var(--muted)}input{width:100%;background:#081820;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.good{color:var(--green)}.bad{color:var(--red)}@media(max-width:620px){.grid{grid-template-columns:1fr}}</style></head>
-<body><header><div class="wrap nav"><strong>RoadTalk Account</strong><div class="links"><a href="/">Web Radio</a><a href="/notifications">Notifications</a><a href="/map">Map</a><a href="/audience">Audience</a></div></div></header><main class="wrap">
+<body><header><div class="wrap nav"><strong>RoadTalk Account</strong><div class="links"><a href="/">Home</a><a href="/radio">Radio</a><a href="/notifications">Notifications</a><a href="/map">Map</a><a href="/audience">Audience</a></div></div></header><main class="wrap">
 <div class="card"><h1>Your RoadTalk account</h1><p class="muted">Your private username and password identify your account. Your public call sign belongs to that account profile and comes back every time you log in.</p><p id="status">Checking saved session…</p><p>Call sign: <strong id="callsign">—</strong></p></div>
 <div class="card"><h2>Log in</h2><p class="muted">Return to an existing RoadTalk account and restore its public profile.</p><div class="grid"><label>Private username<input id="login-username" autocomplete="username" minlength="3" maxlength="64"></label><label>Password<input id="login-password" type="password" autocomplete="current-password" minlength="12" maxlength="256"></label></div><div class="actions"><button id="login" class="primary">Log in</button><button id="logout">Log out</button></div></div>
 <div class="card"><h2>Create account</h2><p class="muted">Create one persistent account with a private login and public call sign. RoadTalk assigns the web default avatar; you can change it later.</p><div class="grid"><label>Private username<input id="create-username" autocomplete="username" minlength="3" maxlength="64"></label><label>Public call sign<input id="create-callsign" autocomplete="nickname" minlength="3" maxlength="24"></label><label>Password<input id="create-password" type="password" autocomplete="new-password" minlength="12" maxlength="256"></label><label>Confirm password<input id="create-confirm" type="password" autocomplete="new-password" minlength="12" maxlength="256"></label></div><div class="actions"><button id="register" class="primary">Create account</button></div></div>
@@ -124,7 +124,6 @@ async def account_console() -> HTMLResponse:
     return HTMLResponse(_ACCOUNT_PAGE)
 
 
-@router.get("/", response_class=HTMLResponse)
 async def hardened_radio_console() -> HTMLResponse:
     response = await radio_console()
     html = bytes(response.body).decode("utf-8")
@@ -135,7 +134,7 @@ async def hardened_radio_console() -> HTMLResponse:
     )
     html = html.replace(
         '<div class="navlinks"><a class="button" href="/ops">Operations</a>',
-        '<div class="navlinks"><a class="button" href="/account">Account</a><a class="button" href="/notifications">Notifications</a><a class="button" href="/map">Map</a><a class="button" href="/audience">Audience</a><a class="button" href="/ops">Operations</a>',
+        '<div class="navlinks"><a class="button" href="/">Home</a><a class="button" href="/account">Account</a><a class="button" href="/notifications">Notifications</a><a class="button" href="/map">Map</a><a class="button" href="/audience">Audience</a><a class="button" href="/ops">Operations</a>',
         1,
     )
     html = html.replace("</body>", f"{_RADIO_HARDENING}</body>", 1)
@@ -148,7 +147,7 @@ async def hardened_operations_dashboard() -> HTMLResponse:
     html = bytes(response.body).decode("utf-8")
     html = html.replace(
         '<div class="navlinks"><a class="button" href="/docs">Swagger</a>',
-        '<div class="navlinks"><a class="button" href="/">Web Radio</a><a class="button" href="/account">Account</a><a class="button" href="/notifications">Notifications</a><a class="button" href="/map">Map Awareness</a><a class="button" href="/audience">Audience Mode</a><a class="button" href="/docs">Swagger</a>',
+        '<div class="navlinks"><a class="button" href="/">Home</a><a class="button" href="/radio">Radio</a><a class="button" href="/account">Account</a><a class="button" href="/notifications">Notifications</a><a class="button" href="/map">Map Awareness</a><a class="button" href="/audience">Audience Mode</a><a class="button" href="/docs">Swagger</a>',
         1,
     )
     return HTMLResponse(html)

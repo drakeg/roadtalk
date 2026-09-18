@@ -105,14 +105,15 @@ def test_browser_map_degraded_states_hide_prior_presence_and_false_precision() -
 
 def test_browser_navigation_connects_radio_map_audience_and_operations() -> None:
     with client() as test_client:
-        radio = test_client.get("/")
+        radio = test_client.get("/radio")
         map_page = test_client.get("/map")
         audience = test_client.get("/audience")
         operations = test_client.get("/ops")
 
     assert 'href="/map">Map</a>' in radio.text
     for target in (
-        'href="/">Web Radio</a>',
+        'href="/">Home</a>',
+        'href="/radio">Radio</a>',
         'href="/audience">Audience</a>',
         'href="/ops">Operations</a>',
     ):

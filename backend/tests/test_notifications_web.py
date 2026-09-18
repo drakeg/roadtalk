@@ -52,7 +52,7 @@ def test_notifications_page_locks_urgent_alert_safety_and_targeting_copy() -> No
 
 def test_radio_and_account_navigation_include_notifications() -> None:
     with client() as test_client:
-        radio = test_client.get("/")
+        radio = test_client.get("/radio")
         account = test_client.get("/account")
         ops = test_client.get("/ops")
 

@@ -3,8 +3,6 @@ from pathlib import Path
 from fastapi import APIRouter
 from fastapi.responses import FileResponse, HTMLResponse
 
-from app.web import web_home
-
 router = APIRouter(include_in_schema=False)
 LIVEKIT_CLIENT_PATH = Path("/opt/roadtalk/web/livekit-client.umd.js")
 
@@ -18,12 +16,6 @@ async def livekit_client() -> FileResponse:
     )
 
 
-@router.get("/ops", response_class=HTMLResponse)
-async def operations_dashboard() -> HTMLResponse:
-    return await web_home()
-
-
-@router.get("/", response_class=HTMLResponse)
 async def radio_console() -> HTMLResponse:
     return HTMLResponse(
         """<!doctype html>

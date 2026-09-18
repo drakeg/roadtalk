@@ -22,7 +22,7 @@ async def map_awareness_page() -> HTMLResponse:
   </style>
 </head>
 <body>
-<header><div class="wrap"><nav aria-label="RoadTalk"><div class="brand"><div class="mark" aria-hidden="true">RT</div><div>RoadTalk <span class="muted">Map Awareness</span></div></div><div class="navlinks"><a class="button" href="/">Web Radio</a><a class="button active" href="/map" aria-current="page">Map</a><a class="button" href="/audience">Audience</a><a class="button" href="/ops">Operations</a></div></nav></div></header>
+<header><div class="wrap"><nav aria-label="RoadTalk"><div class="brand"><div class="mark" aria-hidden="true">RT</div><div>RoadTalk <span class="muted">Map Awareness</span></div></div><div class="navlinks"><a class="button" href="/">Home</a><a class="button" href="/radio">Radio</a><a class="button active" href="/map" aria-current="page">Map</a><a class="button" href="/audience">Audience</a><a class="button" href="/ops">Operations</a></div></nav></div></header>
 <main class="wrap">
   <section class="hero"><div><div class="eyebrow">Privacy-safe awareness</div><h1>See the road around you.</h1><p class="subtitle">Your browser can orient your own position. Other RoadTalk users appear only as coarse, privacy-thresholded areas.</p></div><button id="refresh" class="refresh" type="button" aria-describedby="summary-text">Refresh awareness</button></section>
   <section class="layout">

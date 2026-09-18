@@ -26,9 +26,28 @@ def client() -> TestClient:
     )
 
 
-def test_web_root_renders_roadtalk_radio() -> None:
+def test_web_root_renders_roadtalk_dashboard() -> None:
     with client() as test_client:
         response = test_client.get("/")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    assert "RoadTalk | Home" in response.text
+    assert "Your RoadTalk dashboard" in response.text
+    assert 'href="/radio"' in response.text
+    assert 'href="/map"' in response.text
+    assert 'href="/audience"' in response.text
+    assert 'href="/account"' in response.text
+    assert 'href="/ops"' in response.text
+    assert "/api/v1/auth/session" in response.text
+    assert "/api/v1/me/profile" in response.text
+    assert "coordinates, routes, account identifiers" in response.text
+    assert "HOLD TO" not in response.text
+    assert "/api/v1/system/metrics" not in response.text
+
+
+def test_web_radio_remains_available_at_dedicated_route() -> None:
+    with client() as test_client:
+        response = test_client.get("/radio")
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/html")
     assert "RoadTalk | Web Radio" in response.text
@@ -65,7 +84,7 @@ def test_livekit_browser_client_is_served_locally(
 
 def test_web_radio_preserves_location_order_across_page_reloads() -> None:
     with client() as test_client:
-        response = test_client.get("/")
+        response = test_client.get("/radio")
 
     assert response.status_code == 200
     assert "LOCATION_SEQUENCE_KEY='rt_location_seq'" in response.text
