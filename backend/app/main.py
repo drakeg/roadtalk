@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.admin_web import router as admin_web_router
 from app.api.admin import router as admin_router
 from app.api.auth import router as auth_router
 from app.api.campgrounds import router as campgrounds_router
@@ -16,7 +17,6 @@ from app.api.ptt import router as ptt_router
 from app.api.recovery import router as recovery_router
 from app.api.route_mode import router as route_mode_router
 from app.api.system import router as system_router
-from app.admin_web import router as admin_web_router
 from app.browser_hardening import router as browser_hardening_router
 from app.campgrounds_web import router as campgrounds_web_router
 from app.channels.limiter import ChannelInviteLimiter
