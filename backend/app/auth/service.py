@@ -18,6 +18,7 @@ from app.auth.passwords import (
 from app.auth.schemas import (
     AnonymousSessionRequest,
     AnonymousSessionResponse,
+    RegisteredAccountRequest,
     RegisteredAuthRequest,
     RegisteredPromotionRequest,
     RegisteredSessionResponse,
@@ -26,7 +27,9 @@ from app.auth.schemas import (
 from app.auth.security import hash_refresh_token, issue_access_token, new_refresh_token
 from app.channels.constants import GENERAL_CHANNEL_ID
 from app.config import Settings
-from app.db.models import Account, ChannelSelection, Device, Session
+from app.db.models import Account, ChannelSelection, Device, Profile, Session
+from app.identity.avatars import DEFAULT_WEB_AVATAR_ID
+from app.identity.callsigns import CallsignPolicyError, validate_callsign
 from app.ptt.service import revoke_device_media_grants
 
 
@@ -139,12 +142,15 @@ async def create_anonymous_session(
 
 async def create_registered_account(
     db: AsyncSession,
-    payload: RegisteredAuthRequest,
+    payload: RegisteredAccountRequest,
     settings: Settings,
 ) -> RegisteredSessionResponse:
     try:
         username = normalize_username(payload.username)
         password_hash = hash_password(payload.password)
+        callsign = validate_callsign(payload.callsign)
+    except CallsignPolicyError as exc:
+        raise AuthenticationError(exc.code, exc.detail) from exc
     except ValueError as exc:
         raise AuthenticationError("INVALID_REGISTRATION", str(exc)) from exc
 
@@ -165,9 +171,26 @@ async def create_registered_account(
             "DEVICE_ALREADY_REGISTERED",
             "This installation is already attached to an account.",
         )
+    if (
+        await db.scalar(
+            select(Profile.account_id).where(Profile.normalized_callsign == callsign.normalized)
+        )
+        is not None
+    ):
+        raise AuthenticationError(
+            "CALLSIGN_UNAVAILABLE",
+            "That call sign is already assigned to another RoadTalk profile.",
+        )
 
     account = Account(id=uuid.uuid4(), account_type="registered")
     account.channel_selection = ChannelSelection(channel_id=GENERAL_CHANNEL_ID)
+    account.profile = Profile(
+        normalized_callsign=callsign.normalized,
+        display_callsign=callsign.display,
+        avatar_id=DEFAULT_WEB_AVATAR_ID,
+        setup_completed=True,
+        callsign_changed_at=utcnow(),
+    )
     device = Device(
         account=account,
         platform=payload.platform,
@@ -189,6 +212,16 @@ async def create_registered_account(
         await db.commit()
     except IntegrityError as exc:
         await db.rollback()
+        if (
+            await db.scalar(
+                select(Profile.account_id).where(Profile.normalized_callsign == callsign.normalized)
+            )
+            is not None
+        ):
+            raise AuthenticationError(
+                "CALLSIGN_UNAVAILABLE",
+                "That call sign is already assigned to another RoadTalk profile.",
+            ) from exc
         raise AuthenticationError(
             "REGISTRATION_CONFLICT", "Registration could not be completed."
         ) from exc

@@ -6,6 +6,8 @@ RoadTalk supports persistent registered accounts without requiring email, phone,
 
 - A private username and password authenticate the RoadTalk account.
 - The public call sign remains part of the account profile and is not used as the login credential.
+- New registration atomically creates the account, credential, public call sign, and
+  active web-default avatar so a partial registered identity is never exposed.
 - A call sign therefore follows the account across browser sessions and devices.
 - Logging out revokes only the current session; it does not delete the account, profile, or call sign.
 
@@ -17,7 +19,17 @@ If the anonymous account is no longer authenticated, use the existing recovery-k
 
 ## Browser flow
 
-Browsers without a saved access or refresh credential are directed to `/account` before Web Radio creates a guest identity. Returning users log in there. New users may create a registered account. A browser that already has an authenticated guest identity can use **Create / protect this account** to promote that same account.
+Browsers without a saved access or refresh credential are directed to `/account`
+before Web Radio creates a guest identity. The page presents separate **Log in** and
+**Create account** forms. Creation requires a private username, password confirmation,
+and public call sign; the server assigns the active web-default avatar in the same
+transaction. A browser with an authenticated guest profile and call sign can instead
+use **Protect this existing profile** to promote that same account without changing
+its account id, call sign, avatar, or account-owned state.
+
+If another account—including an anonymous account—already owns the requested call
+sign, registration fails without creating a partial account. RoadTalk does not infer
+ownership from knowledge of a call sign and does not silently release or reassign it.
 
 ## Password handling
 

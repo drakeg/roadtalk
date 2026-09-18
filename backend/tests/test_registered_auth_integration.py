@@ -7,10 +7,12 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from app.auth.credentials import RegisteredCredential
 from app.auth.schemas import (
     AnonymousSessionRequest,
+    RegisteredAccountRequest,
     RegisteredAuthRequest,
     RegisteredPromotionRequest,
 )
 from app.auth.service import (
+    AuthenticationError,
     authenticate_session,
     create_anonymous_session,
     create_registered_account,
@@ -43,23 +45,34 @@ async def _registered_lifecycle() -> None:
         async with factory() as db:
             created = await create_registered_account(
                 db,
-                RegisteredAuthRequest(
+                RegisteredAccountRequest(
                     username=username,
                     password=password,
+                    callsign=f"Driver-{suffix}",
                     installation_id=first_install,
                     platform="web",
                 ),
                 settings,
             )
-            profile = Profile(
-                account_id=created.account_id,
-                normalized_callsign=f"driver-{suffix}",
-                display_callsign=f"Driver-{suffix}",
-                avatar_id="duck-01",
-                setup_completed=True,
-            )
-            db.add(profile)
-            await db.commit()
+            created_profile = await db.get(Profile, created.account_id)
+            assert created_profile is not None
+            assert created_profile.display_callsign == f"Driver-{suffix}"
+            assert created_profile.avatar_id == "road-runner"
+            assert created_profile.setup_completed is True
+
+            with pytest.raises(AuthenticationError) as callsign_conflict:
+                await create_registered_account(
+                    db,
+                    RegisteredAccountRequest(
+                        username=f"other-{suffix}",
+                        password=password,
+                        callsign=f"driver-{suffix}",
+                        installation_id="registered-conflict-" + os.urandom(16).hex(),
+                        platform="web",
+                    ),
+                    settings,
+                )
+            assert callsign_conflict.value.code == "CALLSIGN_UNAVAILABLE"
 
             logged_in = await login_registered_account(
                 db,

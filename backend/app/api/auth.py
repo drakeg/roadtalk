@@ -11,6 +11,7 @@ from app.auth.schemas import (
     DeviceRevocationResponse,
     LogoutResponse,
     RefreshRequest,
+    RegisteredAccountRequest,
     RegisteredAuthRequest,
     RegisteredPromotionRequest,
     RegisteredSessionResponse,
@@ -113,7 +114,7 @@ async def register_anonymous(
     status_code=status.HTTP_201_CREATED,
 )
 async def register_account(
-    request: Request, payload: RegisteredAuthRequest, db: DatabaseSession
+    request: Request, payload: RegisteredAccountRequest, db: DatabaseSession
 ) -> RegisteredSessionResponse:
     try:
         return await create_registered_account(db, payload, request.app.state.settings)
@@ -121,7 +122,12 @@ async def register_account(
         status_code = (
             status.HTTP_409_CONFLICT
             if exc.code
-            in {"USERNAME_UNAVAILABLE", "DEVICE_ALREADY_REGISTERED", "REGISTRATION_CONFLICT"}
+            in {
+                "USERNAME_UNAVAILABLE",
+                "CALLSIGN_UNAVAILABLE",
+                "DEVICE_ALREADY_REGISTERED",
+                "REGISTRATION_CONFLICT",
+            }
             else status.HTTP_422_UNPROCESSABLE_CONTENT
         )
         raise auth_error(exc, status_code) from exc

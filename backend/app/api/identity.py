@@ -4,6 +4,7 @@ from typing import Annotated, cast
 from fastapi import APIRouter, HTTPException, Query, Request, status
 
 from app.api.auth import CurrentSession, DatabaseSession
+from app.identity.avatars import DEFAULT_WEB_AVATAR_ID as DEFAULT_WEB_AVATAR_ID
 from app.identity.avatars import avatar_catalog
 from app.identity.callsigns import CallsignAvailabilityLimiter, CallsignRateLimitError
 from app.identity.schemas import (
@@ -20,7 +21,6 @@ from app.identity.service import (
 )
 
 router = APIRouter(tags=["identity"])
-DEFAULT_WEB_AVATAR_ID = "road-runner"
 
 
 def web_profile_avatar_id(
