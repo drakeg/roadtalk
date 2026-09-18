@@ -34,6 +34,7 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         String(16), default="anonymous", server_default="anonymous"
     )
     deleted_at: Mapped[datetime | None]
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
 
     devices: Mapped[list["Device"]] = relationship(
         back_populates="account", cascade="all, delete-orphan"
@@ -92,6 +93,26 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     notifications: Mapped[list["Notification"]] = relationship(
         back_populates="account", cascade="all, delete-orphan"
     )
+
+
+class AdminAuditEvent(UUIDPrimaryKeyMixin, Base):
+    __tablename__ = "admin_audit_event"
+    __table_args__ = (
+        CheckConstraint(
+            "action IN ('account_disabled', 'account_enabled', 'sessions_revoked')",
+            name="action_allowed",
+        ),
+        Index("ix_admin_audit_event_target_created", "target_account_id", "created_at"),
+    )
+
+    actor_account_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE")
+    )
+    target_account_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE")
+    )
+    action: Mapped[str] = mapped_column(String(32))
+    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
 
 
 class Device(UUIDPrimaryKeyMixin, TimestampMixin, Base):
