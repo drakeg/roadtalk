@@ -9,6 +9,7 @@ def test_active_sprint_tables_are_registered() -> None:
     assert set(Base.metadata.tables) == {
         "account",
         "account_route_mode",
+        "admin_audit_event",
         "campground",
         "channel",
         "channel_invite",
