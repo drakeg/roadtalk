@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.admin import router as admin_router
 from app.api.auth import router as auth_router
 from app.api.campgrounds import router as campgrounds_router
 from app.api.channels import router as channels_router
@@ -15,6 +16,7 @@ from app.api.ptt import router as ptt_router
 from app.api.recovery import router as recovery_router
 from app.api.route_mode import router as route_mode_router
 from app.api.system import router as system_router
+from app.admin_web import router as admin_web_router
 from app.browser_hardening import router as browser_hardening_router
 from app.campgrounds_web import router as campgrounds_web_router
 from app.channels.limiter import ChannelInviteLimiter
@@ -99,6 +101,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(RequestContextMiddleware, settings=resolved)
     install_problem_handlers(app)
     app.include_router(dashboard_web_router)
+    app.include_router(admin_web_router)
     app.include_router(web_radio_landing_router)
     app.include_router(browser_hardening_router)
     app.include_router(notifications_web_router)
@@ -108,6 +111,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(campgrounds_web_router)
     app.include_router(profile_web_router)
     app.include_router(system_router)
+    app.include_router(admin_router)
     app.include_router(auth_router)
     app.include_router(identity_router)
     app.include_router(recovery_router)
