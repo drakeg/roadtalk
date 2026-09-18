@@ -1,6 +1,6 @@
 # RoadTalk Logical Data Model
 
-- Status: Approved for Sprint 1 implementation
+- Status: Baseline approved in Sprint 0; implementation notes reconciled through accepted Sprint 10
 - Sprint: 0
 - Requirements: S00-R04
 - Acceptance: S00-T03
@@ -43,8 +43,8 @@ erDiagram
 ### account
 
 - `id`
-- `status`: active, suspended, deletion_pending, deleted
-- `account_type`: anonymous initially
+- `status`: active, disabled, deleted
+- `account_type`: anonymous or registered
 - `policy_version_accepted`
 - `deleted_at`
 - timestamps/version
