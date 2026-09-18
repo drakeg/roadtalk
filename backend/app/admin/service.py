@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func, or_, select, update
+from sqlalchemy.sql.elements import ColumnElement
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -69,7 +70,9 @@ async def list_accounts(
     )
     normalized = (query or "").strip()
     if normalized:
-        conditions = [Profile.display_callsign.ilike(f"%{normalized}%")]
+        conditions: list[ColumnElement[bool]] = [
+            Profile.display_callsign.ilike(f"%{normalized}%")
+        ]
         try:
             conditions.append(Account.id == uuid.UUID(normalized))
         except ValueError:
@@ -121,12 +124,19 @@ async def set_account_enabled(
     target.status = "active" if enabled else "disabled"
     revoked = 0
     if not enabled:
-        result = await db.execute(
+        active_session_ids = list(
+            await db.scalars(
+                select(Session.id).where(
+                    Session.account_id == target.id, Session.revoked_at.is_(None)
+                )
+            )
+        )
+        await db.execute(
             update(Session)
-            .where(Session.account_id == target.id, Session.revoked_at.is_(None))
+            .where(Session.id.in_(active_session_ids))
             .values(revoked_at=_utcnow(), revoke_reason="admin_account_disabled")
         )
-        revoked = result.rowcount or 0
+        revoked = len(active_session_ids)
     db.add(
         AdminAuditEvent(
             actor_account_id=actor.account.id,
@@ -152,12 +162,19 @@ async def revoke_account_sessions(
     target = await db.get(Account, target_account_id)
     if target is None or target.status == "deleted":
         raise AdminMutationError("Account is unavailable.")
-    result = await db.execute(
+    active_session_ids = list(
+        await db.scalars(
+            select(Session.id).where(
+                Session.account_id == target.id, Session.revoked_at.is_(None)
+            )
+        )
+    )
+    await db.execute(
         update(Session)
-        .where(Session.account_id == target.id, Session.revoked_at.is_(None))
+        .where(Session.id.in_(active_session_ids))
         .values(revoked_at=_utcnow(), revoke_reason="admin_revoked")
     )
-    revoked = result.rowcount or 0
+    revoked = len(active_session_ids)
     db.add(
         AdminAuditEvent(
             actor_account_id=actor.account.id,
