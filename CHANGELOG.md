@@ -2,7 +2,20 @@
 
 All notable RoadTalk changes are recorded here. The repository history and sprint review records remain the detailed source of truth.
 
-## Unreleased — Sprint 9: Notifications
+## Sprint 10: Campgrounds — accepted by PR #267
+
+### Added
+
+- Closed campground domain/privacy contracts, bounded deterministic catalog
+  persistence, and search/filter/detail APIs with explicit non-live provenance.
+- Server-derived expiring campground context that cannot broaden existing location,
+  proximity, channel, media, or notification authorization.
+- Browser and mobile campground discovery/current-context experiences with degraded
+  states and no campsite-level presence, occupancy enumeration, or visit history.
+- Reliability, privacy, scale, provider, compatibility, cost, and final-review
+  evidence under the $0 local/GitHub-CI boundary.
+
+## Sprint 9: Notifications — accepted by PR #244
 
 ### Added
 
@@ -14,13 +27,32 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
   recipient lists, device identifiers, coordinates, routes, and location history.
 - Urgent-alert inbox responses reconstruct the fixed unverified and non-emergency
   safety contract without duplicating that invariant copy in storage.
+- Server-side notification authorization composition that can narrow but never
+  broaden existing eligibility, plus a deterministic disabled provider boundary.
+- Accessible browser and mobile notification inbox/preferences experiences and
+  constrained user-initiated urgent alerts.
+- Abuse controls, lifecycle/idempotency hardening, synthetic scale evidence, and a
+  final review that preserves non-emergency and non-guaranteed delivery semantics.
 
-## Unreleased — Sprint 7: Route Awareness
+## Sprint 8: Map & Presence — accepted by PR #219
+
+### Added
+
+- Privacy-preserving map-provider and presence boundaries using deterministic local/CI
+  behavior, coarse presence semantics, and no other-user coordinates or identities.
+- Accessible browser/mobile map awareness with explicit permission, unavailable,
+  stale, degraded, and offline states.
+- Lifecycle, privacy, scale, compatibility, traceability, and final-review evidence;
+  no live map provider, background location, cloud activation, or recurring spend.
+
+## Sprint 7: Route Awareness — accepted by PR #185
 
 ### Added
 
 - Versioned authenticated Nearby/Same-road route-mode persistence and exact GET/PUT API with Nearby-compatible defaults, optimistic conflicts, replay handling, and non-disclosing semantic availability.
 - Route-mode privacy/scope CI gate; no matching, provider, dataset, map, cloud resource, or spend.
+- Current-only route-context lifecycle, deterministic provider boundary, restrictive
+  Same-road authorization composition, browser/mobile controls, and final evidence.
 
 ### Planning
 
