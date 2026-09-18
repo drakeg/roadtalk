@@ -64,6 +64,19 @@ def test_openapi_exposes_only_approved_contracts() -> None:
         "/api/v1/system/version",
     }
     components = schema["components"]["schemas"]
+    assert set(components["RegisteredAccountRequest"]["properties"]) == {
+        "username",
+        "password",
+        "callsign",
+        "installation_id",
+        "platform",
+    }
+    assert set(components["RegisteredAuthRequest"]["properties"]) == {
+        "username",
+        "password",
+        "installation_id",
+        "platform",
+    }
     assert set(components["PublicIdentity"]["properties"]) == {"callsign", "avatar_id"}
     assert set(components["ProfileResponse"]["properties"]) == {
         "identity",

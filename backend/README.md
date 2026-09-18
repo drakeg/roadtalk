@@ -38,6 +38,12 @@ S01-D03 and S01-D04 provide:
 
 Profile persistence supports an incomplete identity without inventing a callsign or avatar. S02-D04 adds owner-scoped profile reads and conditional callsign updates using the shared policy. Avatar mutation is validated against the bundled catalog, and optional anonymous recovery remains PII-free.
 
+Registered browser account creation requires a private username/password and public
+call sign, then atomically creates the credential and completed profile with the
+active web-default avatar. Login remains a separate credential-only contract. A call
+sign already owned by any account is not reassigned; authenticated guest promotion
+preserves the existing account id and profile.
+
 S03-D02 adds persistence only for append-only foreground-location consent decisions
 and one expiring PostGIS geography point per account. The current row is owned by the
 account and source device, contains quality/sequence/expiry metadata, and cascades on

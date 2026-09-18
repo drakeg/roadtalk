@@ -1,7 +1,7 @@
 import uuid
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AnonymousSessionRequest(BaseModel):
@@ -14,6 +14,12 @@ class RegisteredAuthRequest(BaseModel):
     password: str = Field(min_length=12, max_length=256)
     installation_id: str = Field(min_length=16, max_length=255)
     platform: Literal["android", "ios", "web"]
+
+
+class RegisteredAccountRequest(RegisteredAuthRequest):
+    model_config = ConfigDict(extra="forbid")
+
+    callsign: str = Field(min_length=1, max_length=128)
 
 
 class RegisteredPromotionRequest(BaseModel):

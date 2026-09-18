@@ -25,6 +25,7 @@ def test_registered_account_validation_identifies_password_requirement() -> None
             json={
                 "username": "roaduser",
                 "password": "short",
+                "callsign": "Road-User",
                 "installation_id": "web-1234567890123456",
                 "platform": "web",
             },

@@ -4,6 +4,7 @@ from typing import Literal
 from app.identity.schemas import AvatarCatalogItem, AvatarCatalogResponse
 
 AVATAR_CATALOG_VERSION = "2026.1"
+DEFAULT_WEB_AVATAR_ID = "road-runner"
 
 
 @dataclass(frozen=True, slots=True)
