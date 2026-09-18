@@ -23,6 +23,10 @@ def test_openapi_exposes_only_approved_contracts() -> None:
     schema = create_app(settings()).openapi()
 
     assert set(schema["paths"]) == {
+        "/api/v1/admin/accounts",
+        "/api/v1/admin/accounts/{account_id}/disable",
+        "/api/v1/admin/accounts/{account_id}/enable",
+        "/api/v1/admin/accounts/{account_id}/revoke-sessions",
         "/api/v1/auth/anonymous",
         "/api/v1/auth/devices/{device_id}",
         "/api/v1/auth/login",
