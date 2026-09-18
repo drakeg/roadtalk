@@ -3,7 +3,9 @@ from fastapi.responses import HTMLResponse
 
 router = APIRouter(include_in_schema=False)
 
-# The browser console is intentionally embedded with the other RoadTalk browser surfaces.\n# ruff: noqa: E501\n_ADMIN_PAGE = """<!doctype html>
+# The browser console is intentionally embedded with the other RoadTalk browser surfaces.
+# ruff: noqa: E501
+_ADMIN_PAGE = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RoadTalk | Administration</title>
 <style>:root{color-scheme:dark;--bg:#07141b;--panel:#10232e;--text:#f2f7f9;--muted:#8fa7b2;--accent:#f2b84b;--bad:#ff7979;--line:rgba(255,255,255,.1)}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}.wrap{width:min(1100px,calc(100% - 28px));margin:auto}header{padding:18px 0;border-bottom:1px solid var(--line)}nav,.row,.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}nav{justify-content:space-between}a,button,input{font:inherit}a,button{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:rgba(255,255,255,.04);color:var(--text);text-decoration:none}button{cursor:pointer}button.danger{border-color:var(--bad)}main{padding:28px 0}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px}.muted{color:var(--muted)}.bad{color:var(--bad)}input{background:#081820;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:280px}.account{border-top:1px solid var(--line);padding:15px 0}.account:first-child{border-top:0}.meta{color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}</style></head>
 <body><header><div class="wrap"><nav><strong>RoadTalk Administration</strong><div><a href="/">Home</a> <a href="/ops">Operations</a> <a href="/account">Account</a></div></nav></div></header>
