@@ -90,7 +90,7 @@ _DESKTOP_WELCOME = r"""
 """
 
 
-@router.get("/", response_class=HTMLResponse)
+@router.get("/radio", response_class=HTMLResponse)
 async def desktop_web_radio() -> HTMLResponse:
     response = await hardened_radio_console()
     html = bytes(response.body).decode("utf-8")

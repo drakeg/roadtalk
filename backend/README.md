@@ -212,6 +212,10 @@ The API listens on `127.0.0.1:8000` by default.
 
 | Endpoint | Purpose |
 |---|---|
+| `GET /` | Open the privacy-limited RoadTalk dashboard. |
+| `GET /radio` | Open Web Radio; unsigned browsers continue to the account page first. |
+| `GET /account` | Log in, create a registered account, or protect a guest profile. |
+| `GET /ops` | Open the local operations dashboard. |
 | `GET /health/live` | Process liveness. |
 | `GET /health/ready` | Registered dependency readiness. |
 | `GET /api/v1/system/version` | API version and environment. |

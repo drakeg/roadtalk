@@ -56,7 +56,7 @@ def test_account_page_separates_login_creation_and_profile_protection() -> None:
 
 def test_radio_routes_unsigned_browser_to_account_page_first() -> None:
     with client() as test_client:
-        response = test_client.get("/")
+        response = test_client.get("/radio")
 
     assert response.status_code == 200
     assert "location.replace('/account')" in response.text

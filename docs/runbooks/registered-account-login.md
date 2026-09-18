@@ -19,8 +19,12 @@ If the anonymous account is no longer authenticated, use the existing recovery-k
 
 ## Browser flow
 
-Browsers without a saved access or refresh credential are directed to `/account`
-before Web Radio creates a guest identity. The page presents separate **Log in** and
+The browser home route (`/`) is a privacy-limited dashboard. It reports service
+readiness, session type, and the account's public call sign when available, without
+displaying account, device, session, route, or location identifiers. Web Radio lives
+at `/radio`; browsers without a saved access or refresh credential are directed to
+`/account` before Web Radio creates a guest identity. The account page presents
+separate **Log in** and
 **Create account** forms. Creation requires a private username, password confirmation,
 and public call sign; the server assigns the active web-default avatar in the same
 transaction. A browser with an authenticated guest profile and call sign can instead

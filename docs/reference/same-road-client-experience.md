@@ -18,7 +18,7 @@ The only route-awareness states shown to a user are generic states such as:
 
 ## Browser
 
-The local Web Radio session can open `/audience`. This page shares the browser session stored by the existing Web Radio flow, supports the same Nearby/Same-road API contract, and links back to `/`.
+The local Web Radio session at `/radio` can open `/audience`. This page shares the browser session stored by the existing Web Radio flow, supports the same Nearby/Same-road API contract, and links back to the dashboard and radio.
 
 The browser validates the minimized response before rendering it. Responses containing road names, provider/corridor references, corridor digests, directions, coordinates, exact distance, bearing, identity fields, participant references, or eligibility reasons are rejected generically.
 

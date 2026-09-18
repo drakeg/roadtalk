@@ -20,7 +20,7 @@ def client() -> TestClient:
 
 def test_web_radio_includes_permission_preflight_and_navigation() -> None:
     with client() as test_client:
-        response = test_client.get("/")
+        response = test_client.get("/radio")
 
     assert response.status_code == 200
     assert 'id="roadtalk-browser-hardening"' in response.text
@@ -37,7 +37,7 @@ def test_web_radio_includes_permission_preflight_and_navigation() -> None:
 
 def test_web_radio_recovers_stale_access_with_saved_refresh_before_registering() -> None:
     with client() as test_client:
-        response = test_client.get("/")
+        response = test_client.get("/radio")
 
     assert response.status_code == 200
     html = response.text
@@ -57,7 +57,7 @@ def test_web_radio_recovers_stale_access_with_saved_refresh_before_registering()
 
 def test_web_radio_keeps_guest_reset_as_explicit_account_aware_fallback() -> None:
     with client() as test_client:
-        response = test_client.get("/")
+        response = test_client.get("/radio")
 
     assert response.status_code == 200
     html = response.text
@@ -78,13 +78,14 @@ def test_operations_dashboard_links_back_to_user_pages() -> None:
         response = test_client.get("/ops")
 
     assert response.status_code == 200
-    assert 'href="/">Web Radio</a>' in response.text
+    assert 'href="/">Home</a>' in response.text
+    assert 'href="/radio">Radio</a>' in response.text
     assert 'href="/audience">Audience Mode</a>' in response.text
 
 
 def test_permission_copy_explains_secure_lan_requirement() -> None:
     with client() as test_client:
-        response = test_client.get("/")
+        response = test_client.get("/radio")
 
     assert response.status_code == 200
     assert "Browser microphone and location require a secure origin" in response.text

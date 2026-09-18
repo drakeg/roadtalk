@@ -19,7 +19,7 @@ async def profile_page() -> HTMLResponse:
   </style>
 </head>
 <body>
-<header><div class="wrap"><nav><div class="brand">RoadTalk <span style="color:var(--muted);font-weight:600">Profile</span></div><div class="navlinks"><a class="button" href="/">Radio</a><a class="button" href="/ops">Operations</a></div></nav></div></header>
+<header><div class="wrap"><nav><div class="brand">RoadTalk <span style="color:var(--muted);font-weight:600">Profile</span></div><div class="navlinks"><a class="button" href="/">Home</a><a class="button" href="/radio">Radio</a><a class="button" href="/ops">Operations</a></div></nav></div></header>
 <main class="wrap">
   <div class="eyebrow" style="color:var(--accent);font-size:11px;font-weight:900;letter-spacing:.16em;text-transform:uppercase">Your identity</div>
   <h1>Choose how you appear on RoadTalk.</h1>
