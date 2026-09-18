@@ -70,9 +70,7 @@ async def list_accounts(
     )
     normalized = (query or "").strip()
     if normalized:
-        conditions: list[ColumnElement[bool]] = [
-            Profile.display_callsign.ilike(f"%{normalized}%")
-        ]
+        conditions: list[ColumnElement[bool]] = [Profile.display_callsign.ilike(f"%{normalized}%")]
         try:
             conditions.append(Account.id == uuid.UUID(normalized))
         except ValueError:
@@ -164,9 +162,7 @@ async def revoke_account_sessions(
         raise AdminMutationError("Account is unavailable.")
     active_session_ids = list(
         await db.scalars(
-            select(Session.id).where(
-                Session.account_id == target.id, Session.revoked_at.is_(None)
-            )
+            select(Session.id).where(Session.account_id == target.id, Session.revoked_at.is_(None))
         )
     )
     await db.execute(
