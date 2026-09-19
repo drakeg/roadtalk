@@ -4,7 +4,7 @@
 
 RoadTalk has accepted Sprints 0–10. The current repository `main` branch is the source of truth for accepted behavior.
 
-Sprint 11 implementation is not authorized merely because Sprint 10 is complete. A new sprint begins only after its specification/readiness gate is approved. Corrective or backlog work outside a new sprint must be tied to an existing approved issue or an explicit planning decision and must preserve accepted sprint privacy, authorization, provider, compatibility, and cost boundaries.
+Sprint 11 Convoys planning/readiness is tracked by #283/#284. Implementation remains unauthorized until the Sprint 11 planning PR is merged. A new sprint begins only after its specification/readiness gate is approved. Corrective or backlog work outside a new sprint must be tied to an existing approved issue or an explicit planning decision and must preserve accepted sprint privacy, authorization, provider, compatibility, and cost boundaries.
 
 ## Required workflow
 
