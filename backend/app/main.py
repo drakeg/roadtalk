@@ -8,6 +8,7 @@ from app.api.admin import router as admin_router
 from app.api.auth import router as auth_router
 from app.api.campgrounds import router as campgrounds_router
 from app.api.channels import router as channels_router
+from app.api.convoys import router as convoys_router
 from app.api.identity import router as identity_router
 from app.api.location import nearby_router
 from app.api.location import router as location_router
@@ -116,6 +117,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(identity_router)
     app.include_router(recovery_router)
     app.include_router(channels_router)
+    app.include_router(convoys_router)
     app.include_router(route_mode_router)
     app.include_router(location_router)
     app.include_router(nearby_router)
