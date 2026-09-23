@@ -22,6 +22,7 @@ from app.browser_hardening import router as browser_hardening_router
 from app.campgrounds_web import router as campgrounds_web_router
 from app.channels.limiter import ChannelInviteLimiter
 from app.config import Settings, get_settings
+from app.convoys_web import router as convoys_web_router
 from app.dashboard_web import router as dashboard_web_router
 from app.db.session import check_database, dispose_database
 from app.health import ReadinessRegistry
@@ -110,6 +111,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(route_mode_web_router)
     app.include_router(map_web_router)
     app.include_router(campgrounds_web_router)
+    app.include_router(convoys_web_router)
     app.include_router(profile_web_router)
     app.include_router(system_router)
     app.include_router(admin_router)
