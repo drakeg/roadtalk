@@ -54,7 +54,7 @@ def test_convoy_api_requires_authentication() -> None:
         unauthenticated = (
             test_client.get("/api/v1/convoys/me"),
             test_client.post("/api/v1/convoys", json={"display_name": "Road crew"}),
-            test_client.post("/api/v1/convoys/join", json={"convoy_id": "00000000-0000-0000-0000-000000000001"}),
+            test_client.post(\n                "/api/v1/convoys/join",\n                json={"convoy_id": "00000000-0000-0000-0000-000000000001"},\n            ),
             test_client.post("/api/v1/convoys/leave"),
             test_client.post("/api/v1/convoys/disband"),
             test_client.get("/api/v1/convoys/awareness"),
