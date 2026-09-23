@@ -33,9 +33,7 @@ def test_public_summary_is_closed_and_bounded() -> None:
 
 
 def test_member_summary_exposes_only_active_member_identity() -> None:
-    member = ConvoyMemberSummary(
-        account_id=uuid.uuid4(), callsign="RoadRunner", role="member"
-    )
+    member = ConvoyMemberSummary(account_id=uuid.uuid4(), callsign="RoadRunner", role="member")
     assert member.state == "active"
     assert set(member.model_dump()) == {"account_id", "callsign", "role", "state"}
 
@@ -53,9 +51,7 @@ def test_membership_context_cannot_claim_authorization() -> None:
     assert context.authorization_source == "existing_roadtalk_authorization"
 
     with pytest.raises(ValidationError):
-        ConvoyMembershipContext.model_validate(
-            {**context.model_dump(), "context_only": False}
-        )
+        ConvoyMembershipContext.model_validate({**context.model_dump(), "context_only": False})
     with pytest.raises(ValidationError):
         ConvoyMembershipContext.model_validate(
             {**context.model_dump(), "authorization_source": "convoy_membership"}
