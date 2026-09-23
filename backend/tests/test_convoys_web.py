@@ -49,7 +49,7 @@ def test_convoy_browser_has_lifecycle_controls_and_destructive_confirmations() -
     assert "confirm(" in response.text
 
 
-def test_convoy_api_requires_authentication_and_rejects_overposting() -> None:
+def test_convoy_api_requires_authentication() -> None:
     with client() as test_client:
         unauthenticated = (
             test_client.get("/api/v1/convoys/me"),
@@ -80,3 +80,17 @@ def test_convoy_api_contract_is_closed_and_non_disclosing() -> None:
     encoded = str(components["ConvoyStatusResponse"]).lower()
     for forbidden in ("latitude", "longitude", "route_history", "provider_token", "password"):
         assert forbidden not in encoded
+
+
+def test_convoy_api_openapi_rejects_overposting() -> None:
+    schema = create_app(
+        Settings(
+            environment="test",
+            docs_enabled=True,
+            log_level="CRITICAL",
+            database_check_enabled=False,
+        )
+    ).openapi()
+    components = schema["components"]["schemas"]
+    assert components["CreateConvoyRequest"]["additionalProperties"] is False
+    assert components["JoinConvoyRequest"]["additionalProperties"] is False
