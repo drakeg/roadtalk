@@ -41,7 +41,9 @@ def upgrade() -> None:
         sa.Column("account_id", sa.Uuid(), nullable=False),
         sa.Column("role", sa.String(16), nullable=False),
         sa.Column("state", sa.String(16), server_default="active", nullable=False),
-        sa.Column(\n            "joined_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False\n        ),
+        sa.Column(
+            "joined_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("ended_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("version", sa.Integer(), server_default="1", nullable=False),
