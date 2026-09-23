@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
+from typing import cast
 
 from sqlalchemy import exists, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -77,7 +78,10 @@ async def current_convoy_awareness(
             )
             .join(Account, Account.id == ConvoyMembership.account_id)
             .join(Profile, Profile.account_id == ConvoyMembership.account_id)
-            .join(CurrentLocation, CurrentLocation.account_id == ConvoyMembership.account_id)
+            .join(
+                CurrentLocation,
+                CurrentLocation.account_id == ConvoyMembership.account_id,
+            )
             .join(consent, consent.id == latest_consent_id)
             .where(
                 ConvoyMembership.convoy_id == viewer_membership.convoy_id,
@@ -102,7 +106,7 @@ async def current_convoy_awareness(
     members = tuple(
         ConvoyAwarenessMember(
             account_id=row.account_id,
-            callsign=row.display_callsign,
+            callsign=cast(str, row.display_callsign),
             role=row.role,
             expires_at=row.expires_at,
         )
