@@ -2,7 +2,7 @@ import asyncio
 import uuid
 from datetime import UTC, datetime
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from app.ptt.proximity import EligibleReceiveGrant, filter_convoy_receive_grants
 
@@ -40,7 +40,7 @@ async def _same_convoy_candidates() -> None:
     convoy_id = uuid.uuid4()
     db = AsyncMock()
     db.scalar.return_value = SimpleNamespace(convoy_id=convoy_id)
-    scalars = AsyncMock()
+    scalars = MagicMock()
     scalars.all.return_value = [keep.account_id]
     db.scalars.return_value = scalars
 
@@ -64,7 +64,7 @@ async def _expired_membership_query() -> None:
     now = datetime.now(UTC)
     db = AsyncMock()
     db.scalar.return_value = SimpleNamespace(convoy_id=uuid.uuid4())
-    scalars = AsyncMock()
+    scalars = MagicMock()
     scalars.all.return_value = []
     db.scalars.return_value = scalars
 
