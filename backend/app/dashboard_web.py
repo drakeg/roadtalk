@@ -26,7 +26,7 @@ _DASHBOARD = r"""<!doctype html>
     <a class="card" href="/map"><span class="icon">⌖</span><h2>Map</h2><p>See privacy-limited awareness without exposing precise routes.</p></a>
     <a class="card" href="/audience"><span class="icon">⌁</span><h2>Audience</h2><p>Follow route context and listen without transmitting.</p></a>
     <a class="card" href="/account"><span class="icon">RT</span><h2>Account</h2><p>Log in, create an account, or protect a guest profile.</p></a>
-    <a class="card" href="/notifications"><span class="icon">◇</span><h2>Notifications</h2><p>Review safety-focused alerts and delivery status.</p></a>
+    <a class="card" href="/notifications"><span class="icon">◇</span><h2>Notifications</h2><p>Review safety-focused alerts and delivery status.</p></a>\n    <a class="card" href="/convoys"><span class="icon">↝</span><h2>Convoys</h2><p>Create, join, or review privacy-safe travel-together context.</p></a>
     <a class="card" href="/ops"><span class="icon">⚙</span><h2>Operations</h2><p>Open the local service dashboard for operators.</p></a>
   </section>
   <p class="privacy"><strong>Privacy by design:</strong> this dashboard shows only service readiness, session type, and your public call sign. It does not display coordinates, routes, account identifiers, device identifiers, or session identifiers.</p>
