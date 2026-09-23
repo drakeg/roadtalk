@@ -38,6 +38,21 @@ class ConvoyMembershipContext(ClosedModel):
     )
 
 
+class ConvoyAwarenessMember(ClosedModel):
+    account_id: uuid.UUID
+    callsign: str = Field(min_length=1, max_length=64)
+    role: ConvoyMembershipRole
+    availability: Literal["current"] = "current"
+    expires_at: datetime
+
+
+class ConvoyAwarenessSnapshot(ClosedModel):
+    convoy_id: uuid.UUID
+    freshness: Literal["current"] = "current"
+    expires_at: datetime
+    members: tuple[ConvoyAwarenessMember, ...]
+
+
 class ConvoyJoinRequest(ClosedModel):
     invite: str = Field(min_length=40, max_length=128, repr=False)
 
