@@ -93,6 +93,12 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     notifications: Mapped[list["Notification"]] = relationship(
         back_populates="account", cascade="all, delete-orphan"
     )
+    created_convoys: Mapped[list["Convoy"]] = relationship(
+        back_populates="leader", cascade="all, delete-orphan"
+    )
+    convoy_memberships: Mapped[list["ConvoyMembership"]] = relationship(
+        back_populates="account", cascade="all, delete-orphan"
+    )
 
 
 class AdminAuditEvent(UUIDPrimaryKeyMixin, Base):
@@ -404,6 +410,60 @@ class ChannelSelection(TimestampMixin, Base):
 
     account: Mapped[Account] = relationship(back_populates="channel_selection")
     channel: Mapped[Channel] = relationship(back_populates="selections")
+
+
+class Convoy(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "convoy"
+    __table_args__ = (
+        CheckConstraint("state IN ('active', 'disbanded')", name="state_allowed"),
+        CheckConstraint("length(display_name) > 0", name="display_name_present"),
+        CheckConstraint("version >= 1", name="version_positive"),
+        Index("ix_convoy_leader_state", "leader_account_id", "state"),
+    )
+
+    leader_account_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE")
+    )
+    display_name: Mapped[str] = mapped_column(String(64))
+    state: Mapped[str] = mapped_column(String(16), default="active", server_default="active")
+    disbanded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+
+    leader: Mapped[Account] = relationship(back_populates="created_convoys")
+    memberships: Mapped[list["ConvoyMembership"]] = relationship(
+        back_populates="convoy", cascade="all, delete-orphan"
+    )
+
+
+class ConvoyMembership(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "convoy_membership"
+    __table_args__ = (
+        CheckConstraint("role IN ('leader', 'member')", name="role_allowed"),
+        CheckConstraint(
+            "state IN ('active', 'left', 'revoked', 'expired')", name="state_allowed"
+        ),
+        CheckConstraint(
+            "(state = 'active' AND ended_at IS NULL) OR "
+            "(state <> 'active' AND ended_at IS NOT NULL)",
+            name="state_timestamp_consistent",
+        ),
+        CheckConstraint("version >= 1", name="version_positive"),
+        Index("uq_convoy_membership_convoy_account", "convoy_id", "account_id", unique=True),
+        Index("ix_convoy_membership_account_state", "account_id", "state"),
+        Index("ix_convoy_membership_convoy_state", "convoy_id", "state"),
+    )
+
+    convoy_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("convoy.id", ondelete="CASCADE"))
+    account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("account.id", ondelete="CASCADE"))
+    role: Mapped[str] = mapped_column(String(16))
+    state: Mapped[str] = mapped_column(String(16), default="active", server_default="active")
+    joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+
+    convoy: Mapped[Convoy] = relationship(back_populates="memberships")
+    account: Mapped[Account] = relationship(back_populates="convoy_memberships")
 
 
 class AccountRouteMode(TimestampMixin, Base):
