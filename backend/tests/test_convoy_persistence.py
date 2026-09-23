@@ -1,15 +1,17 @@
 import uuid
 from datetime import UTC, datetime
 
-import pytest
-from sqlalchemy import CheckConstraint, Table
 from typing import cast
+
+from sqlalchemy import CheckConstraint, Table
 
 from app.db import Convoy, ConvoyMembership
 
 
 def test_convoy_constraints_lock_lifecycle_values() -> None:
-    convoy_names = {\n        c.name for c in cast(Table, Convoy.__table__).constraints if isinstance(c, CheckConstraint)\n    }
+    convoy_names = {
+        c.name for c in cast(Table, Convoy.__table__).constraints if isinstance(c, CheckConstraint)
+    }
     membership_names = {
         c.name
         for c in cast(Table, ConvoyMembership.__table__).constraints
