@@ -15,6 +15,8 @@ from app.db.models import (
     Channel,
     ChannelMembership,
     ChannelSelection,
+    Convoy,
+    ConvoyMembership,
     CurrentLocation,
     Device,
     LocationConsentEvent,
@@ -269,6 +271,54 @@ async def filter_same_road_receive_grants(
     return tuple(filtered)
 
 
+async def filter_convoy_receive_grants(
+    db: AsyncSession,
+    *,
+    sender_account_id: uuid.UUID,
+    eligible_receivers: tuple[EligibleReceiveGrant, ...],
+    now: datetime,
+) -> tuple[EligibleReceiveGrant, ...]:
+    """Restrict an already-authorized candidate set when the sender has active convoy context."""
+    if not eligible_receivers:
+        return ()
+
+    sender_membership = await db.scalar(
+        select(ConvoyMembership)
+        .join(Convoy, Convoy.id == ConvoyMembership.convoy_id)
+        .where(
+            ConvoyMembership.account_id == sender_account_id,
+            ConvoyMembership.state == "active",
+            or_(
+                ConvoyMembership.expires_at.is_(None),
+                ConvoyMembership.expires_at > now,
+            ),
+            Convoy.state == "active",
+        )
+    )
+    if sender_membership is None:
+        return eligible_receivers
+
+    receiver_account_ids = {receiver.account_id for receiver in eligible_receivers}
+    convoy_members = set(
+        (
+            await db.scalars(
+                select(ConvoyMembership.account_id).where(
+                    ConvoyMembership.convoy_id == sender_membership.convoy_id,
+                    ConvoyMembership.account_id.in_(receiver_account_ids),
+                    ConvoyMembership.state == "active",
+                    or_(
+                        ConvoyMembership.expires_at.is_(None),
+                        ConvoyMembership.expires_at > now,
+                    ),
+                )
+            )
+        ).all()
+    )
+    return tuple(
+        receiver for receiver in eligible_receivers if receiver.account_id in convoy_members
+    )
+
+
 async def find_eligible_receive_grants(
     db: AsyncSession,
     *,
@@ -326,9 +376,15 @@ async def find_eligible_receive_grants(
         )
         for receive_grant_id, account_id, device_id, participant_ref in result.all()
     )
-    return await filter_same_road_receive_grants(
+    same_road_eligible = await filter_same_road_receive_grants(
         db,
         sender_account_id=sender_account_id,
         eligible_receivers=eligible,
+        now=evaluated_at,
+    )
+    return await filter_convoy_receive_grants(
+        db,
+        sender_account_id=sender_account_id,
+        eligible_receivers=same_road_eligible,
         now=evaluated_at,
     )
