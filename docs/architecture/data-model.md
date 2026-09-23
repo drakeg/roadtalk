@@ -302,6 +302,19 @@ S06-D02 through D05 implement the durable channel authority:
   local authority. Fresh receive authority is issued only from the resulting selection.
 - No Redis, worker, AWS resource, live provider call, or paid service is introduced.
 
+### Sprint 11 convoy persistence
+
+S11-D03 adds only durable convoy identity and membership lifecycle state:
+
+- `convoy` stores opaque ID, leader account, bounded display name, active/disbanded state, disband timestamp and optimistic version.
+- `convoy_membership` stores opaque membership ID, convoy/account ownership, leader/member role, active/left/revoked/expired state, join/optional expiry/end timestamps and optimistic version.
+- one account has at most one durable membership row per convoy; terminal membership is retained as lifecycle/audit state and cannot be silently reactivated by D03.
+- disbanding terminates all active memberships; leader membership cannot use the ordinary member leave/revoke path.
+- neither table stores coordinates, current location, route, route history, heading, speed, background state, provider credentials, recipient overrides or presence snapshots.
+- account/convoy deletion cascades the bounded lifecycle rows. No external provider, worker, cache, cloud resource or recurring cost is introduced.
+
+Convoy membership remains contextual state only and is not account/session, location, proximity/Same-road, channel, recipient or media authorization.
+
 ## Retention baseline
 
 | Data | Initial rule |
