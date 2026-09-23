@@ -1,6 +1,5 @@
 import uuid
 from datetime import UTC, datetime
-
 from typing import cast
 
 from sqlalchemy import CheckConstraint, Table
