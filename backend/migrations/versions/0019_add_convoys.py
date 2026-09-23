@@ -47,7 +47,9 @@ def upgrade() -> None:
         sa.Column("version", sa.Integer(), server_default="1", nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
-        sa.CheckConstraint("role IN ('leader', 'member')", name="ck_convoy_membership_role_allowed"),
+        sa.CheckConstraint(
+            "role IN ('leader', 'member')", name="ck_convoy_membership_role_allowed"
+        ),
         sa.CheckConstraint(
             "state IN ('active', 'left', 'revoked', 'expired')",
             name="ck_convoy_membership_state_allowed",
