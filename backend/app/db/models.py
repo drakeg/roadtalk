@@ -439,9 +439,7 @@ class ConvoyMembership(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "convoy_membership"
     __table_args__ = (
         CheckConstraint("role IN ('leader', 'member')", name="role_allowed"),
-        CheckConstraint(
-            "state IN ('active', 'left', 'revoked', 'expired')", name="state_allowed"
-        ),
+        CheckConstraint("state IN ('active', 'left', 'revoked', 'expired')", name="state_allowed"),
         CheckConstraint(
             "(state = 'active' AND ended_at IS NULL) OR "
             "(state <> 'active' AND ended_at IS NOT NULL)",
