@@ -8,7 +8,7 @@ BACKEND_BIN := $(BACKEND_VENV)/bin
 
 .DEFAULT_GOAL := help
 
-.PHONY: help prerequisites setup config up up-voice up-lan lan-ca up-redis wait ps logs down down-lan reset database-shell redis-cli verify-database local-url backend-install backend-run backend-migrate backend-migration-check backend-migration-downgrade backend-format-check backend-lint backend-typecheck backend-test mobile-install mobile-start mobile-ios mobile-android mobile-doctor mobile-typecheck mobile-test terraform-validate container-build
+.PHONY: help prerequisites setup config up up-voice up-lan lan-ca up-redis wait ps logs down down-lan reset database-shell redis-cli verify-database local-url backend-install backend-run backend-migrate backend-migration-check backend-migration-downgrade backend-compile-check backend-format-check backend-lint backend-typecheck backend-test pre-pr-check mobile-install mobile-start mobile-ios mobile-android mobile-doctor mobile-typecheck mobile-test terraform-validate container-build
 
 help: ## Show local development commands.
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_-]+:.*## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -104,7 +104,7 @@ backend-migration-downgrade: ## Downgrade one revision (local recovery/testing o
 	@test -f "$(ENV_FILE)" || { echo "Missing $(ENV_FILE). Run 'make setup'."; exit 1; }
 	@set -a; . ./$(ENV_FILE); set +a; cd backend && ../$(BACKEND_BIN)/alembic downgrade -1
 
-backend-format-check: ## Check backend formatting.
+backend-compile-check: ## Compile backend Python to catch syntax/corrupt-edit failures.\n\t@$(BACKEND_BIN)/python -m compileall -q backend/app backend/tests backend/migrations\n\nbackend-format-check: ## Check backend formatting.
 	@$(BACKEND_BIN)/ruff format --check backend
 
 backend-lint: ## Lint the backend.
@@ -116,7 +116,7 @@ backend-typecheck: ## Type-check the backend.
 backend-test: ## Run backend tests with branch coverage.
 	@cd backend && ../$(BACKEND_BIN)/pytest --cov=app --cov-branch --cov-report=term-missing
 
-mobile-install: ## Install the locked mobile dependencies.
+pre-pr-check: backend-compile-check backend-format-check backend-lint backend-typecheck backend-test ## Run fast backend PR gates before opening a PR.\n\t@echo "Backend pre-PR checks passed. For migration changes also run: make backend-migrate backend-migration-check"\n\nmobile-install: ## Install the locked mobile dependencies.
 	@cd mobile && npm ci
 
 mobile-start: ## Start Metro and derive the API URL from BACKEND_PORT unless overridden.
