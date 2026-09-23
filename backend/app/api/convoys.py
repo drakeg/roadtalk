@@ -1,8 +1,7 @@
 import uuid
-from datetime import UTC, datetime
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 
@@ -154,11 +153,10 @@ async def disband_current_convoy(db: DatabaseSession, current: CurrentSession) -
 
 @router.get("/awareness", response_model=ConvoyAwarenessSnapshot | None)
 async def read_convoy_awareness(
-    db: DatabaseSession, current: CurrentSession
+    request: Request, db: DatabaseSession, current: CurrentSession
 ) -> ConvoyAwarenessSnapshot | None:
     return await current_convoy_awareness(
         db,
         viewer_account_id=current.account.id,
-        location_policy_version="location-v1",
-        now=datetime.now(UTC),
+        location_policy_version=request.app.state.settings.location_policy_version,
     )
