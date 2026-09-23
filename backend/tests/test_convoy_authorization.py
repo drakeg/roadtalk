@@ -4,8 +4,6 @@ from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
-import pytest
-
 from app.ptt.proximity import EligibleReceiveGrant, filter_convoy_receive_grants
 
 
