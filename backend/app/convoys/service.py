@@ -90,11 +90,7 @@ async def disband_convoy(
     db: AsyncSession, *, convoy_id: uuid.UUID, leader_account_id: uuid.UUID
 ) -> Convoy:
     convoy = await db.get(Convoy, convoy_id, with_for_update=True)
-    if (
-        convoy is None
-        or convoy.leader_account_id != leader_account_id
-        or convoy.state != "active"
-    ):
+    if convoy is None or convoy.leader_account_id != leader_account_id or convoy.state != "active":
         raise ConvoyLifecycleError("convoy unavailable")
 
     now = datetime.now(UTC)
