@@ -1,5 +1,5 @@
 import uuid
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -70,4 +70,3 @@ async def test_convoy_filter_fails_closed_for_expired_membership_query() -> None
     assert result == ()
     statement = db.scalars.await_args.args[0]
     assert "expires_at" in str(statement)
-    assert now + timedelta(seconds=0) == now
