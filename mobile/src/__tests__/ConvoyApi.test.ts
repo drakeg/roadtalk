@@ -16,7 +16,7 @@ describe("mobile convoy API", () => {
 
   it("sends only bounded lifecycle fields", async () => {
     const response = { convoy_id: "c", membership_id: "m", display_name: "Crew", role: "leader", state: "active" };
-    const authenticatedFetch = jest.fn().mockResolvedValue(new Response(JSON.stringify(response), { status: 200 }));
+    const authenticatedFetch = jest.fn().mockImplementation(() =>\n      Promise.resolve(new Response(JSON.stringify(response), { status: 200 })),\n    );
     const api = new ConvoyApi({ authenticatedFetch } as never);
     await api.create("Crew");
     await api.join("00000000-0000-0000-0000-000000000001");
