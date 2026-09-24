@@ -30,7 +30,9 @@ def test_convoy_constraints_lock_lifecycle_values() -> None:
 
 
 def test_convoy_models_store_no_location_or_route_history() -> None:
-    fields = {column.name for column in Convoy.__table__.columns} | {\n        column.name for column in ConvoyMembership.__table__.columns\n    }
+    fields = {column.name for column in Convoy.__table__.columns} | {
+        column.name for column in ConvoyMembership.__table__.columns
+    }
     assert not {
         "latitude",
         "longitude",
