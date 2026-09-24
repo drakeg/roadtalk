@@ -45,7 +45,10 @@ class ConvoyStatusResponse(BaseModel):
 def _conflict(exc: ConvoyLifecycleError) -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_409_CONFLICT,
-        detail={"code": "CONVOY_LIFECYCLE_CONFLICT", "detail": "Convoy state changed or is unavailable."},
+        detail={
+            "code": "CONVOY_LIFECYCLE_CONFLICT",
+            "detail": "Convoy state changed or is unavailable.",
+        },
     )
 
 
