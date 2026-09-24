@@ -120,6 +120,9 @@ async def current_convoy_awareness(
         )
     return ConvoyAwarenessSnapshot(
         convoy_id=viewer_membership.convoy_id,
-        expires_at=min(member.expires_at for member in members),
+        expires_at=min(
+            [member.expires_at for member in members]
+            + ([viewer_membership.expires_at] if viewer_membership.expires_at else [])
+        ),
         members=members,
     )
