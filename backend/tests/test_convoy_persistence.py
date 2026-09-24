@@ -30,7 +30,7 @@ def test_convoy_constraints_lock_lifecycle_values() -> None:
 
 
 def test_convoy_models_store_no_location_or_route_history() -> None:
-    fields = set(Convoy.__table__.columns) | set(ConvoyMembership.__table__.columns)
+    fields = {column.name for column in Convoy.__table__.columns} | {\n        column.name for column in ConvoyMembership.__table__.columns\n    }
     assert not {
         "latitude",
         "longitude",
@@ -61,3 +61,14 @@ def test_relationships_are_bidirectional() -> None:
     assert Convoy.memberships.property.back_populates == "convoy"
     assert ConvoyMembership.convoy.property.back_populates == "memberships"
     assert ConvoyMembership.account.property.back_populates == "convoy_memberships"
+
+
+def test_only_one_active_convoy_membership_is_allowed_per_account() -> None:
+    index = next(
+        item
+        for item in ConvoyMembership.__table__.indexes
+        if item.name == "uq_convoy_membership_one_active_account"
+    )
+    assert index.unique is True
+    assert [column.name for column in index.columns] == ["account_id"]
+    assert str(index.dialect_options["postgresql"]["where"]) == "state = 'active'"
