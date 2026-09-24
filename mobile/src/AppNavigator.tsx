@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import { CampgroundsScreen } from "./screens/CampgroundsScreen";
 import { DiagnosticsScreen } from "./screens/DiagnosticsScreen";
+import { ConvoysScreen } from "./screens/ConvoysScreen";
 import { ChannelScreen } from "./screens/ChannelScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { IdentityScreen } from "./screens/IdentityScreen";
@@ -19,6 +20,7 @@ export type RootStackParamList = {
   Campgrounds: undefined;
   Channels: undefined;
   Diagnostics: undefined;
+  Convoys: undefined;
   Identity: undefined;
   LocationPermission: undefined;
   MapAwareness: undefined;
@@ -53,6 +55,7 @@ export function AppNavigator() {
       >
         <Stack.Screen component={CampgroundsScreen} name="Campgrounds" options={{ title: "Campgrounds" }} />
         <Stack.Screen component={ChannelScreen} name="Channels" options={{ title: "Channels" }} />
+        <Stack.Screen component={ConvoysScreen} name="Convoys" options={{ title: "Convoys" }} />
         <Stack.Screen component={RouteModeScreen} name="RouteMode" options={{ title: "Audience mode" }} />
         <Stack.Screen component={MapAwarenessScreen} name="MapAwareness" options={{ title: "Map awareness" }} />
         <Stack.Screen component={LocationPermissionScreen} name="LocationPermission" options={{ title: "Location privacy" }} />
