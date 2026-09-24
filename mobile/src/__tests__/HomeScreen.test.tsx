@@ -29,6 +29,8 @@ describe("foundation screen", () => {
     expect(view.getByRole("header", { name: "RoadTalk" })).toBeOnTheScreen();
     await fireEvent.press(view.getByRole("button", { name: "Open notifications" }));
     expect(navigate).toHaveBeenCalledWith("Notifications");
+    await fireEvent.press(view.getByRole("button", { name: "Open convoy controls" }));
+    expect(navigate).toHaveBeenCalledWith("Convoys");
     await fireEvent.press(view.getByRole("button", { name: "Open map awareness" }));
     expect(navigate).toHaveBeenCalledWith("MapAwareness");
     await fireEvent.press(
