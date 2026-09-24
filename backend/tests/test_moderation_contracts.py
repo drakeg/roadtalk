@@ -97,7 +97,13 @@ def test_restriction_command_cannot_target_arbitrary_audiences() -> None:
     command = RestrictionCommand(subject_account_id=uuid.uuid4(), kind="mute")
     assert set(command.model_dump()) == {"subject_account_id", "kind"}
 
-    for forbidden in ("recipient_ids", "nearby_users", "all_users", "latitude", "provider"):
+    for forbidden in (
+        "recipient_ids",
+        "nearby_users",
+        "all_users",
+        "latitude",
+        "provider",
+    ):
         with pytest.raises(ValidationError):
             RestrictionCommand.model_validate(
                 {**command.model_dump(), forbidden: "override"}
