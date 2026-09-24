@@ -7,12 +7,20 @@
 - [Original RoadTalk Development Plan](reference/RoadTalk_Development_Plan.docx)
 - [Agile Workflow](AGILE_WORKFLOW.md)
 
-## Sprint 11 — Convoys (final review)
+## Sprint 12 — Moderation (planning)
+
+- [Sprint 12: Moderation](sprints/sprint-12-moderation.md)
+- [Sprint 12 readiness](sprints/sprint-12-readiness.md)
+- Planning issue #305; implementation tracker #306; delivery issues #296–#304
+- Implementation remains blocked until the D01 planning PR is merged
+- Incremental recurring implementation cost is locked at $0; no external moderation/AI/cloud activation
+
+## Sprint 11 — Convoys (complete and accepted)
 
 - [Sprint 11: Convoys](sprints/sprint-11-convoys.md)
 - [Sprint 11 readiness](sprints/sprint-11-readiness.md)
 - Implementation tracker #284; ordered deliverables #274–#282
-- D02–D09 are merged; D10 final evidence/review is pending acceptance
+- D02–D10 are merged and Sprint 11 is accepted by PR #295
 - [Sprint 11 final evidence and review](evidence/sprint-11-d10-final-review.md)
 - Convoy state may narrow or label existing authorization only; it never grants communication eligibility
 - External providers, AWS/LiveKit Cloud activation, background location/audio, durable movement history and recurring spend remain unauthorized
