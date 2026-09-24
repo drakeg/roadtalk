@@ -17,9 +17,7 @@ class ClosedModel(BaseModel):
 class ReportCommand(ClosedModel):
     subject_account_id: uuid.UUID
     reason: ReportReason
-    idempotency_key: str = Field(
-        min_length=16, max_length=128, pattern=r"^[A-Za-z0-9._~-]+$"
-    )
+    idempotency_key: str = Field(min_length=16, max_length=128, pattern=r"^[A-Za-z0-9._~-]+$")
 
 
 class ReportSummary(ClosedModel):
