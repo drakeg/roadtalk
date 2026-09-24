@@ -110,6 +110,16 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="subject",
         cascade="all, delete-orphan",
     )
+    moderation_restrictions: Mapped[list["ModerationRestriction"]] = relationship(
+        foreign_keys="ModerationRestriction.actor_account_id",
+        back_populates="actor",
+        cascade="all, delete-orphan",
+    )
+    moderation_restrictions_received: Mapped[list["ModerationRestriction"]] = relationship(
+        foreign_keys="ModerationRestriction.subject_account_id",
+        back_populates="subject",
+        cascade="all, delete-orphan",
+    )
 
 
 class AdminAuditEvent(UUIDPrimaryKeyMixin, Base):
@@ -527,6 +537,54 @@ class ModerationReport(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     subject: Mapped[Account] = relationship(
         foreign_keys=[subject_account_id], back_populates="received_reports"
+    )
+
+
+class ModerationRestriction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "moderation_restriction"
+    __table_args__ = (
+        CheckConstraint("kind IN ('mute', 'block')", name="kind_allowed"),
+        CheckConstraint("state IN ('active', 'revoked', 'expired')", name="state_allowed"),
+        CheckConstraint("actor_account_id <> subject_account_id", name="different_accounts"),
+        CheckConstraint(
+            "(state = 'active' AND ended_at IS NULL) OR "
+            "(state <> 'active' AND ended_at IS NOT NULL)",
+            name="state_timestamp_consistent",
+        ),
+        CheckConstraint("version >= 1", name="version_positive"),
+        Index(
+            "uq_moderation_restriction_active_pair_kind",
+            "actor_account_id",
+            "subject_account_id",
+            "kind",
+            unique=True,
+            postgresql_where=text("state = 'active'"),
+        ),
+        Index(
+            "ix_moderation_restriction_subject_state",
+            "subject_account_id",
+            "state",
+        ),
+    )
+
+    actor_account_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE")
+    )
+    subject_account_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE")
+    )
+    kind: Mapped[str] = mapped_column(String(16))
+    state: Mapped[str] = mapped_column(String(16), default="active", server_default="active")
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+
+    actor: Mapped[Account] = relationship(
+        foreign_keys=[actor_account_id], back_populates="moderation_restrictions"
+    )
+    subject: Mapped[Account] = relationship(
+        foreign_keys=[subject_account_id],
+        back_populates="moderation_restrictions_received",
     )
 
 
