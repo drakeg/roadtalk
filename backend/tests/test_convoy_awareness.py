@@ -36,7 +36,7 @@ async def _bounded_member_state() -> None:
     member_id = uuid.uuid4()
     expires_at = now + timedelta(seconds=30)
     db = AsyncMock()
-    db.scalar.return_value = SimpleNamespace(convoy_id=convoy_id)
+    db.scalar.return_value = SimpleNamespace(convoy_id=convoy_id, expires_at=None)
     rows = SimpleNamespace(
         all=lambda: [
             SimpleNamespace(
