@@ -84,9 +84,7 @@ def test_restriction_context_is_restrictive_only() -> None:
     assert context.authorization_source == "existing_roadtalk_authorization"
 
     with pytest.raises(ValidationError):
-        RestrictionContext.model_validate(
-            {**context.model_dump(), "restrictive_only": False}
-        )
+        RestrictionContext.model_validate({**context.model_dump(), "restrictive_only": False})
     with pytest.raises(ValidationError):
         RestrictionContext.model_validate(
             {**context.model_dump(), "authorization_source": "moderation"}
@@ -105,9 +103,7 @@ def test_restriction_command_cannot_target_arbitrary_audiences() -> None:
         "provider",
     ):
         with pytest.raises(ValidationError):
-            RestrictionCommand.model_validate(
-                {**command.model_dump(), forbidden: "override"}
-            )
+            RestrictionCommand.model_validate({**command.model_dump(), forbidden: "override"})
 
 
 def test_report_idempotency_key_is_transport_safe() -> None:
