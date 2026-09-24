@@ -68,7 +68,7 @@ def test_relationships_are_bidirectional() -> None:
 def test_only_one_active_convoy_membership_is_allowed_per_account() -> None:
     index = next(
         item
-        for item in ConvoyMembership.__table__.indexes
+        for item in cast(Table, ConvoyMembership.__table__).indexes
         if item.name == "uq_convoy_membership_one_active_account"
     )
     assert index.unique is True
