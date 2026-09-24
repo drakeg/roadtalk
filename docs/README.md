@@ -7,12 +7,13 @@
 - [Original RoadTalk Development Plan](reference/RoadTalk_Development_Plan.docx)
 - [Agile Workflow](AGILE_WORKFLOW.md)
 
-## Sprint 11 — Convoys (active)
+## Sprint 11 — Convoys (final review)
 
 - [Sprint 11: Convoys](sprints/sprint-11-convoys.md)
 - [Sprint 11 readiness](sprints/sprint-11-readiness.md)
 - Implementation tracker #284; ordered deliverables #274–#282
-- D02–D08 are merged; D09 scale/compatibility evidence is active
+- D02–D09 are merged; D10 final evidence/review is pending acceptance
+- [Sprint 11 final evidence and review](evidence/sprint-11-d10-final-review.md)
 - Convoy state may narrow or label existing authorization only; it never grants communication eligibility
 - External providers, AWS/LiveKit Cloud activation, background location/audio, durable movement history and recurring spend remain unauthorized
 
