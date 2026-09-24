@@ -105,8 +105,10 @@ def test_convoy_conflict_message_does_not_enumerate_internal_state() -> None:
 
     response = _conflict(ConvoyLifecycleError("membership unavailable"))
     assert response.status_code == 409
-    assert response.detail == {
+    detail = response.detail
+    assert isinstance(detail, dict)
+    assert detail == {
         "code": "CONVOY_LIFECYCLE_CONFLICT",
         "detail": "Convoy state changed or is unavailable.",
     }
-    assert "membership" not in str(response.detail).lower()
+    assert "membership" not in str(detail).lower()
