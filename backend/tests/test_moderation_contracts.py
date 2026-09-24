@@ -105,7 +105,11 @@ def test_restriction_command_cannot_target_arbitrary_audiences() -> None:
 
 
 def test_report_idempotency_key_is_transport_safe() -> None:
-    for invalid in ("contains spaces 0001", "contains/slash/0001", "contains\\nnewline0001"):
+    for invalid in (
+        "contains spaces 0001",
+        "contains/slash/0001",
+        "contains\\nnewline0001",
+    ):
         with pytest.raises(ValidationError):
             ReportCommand(
                 subject_account_id=uuid.uuid4(),
