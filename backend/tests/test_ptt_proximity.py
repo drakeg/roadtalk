@@ -89,9 +89,10 @@ async def _private_eligibility() -> None:
         ]
     )
     nearby_modes = SimpleNamespace(all=lambda: [])
+    moderation_rows = SimpleNamespace(all=lambda: [])
     db = AsyncMock()
     db.scalar.side_effect = [SimpleNamespace(position=sender_position), None]
-    db.execute.side_effect = [proximity_result, nearby_modes]
+    db.execute.side_effect = [proximity_result, nearby_modes, moderation_rows]
 
     eligible = await find_eligible_receive_grants(
         db,
