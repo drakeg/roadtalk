@@ -100,3 +100,38 @@ async def _empty_authorized() -> None:
     assert result is not None
     assert result.members == ()
     assert result.expires_at == now
+
+
+def test_awareness_snapshot_never_outlives_viewer_membership() -> None:
+    asyncio.run(_viewer_membership_bounds_snapshot())
+
+
+async def _viewer_membership_bounds_snapshot() -> None:
+    now = datetime(2026, 9, 23, tzinfo=UTC)
+    membership_expiry = now + timedelta(seconds=10)
+    location_expiry = now + timedelta(seconds=30)
+    db = AsyncMock()
+    db.scalar.return_value = SimpleNamespace(
+        convoy_id=uuid.uuid4(),
+        expires_at=membership_expiry,
+    )
+    db.execute.return_value = SimpleNamespace(
+        all=lambda: [
+            SimpleNamespace(
+                account_id=uuid.uuid4(),
+                display_callsign="Mallard One",
+                role="member",
+                expires_at=location_expiry,
+            )
+        ]
+    )
+
+    result = await current_convoy_awareness(
+        db,
+        viewer_account_id=uuid.uuid4(),
+        location_policy_version="location-v1",
+        now=now,
+    )
+
+    assert result is not None
+    assert result.expires_at == membership_expiry
