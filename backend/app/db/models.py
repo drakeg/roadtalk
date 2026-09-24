@@ -15,6 +15,7 @@ from sqlalchemy import (
     String,
     Text,
     func,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -448,6 +449,12 @@ class ConvoyMembership(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         CheckConstraint("version >= 1", name="version_positive"),
         Index("uq_convoy_membership_convoy_account", "convoy_id", "account_id", unique=True),
         Index("ix_convoy_membership_account_state", "account_id", "state"),
+        Index(
+            "uq_convoy_membership_one_active_account",
+            "account_id",
+            unique=True,
+            postgresql_where=text("state = 'active'"),
+        ),
         Index("ix_convoy_membership_convoy_state", "convoy_id", "state"),
     )
 
