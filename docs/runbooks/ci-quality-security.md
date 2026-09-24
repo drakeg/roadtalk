@@ -48,7 +48,10 @@ deliverable.
 
 ## Local parity
 
+Before opening a PR, use the repository targets rather than waiting for GitHub Actions to discover deterministic local failures. Backend work should start with `make pre-pr-check`; migration work must also migrate a disposable local database and run the migration drift check. Mobile work must run doctor, type-check and tests. After any CI repair, repeat the complete affected gate set.
+
 ```sh
+make backend-compile-check
 make backend-format-check
 make backend-lint
 make backend-typecheck

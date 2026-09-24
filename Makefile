@@ -104,7 +104,10 @@ backend-migration-downgrade: ## Downgrade one revision (local recovery/testing o
 	@test -f "$(ENV_FILE)" || { echo "Missing $(ENV_FILE). Run 'make setup'."; exit 1; }
 	@set -a; . ./$(ENV_FILE); set +a; cd backend && ../$(BACKEND_BIN)/alembic downgrade -1
 
-backend-compile-check: ## Compile backend Python to catch syntax/corrupt-edit failures.\n\t@$(BACKEND_BIN)/python -m compileall -q backend/app backend/tests backend/migrations\n\nbackend-format-check: ## Check backend formatting.
+backend-compile-check: ## Compile backend Python to catch syntax/corrupt-edit failures.
+	@$(BACKEND_BIN)/python -m compileall -q backend/app backend/tests backend/migrations
+
+backend-format-check: ## Check backend formatting.
 	@$(BACKEND_BIN)/ruff format --check backend
 
 backend-lint: ## Lint the backend.
@@ -116,7 +119,10 @@ backend-typecheck: ## Type-check the backend.
 backend-test: ## Run backend tests with branch coverage.
 	@cd backend && ../$(BACKEND_BIN)/pytest --cov=app --cov-branch --cov-report=term-missing
 
-pre-pr-check: backend-compile-check backend-format-check backend-lint backend-typecheck backend-test ## Run fast backend PR gates before opening a PR.\n\t@echo "Backend pre-PR checks passed. For migration changes also run: make backend-migrate backend-migration-check"\n\nmobile-install: ## Install the locked mobile dependencies.
+pre-pr-check: backend-compile-check backend-format-check backend-lint backend-typecheck backend-test ## Run fast backend PR gates before opening a PR.
+	@echo "Backend pre-PR checks passed. For migration changes also run: make backend-migrate backend-migration-check"
+
+mobile-install: ## Install the locked mobile dependencies.
 	@cd mobile && npm ci
 
 mobile-start: ## Start Metro and derive the API URL from BACKEND_PORT unless overridden.
