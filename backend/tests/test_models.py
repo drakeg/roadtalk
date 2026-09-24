@@ -22,6 +22,7 @@ def test_active_sprint_tables_are_registered() -> None:
         "device",
         "location_consent_event",
         "media_grant",
+        "moderation_report",
         "notification",
         "notification_delivery_receipt",
         "notification_preferences",

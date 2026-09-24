@@ -100,6 +100,16 @@ class Account(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     convoy_memberships: Mapped[list["ConvoyMembership"]] = relationship(
         back_populates="account", cascade="all, delete-orphan"
     )
+    submitted_reports: Mapped[list["ModerationReport"]] = relationship(
+        foreign_keys="ModerationReport.reporter_account_id",
+        back_populates="reporter",
+        cascade="all, delete-orphan",
+    )
+    received_reports: Mapped[list["ModerationReport"]] = relationship(
+        foreign_keys="ModerationReport.subject_account_id",
+        back_populates="subject",
+        cascade="all, delete-orphan",
+    )
 
 
 class AdminAuditEvent(UUIDPrimaryKeyMixin, Base):
@@ -469,6 +479,55 @@ class ConvoyMembership(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     convoy: Mapped[Convoy] = relationship(back_populates="memberships")
     account: Mapped[Account] = relationship(back_populates="convoy_memberships")
+
+
+class ModerationReport(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "moderation_report"
+    __table_args__ = (
+        CheckConstraint(
+            "reason IN ('harassment', 'spam', 'impersonation', 'unsafe_content', 'other')",
+            name="reason_allowed",
+        ),
+        CheckConstraint(
+            "state IN ('submitted', 'closed', 'withdrawn')",
+            name="state_allowed",
+        ),
+        CheckConstraint(
+            "(state = 'submitted' AND ended_at IS NULL) OR "
+            "(state <> 'submitted' AND ended_at IS NOT NULL)",
+            name="state_timestamp_consistent",
+        ),
+        CheckConstraint("reporter_account_id <> subject_account_id", name="different_accounts"),
+        CheckConstraint("length(idempotency_key_hash) = 64", name="idempotency_hash_valid"),
+        CheckConstraint("version >= 1", name="version_positive"),
+        Index(
+            "uq_moderation_report_reporter_idempotency",
+            "reporter_account_id",
+            "idempotency_key_hash",
+            unique=True,
+        ),
+        Index("ix_moderation_report_subject_state", "subject_account_id", "state"),
+        Index("ix_moderation_report_reporter_created", "reporter_account_id", "created_at"),
+    )
+
+    reporter_account_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE")
+    )
+    subject_account_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("account.id", ondelete="CASCADE")
+    )
+    reason: Mapped[str] = mapped_column(String(32))
+    state: Mapped[str] = mapped_column(String(16), default="submitted", server_default="submitted")
+    idempotency_key_hash: Mapped[str] = mapped_column(String(64))
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+
+    reporter: Mapped[Account] = relationship(
+        foreign_keys=[reporter_account_id], back_populates="submitted_reports"
+    )
+    subject: Mapped[Account] = relationship(
+        foreign_keys=[subject_account_id], back_populates="received_reports"
+    )
 
 
 class AccountRouteMode(TimestampMixin, Base):
