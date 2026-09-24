@@ -21,6 +21,7 @@ from app.db.models import (
     Device,
     LocationConsentEvent,
     MediaGrant,
+    ModerationRestriction,
     Session,
 )
 from app.route_context.models import CurrentRouteContext
@@ -319,6 +320,55 @@ async def filter_convoy_receive_grants(
     )
 
 
+async def filter_moderation_receive_grants(
+    db: AsyncSession,
+    *,
+    sender_account_id: uuid.UUID,
+    eligible_receivers: tuple[EligibleReceiveGrant, ...],
+    now: datetime,
+) -> tuple[EligibleReceiveGrant, ...]:
+    """Apply active mute/block state only to an already-authorized receiver set."""
+    if not eligible_receivers:
+        return ()
+
+    receiver_ids = {receiver.account_id for receiver in eligible_receivers}
+    rows = (
+        await db.execute(
+            select(
+                ModerationRestriction.actor_account_id,
+                ModerationRestriction.subject_account_id,
+                ModerationRestriction.kind,
+            ).where(
+                ModerationRestriction.state == "active",
+                or_(
+                    ModerationRestriction.expires_at.is_(None),
+                    ModerationRestriction.expires_at > now,
+                ),
+                or_(
+                    (
+                        ModerationRestriction.actor_account_id.in_(receiver_ids)
+                        & (ModerationRestriction.subject_account_id == sender_account_id)
+                    ),
+                    (
+                        (ModerationRestriction.actor_account_id == sender_account_id)
+                        & ModerationRestriction.subject_account_id.in_(receiver_ids)
+                        & (ModerationRestriction.kind == "block")
+                    ),
+                ),
+            )
+        )
+    ).all()
+
+    denied: set[uuid.UUID] = set()
+    for actor_id, subject_id, kind in rows:
+        if actor_id in receiver_ids and subject_id == sender_account_id:
+            denied.add(actor_id)
+        elif actor_id == sender_account_id and kind == "block" and subject_id in receiver_ids:
+            denied.add(subject_id)
+
+    return tuple(receiver for receiver in eligible_receivers if receiver.account_id not in denied)
+
+
 async def find_eligible_receive_grants(
     db: AsyncSession,
     *,
@@ -382,9 +432,15 @@ async def find_eligible_receive_grants(
         eligible_receivers=eligible,
         now=evaluated_at,
     )
-    return await filter_convoy_receive_grants(
+    convoy_eligible = await filter_convoy_receive_grants(
         db,
         sender_account_id=sender_account_id,
         eligible_receivers=same_road_eligible,
+        now=evaluated_at,
+    )
+    return await filter_moderation_receive_grants(
+        db,
+        sender_account_id=sender_account_id,
+        eligible_receivers=convoy_eligible,
         now=evaluated_at,
     )
