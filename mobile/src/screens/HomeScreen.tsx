@@ -32,6 +32,7 @@ export function HomeScreen({ navigation }: Props) {
         {snapshot.status === "signed_out" && snapshot.message !== undefined ? <Text style={styles.message}>{snapshot.message}</Text> : null}
       </View>
       {open("Campgrounds", "Campgrounds", "Browse deterministic campground discovery and current context")}
+      {open("Convoys", "Convoys", "Open convoy controls")}
       {open("Notifications", "Notifications", "Open notifications")}
       {open("MapAwareness", "Map awareness", "Open map awareness")}
       {open("Channels", "Channels", "Choose a RoadTalk channel")}
