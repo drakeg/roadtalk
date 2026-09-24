@@ -1,7 +1,6 @@
 import asyncio
 import uuid
 from datetime import UTC, datetime
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
 from app.ptt.proximity import EligibleReceiveGrant, filter_moderation_receive_grants
@@ -45,16 +44,8 @@ async def _receiver_restrictions() -> None:
     db = AsyncMock()
     result_proxy = MagicMock()
     result_proxy.all.return_value = [
-        SimpleNamespace(
-            actor_account_id=muted.account_id,
-            subject_account_id=sender_id,
-            kind="mute",
-        ),
-        SimpleNamespace(
-            actor_account_id=blocked.account_id,
-            subject_account_id=sender_id,
-            kind="block",
-        ),
+        (muted.account_id, sender_id, "mute"),
+        (blocked.account_id, sender_id, "block"),
     ]
     db.execute.return_value = result_proxy
 
@@ -79,16 +70,8 @@ async def _sender_restrictions() -> None:
     db = AsyncMock()
     result_proxy = MagicMock()
     result_proxy.all.return_value = [
-        SimpleNamespace(
-            actor_account_id=sender_id,
-            subject_account_id=blocked.account_id,
-            kind="block",
-        ),
-        SimpleNamespace(
-            actor_account_id=sender_id,
-            subject_account_id=muted.account_id,
-            kind="mute",
-        ),
+        (sender_id, blocked.account_id, "block"),
+        (sender_id, muted.account_id, "mute"),
     ]
     db.execute.return_value = result_proxy
 
