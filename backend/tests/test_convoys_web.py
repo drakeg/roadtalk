@@ -97,3 +97,16 @@ def test_convoy_api_openapi_rejects_overposting() -> None:
     components = schema["components"]["schemas"]
     assert components["CreateConvoyRequest"]["additionalProperties"] is False
     assert components["JoinConvoyRequest"]["additionalProperties"] is False
+
+
+def test_convoy_conflict_message_does_not_enumerate_internal_state() -> None:
+    from app.api.convoys import _conflict
+    from app.convoys.service import ConvoyLifecycleError
+
+    response = _conflict(ConvoyLifecycleError("membership unavailable"))
+    assert response.status_code == 409
+    assert response.detail == {
+        "code": "CONVOY_LIFECYCLE_CONFLICT",
+        "detail": "Convoy state changed or is unavailable.",
+    }
+    assert "membership" not in str(response.detail).lower()
