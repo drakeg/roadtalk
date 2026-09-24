@@ -28,7 +28,9 @@ def upgrade() -> None:
         sa.Column("version", sa.Integer(), server_default="1", nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now(), nullable=False),
-        sa.CheckConstraint("kind IN ('mute', 'block')", name="ck_moderation_restriction_kind_allowed"),
+        sa.CheckConstraint(
+            "kind IN ('mute', 'block')", name="ck_moderation_restriction_kind_allowed"
+        ),
         sa.CheckConstraint(
             "state IN ('active', 'revoked', 'expired')",
             name="ck_moderation_restriction_state_allowed",
