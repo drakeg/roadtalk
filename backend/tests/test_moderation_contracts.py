@@ -1,5 +1,6 @@
 import uuid
 from datetime import UTC, datetime
+from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -7,6 +8,7 @@ from pydantic import ValidationError
 from app.moderation.contracts import (
     PROHIBITED_MODERATION_FIELDS,
     ReportCommand,
+    ReportReason,
     ReportSummary,
     RestrictionCommand,
     RestrictionContext,
@@ -41,7 +43,7 @@ def test_report_command_is_closed_bounded_and_has_no_sensitive_evidence() -> Non
 def test_report_reason_is_bounded(reason: str) -> None:
     command = ReportCommand(
         subject_account_id=uuid.uuid4(),
-        reason=reason,
+        reason=cast(ReportReason, reason),
         idempotency_key="report-command-0002",
     )
     assert command.reason == reason
