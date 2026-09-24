@@ -75,6 +75,7 @@ describe("foundation screen", () => {
 
     expect(view.getByText(/control who you can hear/i)).toBeOnTheScreen();
     expect(view.getByRole("button", { name: "Open notifications" })).toBeOnTheScreen();
+    expect(view.getByRole("button", { name: "Open convoy controls" })).toBeOnTheScreen();
     expect(view.getByRole("button", { name: "Open map awareness" })).toBeOnTheScreen();
     expect(
       view.getByRole("button", { name: "Choose Nearby or Same road audience mode" }),
