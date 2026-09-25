@@ -31,9 +31,9 @@ from app.identity.callsigns import CallsignAvailabilityLimiter
 from app.location.limiter import LocationLimiter
 from app.logging import configure_logging
 from app.map_web import router as map_web_router
+from app.middleware import RequestContextMiddleware
 from app.moderation.limiter import ModerationReportLimiter
 from app.moderation_web import router as moderation_web_router
-from app.middleware import RequestContextMiddleware
 from app.notifications.limiter import UrgentAlertLimiter
 from app.notifications_web import router as notifications_web_router
 from app.problems import install_problem_handlers
