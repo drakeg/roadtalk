@@ -93,9 +93,7 @@ async def create_report(
 
 
 @router.get("/restrictions", response_model=RestrictionList)
-async def list_restrictions(
-    db: DatabaseSession, current: CurrentSession
-) -> RestrictionList:
+async def list_restrictions(db: DatabaseSession, current: CurrentSession) -> RestrictionList:
     rows = (
         await db.scalars(
             select(ModerationRestriction).where(
