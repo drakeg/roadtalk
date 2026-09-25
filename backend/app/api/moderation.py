@@ -8,7 +8,12 @@ from sqlalchemy import select
 
 from app.api.auth import CurrentSession, DatabaseSession
 from app.db.models import ModerationRestriction
-from app.moderation.contracts import (\n    ReportCommand,\n    ReportSummary,\n    RestrictionCommand,\n    RestrictionKind,\n)
+from app.moderation.contracts import (
+    ReportCommand,
+    ReportSummary,
+    RestrictionCommand,
+    RestrictionKind,
+)
 from app.moderation.limiter import ModerationRateLimitError, ModerationReportLimiter
 from app.moderation.service import (
     ReportLifecycleError,
@@ -62,7 +67,10 @@ async def create_report(
     except ModerationRateLimitError as exc:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail={\n                "code": "MODERATION_RATE_LIMITED",\n                "detail": "Moderation action is unavailable.",\n            },
+            detail={
+                "code": "MODERATION_RATE_LIMITED",
+                "detail": "Moderation action is unavailable.",
+            },
             headers={"Retry-After": str(exc.retry_after)},
         ) from exc
     try:
