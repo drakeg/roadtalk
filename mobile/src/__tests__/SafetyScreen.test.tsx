@@ -4,10 +4,10 @@ import { Alert } from "react-native";
 import { SafetyScreen } from "../screens/SafetyScreen";
 
 const api = { restrictions: jest.fn(), report: jest.fn(), restrict: jest.fn(), revoke: jest.fn() };
-let sessionStatus = "authenticated";
+let mockSessionStatus = "authenticated";
 jest.mock("../session/SessionContext", () => ({
   useSessionClient: () => ({}),
-  useSession: () => ({ snapshot: { status: sessionStatus } }),
+  useSession: () => ({ snapshot: { status: mockSessionStatus } }),
 }));
 
 const props = { api: api as never, navigation: {} as never, route: { key: "safety", name: "Safety" as const } };
@@ -15,7 +15,7 @@ const props = { api: api as never, navigation: {} as never, route: { key: "safet
 describe("mobile safety controls", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    sessionStatus = "authenticated";
+    mockSessionStatus = "authenticated";
     api.restrictions.mockResolvedValue({ items: [] });
   });
 
@@ -41,7 +41,7 @@ describe("mobile safety controls", () => {
   });
 
   it("does not show stale controls or allow actions when signed out", async () => {
-    sessionStatus = "signed_out";
+    mockSessionStatus = "signed_out";
     const view = render(<SafetyScreen {...props} />);
     await waitFor(() => expect(view.getByText(/No cached restrictions are shown/)).toBeOnTheScreen());
     expect(api.restrictions).not.toHaveBeenCalled();
