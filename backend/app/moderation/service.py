@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import Account, ModerationReport
+from app.db.models import Account, ModerationReport, ModerationRestriction
 from app.moderation.contracts import ReportReason
 
 
@@ -81,3 +81,62 @@ async def end_report(
     await db.commit()
     await db.refresh(report)
     return report
+
+
+class RestrictionLifecycleError(ValueError):
+    pass
+
+
+async def set_restriction(
+    db: AsyncSession,
+    *,
+    actor: Account,
+    subject_account_id: uuid.UUID,
+    kind: str,
+) -> ModerationRestriction:
+    if kind not in {"mute", "block"} or actor.status != "active" or actor.id == subject_account_id:
+        raise RestrictionLifecycleError("moderation unavailable")
+    subject = await db.get(Account, subject_account_id)
+    if subject is None or subject.status == "deleted":
+        raise RestrictionLifecycleError("moderation unavailable")
+    existing = await db.scalar(
+        select(ModerationRestriction).where(
+            ModerationRestriction.actor_account_id == actor.id,
+            ModerationRestriction.subject_account_id == subject_account_id,
+            ModerationRestriction.kind == kind,
+            ModerationRestriction.state == "active",
+        )
+    )
+    if existing is not None:
+        return existing
+    restriction = ModerationRestriction(
+        actor_account_id=actor.id,
+        subject_account_id=subject_account_id,
+        kind=kind,
+        state="active",
+    )
+    db.add(restriction)
+    await db.commit()
+    await db.refresh(restriction)
+    return restriction
+
+
+async def revoke_restriction(
+    db: AsyncSession,
+    *,
+    actor_account_id: uuid.UUID,
+    restriction_id: uuid.UUID,
+) -> ModerationRestriction:
+    restriction = await db.get(ModerationRestriction, restriction_id, with_for_update=True)
+    if (
+        restriction is None
+        or restriction.actor_account_id != actor_account_id
+        or restriction.state != "active"
+    ):
+        raise RestrictionLifecycleError("moderation unavailable")
+    restriction.state = "revoked"
+    restriction.ended_at = datetime.now(UTC)
+    restriction.version += 1
+    await db.commit()
+    await db.refresh(restriction)
+    return restriction

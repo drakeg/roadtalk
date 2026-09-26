@@ -12,6 +12,7 @@ from app.api.convoys import router as convoys_router
 from app.api.identity import router as identity_router
 from app.api.location import nearby_router
 from app.api.location import router as location_router
+from app.api.moderation import router as moderation_router
 from app.api.notifications import router as notifications_router
 from app.api.presence import router as presence_router
 from app.api.ptt import router as ptt_router
@@ -31,6 +32,8 @@ from app.location.limiter import LocationLimiter
 from app.logging import configure_logging
 from app.map_web import router as map_web_router
 from app.middleware import RequestContextMiddleware
+from app.moderation.limiter import ModerationReportLimiter
+from app.moderation_web import router as moderation_web_router
 from app.notifications.limiter import UrgentAlertLimiter
 from app.notifications_web import router as notifications_web_router
 from app.problems import install_problem_handlers
@@ -96,6 +99,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         event_limit=3,
         window_seconds=60,
     )
+    app.state.moderation_report_limiter = ModerationReportLimiter(
+        account_limit=10,
+        device_limit=10,
+        peer_limit=30,
+        event_limit=3,
+        window_seconds=60,
+    )
     app.state.media_provider = media_provider_from_settings(resolved)
     app.state.route_context_provider = build_route_context_provider(resolved)
     if resolved.database_check_enabled:
@@ -110,6 +120,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(radio_router)
     app.include_router(route_mode_web_router)
     app.include_router(map_web_router)
+    app.include_router(moderation_web_router)
     app.include_router(campgrounds_web_router)
     app.include_router(convoys_web_router)
     app.include_router(profile_web_router)
@@ -122,6 +133,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(convoys_router)
     app.include_router(route_mode_router)
     app.include_router(location_router)
+    app.include_router(moderation_router)
     app.include_router(nearby_router)
     app.include_router(notifications_router)
     app.include_router(presence_router)
