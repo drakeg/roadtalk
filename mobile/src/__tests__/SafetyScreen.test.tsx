@@ -4,10 +4,10 @@ import { Alert } from "react-native";
 import { SafetyScreen } from "../screens/SafetyScreen";
 
 const api = { restrictions: jest.fn(), report: jest.fn(), restrict: jest.fn(), revoke: jest.fn() };
-let mockSessionStatus = "authenticated";
+const mockUseSession = jest.fn();
 jest.mock("../session/SessionContext", () => ({
   useSessionClient: () => ({}),
-  useSession: () => ({ snapshot: { status: mockSessionStatus } }),
+  useSession: () => mockUseSession(),
 }));
 
 const props = { api: api as never, navigation: {} as never, route: { key: "safety", name: "Safety" as const } };
@@ -15,7 +15,7 @@ const props = { api: api as never, navigation: {} as never, route: { key: "safet
 describe("mobile safety controls", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSessionStatus = "authenticated";
+    mockUseSession.mockReturnValue({ snapshot: { status: "authenticated" } });
     api.restrictions.mockResolvedValue({ items: [] });
   });
 
@@ -33,16 +33,21 @@ describe("mobile safety controls", () => {
   });
 
   it("clears cached restriction state on failed refresh", async () => {
-    api.restrictions.mockResolvedValueOnce({ items: [{ restriction_id: "r1", subject_account_id: "a1", kind: "block" }] }).mockRejectedValueOnce(new Error("offline"));
+    api.restrictions.mockResolvedValue({
+      items: [{ restriction_id: "r1", subject_account_id: "a1", kind: "block" }],
+    });
     const view = await render(<SafetyScreen {...props} />);
     expect(await view.findByText("Blocked account a1")).toBeOnTheScreen();
+
+    api.restrictions.mockRejectedValue(new Error("offline"));
     fireEvent.press(view.getByRole("button", { name: "Refresh safety controls" }));
+
     await waitFor(() => expect(view.queryByText("Blocked account a1")).not.toBeOnTheScreen());
     expect(view.getByText(/Existing server-side restrictions remain enforced/)).toBeOnTheScreen();
   });
 
   it("does not show stale controls or allow actions when signed out", async () => {
-    mockSessionStatus = "signed_out";
+    mockUseSession.mockReturnValue({ snapshot: { status: "signed_out" } });
     const view = await render(<SafetyScreen {...props} />);
     await waitFor(() => expect(view.getByText(/No cached restrictions are shown/)).toBeOnTheScreen());
     expect(api.restrictions).not.toHaveBeenCalled();
