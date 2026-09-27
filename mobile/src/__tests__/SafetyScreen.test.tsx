@@ -21,7 +21,7 @@ describe("mobile safety controls", () => {
 
   it("requires confirmation before report or block and sends no command on cancel", async () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(jest.fn());
-    const view = render(<SafetyScreen {...props} />);
+    const view = await render(<SafetyScreen {...props} />);
     await waitFor(() => expect(view.getByText("Current safety controls loaded.")).toBeOnTheScreen());
     fireEvent.changeText(view.getByLabelText("Account ID"), "00000000-0000-4000-8000-000000000001");
     await waitFor(() => expect(view.getByRole("button", { name: "Block account" })).not.toBeDisabled());
@@ -34,7 +34,7 @@ describe("mobile safety controls", () => {
 
   it("clears cached restriction state on failed refresh", async () => {
     api.restrictions.mockResolvedValueOnce({ items: [{ restriction_id: "r1", subject_account_id: "a1", kind: "block" }] }).mockRejectedValueOnce(new Error("offline"));
-    const view = render(<SafetyScreen {...props} />);
+    const view = await render(<SafetyScreen {...props} />);
     expect(await view.findByText("Blocked account a1")).toBeOnTheScreen();
     fireEvent.press(view.getByRole("button", { name: "Refresh safety controls" }));
     await waitFor(() => expect(view.queryByText("Blocked account a1")).not.toBeOnTheScreen());
@@ -43,7 +43,7 @@ describe("mobile safety controls", () => {
 
   it("does not show stale controls or allow actions when signed out", async () => {
     mockSessionStatus = "signed_out";
-    const view = render(<SafetyScreen {...props} />);
+    const view = await render(<SafetyScreen {...props} />);
     await waitFor(() => expect(view.getByText(/No cached restrictions are shown/)).toBeOnTheScreen());
     expect(api.restrictions).not.toHaveBeenCalled();
     expect(view.getByRole("button", { name: "Block account" })).toBeDisabled();
