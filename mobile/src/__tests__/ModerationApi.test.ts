@@ -2,7 +2,12 @@ import { ModerationApi } from "../moderation/api";
 
 describe("mobile moderation API", () => {
   it("uses authenticated endpoints with only bounded payload fields", async () => {
-    const authenticatedFetch = jest.fn().mockResolvedValue(new Response(JSON.stringify({ items: [] }), { status: 200 }));
+    const authenticatedFetch = jest.fn().mockImplementation(async (_url: string, init?: RequestInit) => {
+      if (init?.method === "POST") {
+        return new Response(JSON.stringify({ restriction_id: "r1", subject_account_id: "00000000-0000-4000-8000-000000000001", kind: "block" }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ items: [] }), { status: 200 });
+    });
     const api = new ModerationApi({ authenticatedFetch } as never);
     await api.report("00000000-0000-4000-8000-000000000001", "spam", "mobile-00000000-0000-4000-8000-000000000002");
     await api.restrict("00000000-0000-4000-8000-000000000001", "block");
