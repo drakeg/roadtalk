@@ -12,6 +12,7 @@ import { MapAwarenessScreen } from "./screens/MapAwarenessScreen";
 import { MicrophonePermissionScreen } from "./screens/MicrophonePermissionScreen";
 import { NotificationsScreen } from "./screens/NotificationsScreen";
 import { RecoveryScreen } from "./screens/RecoveryScreen";
+import { SafetyScreen } from "./screens/SafetyScreen";
 import { RouteModeScreen } from "./screens/RouteModeScreen";
 import { colors } from "./theme";
 
@@ -27,6 +28,7 @@ export type RootStackParamList = {
   MicrophonePermission: undefined;
   Notifications: undefined;
   Recovery: undefined;
+  Safety: undefined;
   RouteMode: undefined;
 };
 
@@ -64,6 +66,7 @@ export function AppNavigator() {
         <Stack.Screen component={HomeScreen} name="Foundation" options={{ title: "RoadTalk" }} />
         <Stack.Screen component={IdentityScreen} name="Identity" options={{ title: "Identity" }} />
         <Stack.Screen component={RecoveryScreen} name="Recovery" options={{ title: "Account recovery" }} />
+        <Stack.Screen component={SafetyScreen} name="Safety" options={{ title: "Safety controls" }} />
         <Stack.Screen component={DiagnosticsScreen} name="Diagnostics" options={{ title: "Diagnostics" }} />
       </Stack.Navigator>
     </NavigationContainer>
