@@ -1,4 +1,4 @@
-import { fireEvent, render, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, render, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
 
 import { SafetyScreen } from "../screens/SafetyScreen";
@@ -25,11 +25,12 @@ describe("mobile safety controls", () => {
     await waitFor(() => expect(view.getByText("Current safety controls loaded.")).toBeOnTheScreen());
     fireEvent.changeText(view.getByLabelText("Account ID"), "00000000-0000-4000-8000-000000000001");
     await waitFor(() => expect(view.getByRole("button", { name: "Block account" })).not.toBeDisabled());
-    fireEvent.press(view.getByRole("button", { name: "Block account" }));
+    await act(async () => { fireEvent.press(view.getByRole("button", { name: "Block account" })); });
     expect(alert).toHaveBeenCalledWith("Block account?", expect.any(String), expect.any(Array));
     expect(api.restrict).not.toHaveBeenCalled();
-    fireEvent.press(view.getByRole("button", { name: "Submit report" }));
+    await act(async () => { fireEvent.press(view.getByRole("button", { name: "Submit report" })); });
     expect(api.report).not.toHaveBeenCalled();
+    await view.unmount();
   });
 
   it("clears cached restriction state on failed refresh", async () => {
@@ -40,10 +41,11 @@ describe("mobile safety controls", () => {
     expect(await view.findByText("Blocked account a1")).toBeOnTheScreen();
 
     api.restrictions.mockRejectedValue(new Error("offline"));
-    fireEvent.press(view.getByRole("button", { name: "Refresh safety controls" }));
+    await act(async () => { fireEvent.press(view.getByRole("button", { name: "Refresh safety controls" })); });
 
     await waitFor(() => expect(view.queryByText("Blocked account a1")).not.toBeOnTheScreen());
     expect(view.getByText(/Existing server-side restrictions remain enforced/)).toBeOnTheScreen();
+    await view.unmount();
   });
 
   it("does not show stale controls or allow actions when signed out", async () => {
@@ -52,5 +54,6 @@ describe("mobile safety controls", () => {
     await waitFor(() => expect(view.getByText(/No cached restrictions are shown/)).toBeOnTheScreen());
     expect(api.restrictions).not.toHaveBeenCalled();
     expect(view.getByRole("button", { name: "Block account" })).toBeDisabled();
+    await view.unmount();
   });
 });
