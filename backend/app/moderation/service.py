@@ -3,6 +3,7 @@ import uuid
 from datetime import UTC, datetime
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import Account, ModerationReport, ModerationRestriction
@@ -52,7 +53,23 @@ async def submit_report(
         idempotency_key_hash=key_hash,
     )
     db.add(report)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        replay = await db.scalar(
+            select(ModerationReport).where(
+                ModerationReport.reporter_account_id == reporter.id,
+                ModerationReport.idempotency_key_hash == key_hash,
+            )
+        )
+        if (
+            replay is not None
+            and replay.subject_account_id == subject_account_id
+            and replay.reason == reason
+        ):
+            return replay
+        raise ReportLifecycleError("report unavailable") from exc
     await db.refresh(report)
     return report
 
@@ -116,7 +133,21 @@ async def set_restriction(
         state="active",
     )
     db.add(restriction)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        replay = await db.scalar(
+            select(ModerationRestriction).where(
+                ModerationRestriction.actor_account_id == actor.id,
+                ModerationRestriction.subject_account_id == subject_account_id,
+                ModerationRestriction.kind == kind,
+                ModerationRestriction.state == "active",
+            )
+        )
+        if replay is not None:
+            return replay
+        raise RestrictionLifecycleError("moderation unavailable") from exc
     await db.refresh(restriction)
     return restriction
 
