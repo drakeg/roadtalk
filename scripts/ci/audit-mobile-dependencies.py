@@ -120,18 +120,17 @@ def advisory_urls(package: str, vulnerabilities: dict[str, Any]) -> set[str] | N
 def is_allowlisted(
     package: str,
     vulnerabilities: dict[str, Any],
+    *,
+    today: date,
 ) -> bool:
+    if today > EXCEPTION_EXPIRES:
+        return False
     advisories = advisory_urls(package, vulnerabilities)
     return bool(advisories) and advisories <= ALLOWED_ADVISORIES
 
 
 def main() -> None:
     today = date.today()
-    if today > EXCEPTION_EXPIRES:
-        fail(
-            "the image-size advisory exception expired on "
-            f"{EXCEPTION_EXPIRES.isoformat()}"
-        )
     if len(sys.argv) > 1 and install_audit_is_clean(Path(sys.argv[1])):
         print(
             "Mobile dependency audit: passed with no vulnerabilities reported by npm ci"
@@ -151,7 +150,7 @@ def main() -> None:
         for package, finding in vulnerabilities.items()
         if isinstance(finding, dict)
         and finding.get("severity") in BLOCKING_SEVERITIES
-        and not is_allowlisted(package, vulnerabilities)
+        and not is_allowlisted(package, vulnerabilities, today=today)
     )
     if blocking:
         fail("unapproved high/critical findings: " + ", ".join(blocking))
@@ -161,7 +160,7 @@ def main() -> None:
         for package, finding in vulnerabilities.items()
         if isinstance(finding, dict)
         and finding.get("severity") in BLOCKING_SEVERITIES
-        and is_allowlisted(package, vulnerabilities)
+        and is_allowlisted(package, vulnerabilities, today=today)
     )
     if excepted:
         print(
