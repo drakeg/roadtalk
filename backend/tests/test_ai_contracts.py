@@ -39,9 +39,7 @@ def test_transcription_intent_requires_explicit_foreground_nonretaining_consent(
         ("durable_audio_retention", True),
     ):
         with pytest.raises(ValidationError):
-            ForegroundConsent.model_validate(
-                {**ForegroundConsent().model_dump(), field: value}
-            )
+            ForegroundConsent.model_validate({**ForegroundConsent().model_dump(), field: value})
 
 
 def test_ai_commands_are_closed_and_reject_sensitive_overposting() -> None:
@@ -71,13 +69,9 @@ def test_authorized_source_is_restrictive_only_and_cannot_override_authorization
     assert value.authorization_source == "existing_roadtalk_authorization"
 
     with pytest.raises(ValidationError):
-        AuthorizedTextSource.model_validate(
-            {**value.model_dump(), "authorized_only": False}
-        )
+        AuthorizedTextSource.model_validate({**value.model_dump(), "authorized_only": False})
     with pytest.raises(ValidationError):
-        AuthorizedTextSource.model_validate(
-            {**value.model_dump(), "authorization_source": "ai"}
-        )
+        AuthorizedTextSource.model_validate({**value.model_dump(), "authorization_source": "ai"})
 
 
 @pytest.mark.parametrize("language", ["en", "es", "fr", "de"])
@@ -143,6 +137,4 @@ def test_ai_result_context_cannot_claim_live_provider_or_audio_retention() -> No
     with pytest.raises(ValidationError):
         AiResultContext.model_validate({**context.model_dump(), "provider_mode": "live"})
     with pytest.raises(ValidationError):
-        AiResultContext.model_validate(
-            {**context.model_dump(), "durable_audio_retention": True}
-        )
+        AiResultContext.model_validate({**context.model_dump(), "durable_audio_retention": True})
