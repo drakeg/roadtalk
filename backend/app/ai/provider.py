@@ -44,7 +44,7 @@ class AiTextRequest(BaseModel):
     target_language: SupportedLanguage | None = None
 
     @model_validator(mode="after")
-    def translation_language_contract(self) -> "AiTextRequest":
+    def translation_language_contract(self) -> AiTextRequest:
         if self.capability == "translation":
             if self.target_language is None:
                 raise ValueError("translation requires a target language")
