@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from collections.abc import Mapping
+from collections.abc import Awaitable, Mapping
 from enum import StrEnum
 from typing import Literal, Protocol
 
@@ -198,10 +198,10 @@ class AiProviderBoundary:
         *,
         request_id: uuid.UUID,
         capability: AiProviderCapability,
-        operation: object,
+        operation: Awaitable[AiProviderResult],
     ) -> AiProviderResult:
         try:
-            result = await asyncio.wait_for(operation, timeout=self._timeout_seconds)  # type: ignore[arg-type]
+            result = await asyncio.wait_for(operation, timeout=self._timeout_seconds)
         except Exception:
             raise AiProviderUnavailable("AI provider unavailable") from None
 
