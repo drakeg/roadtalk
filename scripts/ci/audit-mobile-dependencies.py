@@ -25,6 +25,12 @@ ADVISORY_EXPIRES = {
     # npm release as of 2026-10-02. Keep this exception short-lived so CI
     # automatically becomes blocking when the review window expires.
     "https://github.com/advisories/GHSA-86w9-cpqp-85rv": date(2026, 10, 31),
+    # braces 3.0.3 is still the latest published release and currently has
+    # no fixed npm version for CVE-2026-93687 / GHSA-vfj7-8cjw-p6xm.
+    # Expo/Metro/Jest pull it transitively through micromatch, so this single
+    # advisory propagates across many package names in npm audit. Keep the
+    # exception short-lived and advisory-scoped rather than package-scoped.
+    "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm": date(2026, 10, 31),
 }
 
 
