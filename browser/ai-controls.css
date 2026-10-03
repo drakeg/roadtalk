@@ -1,0 +1,51 @@
+:root {
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+  padding: 1rem;
+}
+
+#roadtalk-ai {
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+.controls {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+button,
+select {
+  min-height: 44px;
+  font: inherit;
+}
+
+button:focus-visible,
+select:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 2px;
+}
+
+button:disabled,
+select:disabled {
+  opacity: 0.6;
+}
+
+#ai-status {
+  min-height: 1.5rem;
+}
+
+#ai-result {
+  border: 1px solid currentColor;
+  padding: 1rem;
+}
+
+#ai-result-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
