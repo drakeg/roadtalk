@@ -59,7 +59,7 @@ def test_browser_ai_has_no_automatic_network_or_provider_activation() -> None:
     assert "EventSource" not in JS
     assert "openai" not in JS.lower()
     assert "bedrock" not in JS.lower()
-    assert "providerMode === \"test\"" in JS
+    assert 'providerMode === "test"' in JS
     assert 'providerMode = value === "test" ? "test" : "disabled"' in JS
 
 
