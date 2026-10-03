@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RoadTalk AI controls</title>
+  <link rel="stylesheet" href="./ai-controls.css">
+</head>
+<body>
+  <main id="app">
+    <section id="roadtalk-ai" aria-labelledby="roadtalk-ai-heading">
+      <h1 id="roadtalk-ai-heading">AI tools</h1>
+      <p id="roadtalk-ai-provenance">
+        AI can only transform content already authorized in RoadTalk.
+      </p>
+
+      <div class="controls" aria-describedby="roadtalk-ai-provenance">
+        <button id="ai-summary" type="button">Summarize authorized text</button>
+
+        <label for="ai-target-language">Translate to</label>
+        <select id="ai-target-language">
+          <option value="es">Spanish</option>
+          <option value="fr">French</option>
+          <option value="de">German</option>
+          <option value="en">English</option>
+        </select>
+        <button id="ai-translate" type="button">Translate authorized text</button>
+
+        <button id="ai-transcribe" type="button">
+          Request foreground transcription
+        </button>
+      </div>
+
+      <p id="ai-status" role="status" aria-live="polite">
+        AI controls are unavailable until an authorized source is present.
+      </p>
+
+      <section id="ai-result" aria-labelledby="ai-result-heading" hidden>
+        <h2 id="ai-result-heading">AI result</h2>
+        <p id="ai-result-provenance"></p>
+        <pre id="ai-result-text"></pre>
+      </section>
+    </section>
+  </main>
+  <script src="./ai-controls.js"></script>
+</body>
+</html>
