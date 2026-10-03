@@ -145,9 +145,7 @@ def test_provider_output_larger_than_requested_bound_is_rejected() -> None:
         asyncio.run(
             summarize_authorized_text(
                 source=source(now),
-                provider=AiProviderBoundary(
-                    FakeAiProvider(outputs={request_id: "x" * 101})
-                ),
+                provider=AiProviderBoundary(FakeAiProvider(outputs={request_id: "x" * 101})),
                 max_output_chars=100,
                 now=now,
                 request_id=request_id,
