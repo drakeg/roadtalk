@@ -182,7 +182,6 @@ def test_no_live_provider_configuration_is_exposed_by_contract() -> None:
     assert request_fields.isdisjoint(forbidden)
 
 
-
 def test_boundary_rejects_completed_request_replay() -> None:
     request = AiTextRequest(
         request_id=uuid.uuid4(),
