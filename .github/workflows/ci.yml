@@ -143,7 +143,7 @@ jobs:
         with:
           terraform_version: 1.15.0
           terraform_wrapper: false
-      - uses: terraform-linters/setup-tflint@c750028ac0f3831886a261f96da68ab58a92e7ec # v6
+      - uses: terraform-linters/setup-tflint@6ffdbaa3be476b3431f7275c26966ef32ff60337 # v6
         with:
           tflint_version: v0.59.1
       - name: Validate local Compose configuration
