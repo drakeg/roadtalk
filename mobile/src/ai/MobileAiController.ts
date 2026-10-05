@@ -100,11 +100,17 @@ export class MobileAiController {
         status: "result",
         message: "AI result ready.",
         source: this.source,
-        result: {
-          text: response.text,
-          capability,
-          targetLanguage: action.targetLanguage,
-        },
+        result:
+          action.targetLanguage === undefined
+            ? {
+                text: response.text,
+                capability,
+              }
+            : {
+                text: response.text,
+                capability,
+                targetLanguage: action.targetLanguage,
+              },
       });
     } catch {
       this.setSnapshot({
