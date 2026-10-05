@@ -1,6 +1,7 @@
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
+import { AiToolsScreen } from "./screens/AiToolsScreen";
 import { CampgroundsScreen } from "./screens/CampgroundsScreen";
 import { DiagnosticsScreen } from "./screens/DiagnosticsScreen";
 import { ConvoysScreen } from "./screens/ConvoysScreen";
@@ -18,6 +19,7 @@ import { colors } from "./theme";
 
 export type RootStackParamList = {
   Foundation: undefined;
+  AiTools: undefined;
   Campgrounds: undefined;
   Channels: undefined;
   Diagnostics: undefined;
@@ -55,6 +57,7 @@ export function AppNavigator() {
           headerTitleStyle: { fontWeight: "600" },
         }}
       >
+        <Stack.Screen component={AiToolsScreen} name="AiTools" options={{ title: "AI tools" }} />
         <Stack.Screen component={CampgroundsScreen} name="Campgrounds" options={{ title: "Campgrounds" }} />
         <Stack.Screen component={ChannelScreen} name="Channels" options={{ title: "Channels" }} />
         <Stack.Screen component={ConvoysScreen} name="Convoys" options={{ title: "Convoys" }} />

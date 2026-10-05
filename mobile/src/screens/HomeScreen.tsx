@@ -31,6 +31,7 @@ export function HomeScreen({ navigation }: Props) {
         <Text style={styles.statusValue}>{snapshot.status === "loading" ? "Connecting securely…" : authenticated ? "Connected" : "Not connected"}</Text>
         {snapshot.status === "signed_out" && snapshot.message !== undefined ? <Text style={styles.message}>{snapshot.message}</Text> : null}
       </View>
+      {open("AiTools", "AI tools", "Open RoadTalk AI tools")}
       {open("Campgrounds", "Campgrounds", "Browse deterministic campground discovery and current context")}
       {open("Convoys", "Convoys", "Open convoy controls")}
       {open("Notifications", "Notifications", "Open notifications")}
