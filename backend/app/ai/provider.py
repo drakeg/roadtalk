@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import uuid
+from collections import deque
 from collections.abc import Awaitable, Mapping
 from enum import StrEnum
+from threading import Lock
 from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -13,6 +15,8 @@ from app.ai.contracts import SupportedLanguage
 AI_PROVIDER_TIMEOUT_MS = 500
 AI_PROVIDER_MAX_TEXT_CHARS = 8_000
 AI_PROVIDER_MAX_EPHEMERAL_AUDIO_BYTES = 262_144
+AI_PROVIDER_MAX_CONCURRENT_REQUESTS = 4
+AI_PROVIDER_REPLAY_WINDOW = 256
 
 
 class AiProviderMode(StrEnum):
@@ -164,11 +168,23 @@ class AiProviderBoundary:
         provider: AiProvider,
         *,
         timeout_ms: int = AI_PROVIDER_TIMEOUT_MS,
+        max_concurrent_requests: int = AI_PROVIDER_MAX_CONCURRENT_REQUESTS,
+        replay_window: int = AI_PROVIDER_REPLAY_WINDOW,
     ) -> None:
         if not 10 <= timeout_ms <= 2_000:
             raise ValueError("AI provider timeout is out of bounds")
+        if not 1 <= max_concurrent_requests <= 32:
+            raise ValueError("AI provider concurrency limit is out of bounds")
+        if not 1 <= replay_window <= 1_024:
+            raise ValueError("AI provider replay window is out of bounds")
         self._provider = provider
         self._timeout_seconds = timeout_ms / 1_000
+        self._max_concurrent_requests = max_concurrent_requests
+        self._replay_window = replay_window
+        self._request_lock = Lock()
+        self._active_request_ids: set[uuid.UUID] = set()
+        self._completed_request_ids: set[uuid.UUID] = set()
+        self._completed_request_order: deque[uuid.UUID] = deque()
 
     def health(self) -> AiProviderHealth:
         try:
@@ -180,18 +196,26 @@ class AiProviderBoundary:
         return health
 
     async def process_text(self, request: AiTextRequest) -> AiProviderResult:
-        return await self._run(
-            request_id=request.request_id,
-            capability=AiProviderCapability(request.capability),
-            operation=self._provider.process_text(request),
-        )
+        self._claim_request(request.request_id)
+        try:
+            return await self._run(
+                request_id=request.request_id,
+                capability=AiProviderCapability(request.capability),
+                operation=self._provider.process_text(request),
+            )
+        finally:
+            self._finish_request(request.request_id)
 
     async def transcribe(self, request: AiTranscriptionRequest) -> AiProviderResult:
-        return await self._run(
-            request_id=request.request_id,
-            capability=AiProviderCapability.TRANSCRIPTION,
-            operation=self._provider.transcribe(request),
-        )
+        self._claim_request(request.request_id)
+        try:
+            return await self._run(
+                request_id=request.request_id,
+                capability=AiProviderCapability.TRANSCRIPTION,
+                operation=self._provider.transcribe(request),
+            )
+        finally:
+            self._finish_request(request.request_id)
 
     async def _run(
         self,
@@ -210,6 +234,27 @@ class AiProviderBoundary:
         if result.provider_mode != "test" or result.provider_version != "test-v1":
             raise AiProviderUnavailable("AI provider unavailable")
         return result
+
+    def _claim_request(self, request_id: uuid.UUID) -> None:
+        with self._request_lock:
+            if (
+                request_id in self._active_request_ids
+                or request_id in self._completed_request_ids
+                or len(self._active_request_ids) >= self._max_concurrent_requests
+            ):
+                raise AiProviderUnavailable("AI provider unavailable")
+            self._active_request_ids.add(request_id)
+
+    def _finish_request(self, request_id: uuid.UUID) -> None:
+        with self._request_lock:
+            self._active_request_ids.discard(request_id)
+            if request_id in self._completed_request_ids:
+                return
+            if len(self._completed_request_order) >= self._replay_window:
+                expired_request_id = self._completed_request_order.popleft()
+                self._completed_request_ids.discard(expired_request_id)
+            self._completed_request_order.append(request_id)
+            self._completed_request_ids.add(request_id)
 
 
 def build_ai_provider(
