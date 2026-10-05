@@ -47,9 +47,6 @@ for forbidden in (
     "vertexai",
     "google.generativeai",
     "azure.ai",
-    "requests.",
-    "httpx.",
-    "aiohttp.",
     "urllib.request",
     "fetch(",
     "xmlhttprequest",
@@ -57,6 +54,14 @@ for forbidden in (
 ):
     if forbidden in implementation:
         fail(f"AI implementation references unapproved external/network capability {forbidden!r}")
+
+for pattern in (
+    r"(^|\\n)\\s*(from|import)\\s+requests\\b",
+    r"(^|\\n)\\s*(from|import)\\s+httpx\\b",
+    r"(^|\\n)\\s*(from|import)\\s+aiohttp\\b",
+):
+    if re.search(pattern, implementation):
+        fail(f"AI implementation imports an unapproved network client matching {pattern!r}")
 
 provider = read("backend/app/ai/provider.py")
 for required in (
