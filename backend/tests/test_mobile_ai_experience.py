@@ -1,12 +1,8 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-CONTROLLER = (ROOT / "mobile" / "src" / "ai" / "MobileAiController.ts").read_text(
-    encoding="utf-8"
-)
-SCREEN = (ROOT / "mobile" / "src" / "screens" / "AiToolsScreen.tsx").read_text(
-    encoding="utf-8"
-)
+CONTROLLER = (ROOT / "mobile" / "src" / "ai" / "MobileAiController.ts").read_text(encoding="utf-8")
+SCREEN = (ROOT / "mobile" / "src" / "screens" / "AiToolsScreen.tsx").read_text(encoding="utf-8")
 
 
 def test_mobile_ai_requires_explicit_foreground_actions() -> None:
