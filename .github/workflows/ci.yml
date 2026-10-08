@@ -239,6 +239,8 @@ jobs:
         run: python scripts/ci/check-sprint-13-ai-hardening.py
       - name: Check Sprint 13 final review and traceability
         run: python scripts/ci/check-sprint-13-review.py
+      - name: Check Sprint 14 planning boundaries
+        run: python scripts/ci/check-sprint-14-planning.py
       - name: Check Sprint 12 moderation compatibility and evidence
         run: python scripts/ci/check-moderation-compatibility.py
       - name: Check Sprint 12 final review and traceability
