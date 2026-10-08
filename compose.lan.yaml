@@ -12,7 +12,7 @@ services:
       ROADTALK_PTT_LIVEKIT_URL: wss://${ROADTALK_LAN_HOST:?Set ROADTALK_LAN_HOST to this computer's private IP address}:${ROADTALK_LAN_HTTPS_PORT:-8443}/livekit
 
   gateway:
-    image: caddy:2.11.4-alpine
+    image: caddy:2.11.7-alpine
     restart: unless-stopped
     environment:
       ROADTALK_LAN_HOST: ${ROADTALK_LAN_HOST:?Set ROADTALK_LAN_HOST to this computer's private IP address}
