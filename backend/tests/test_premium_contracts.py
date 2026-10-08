@@ -38,9 +38,7 @@ def test_subscription_context_rejects_live_provider_mode() -> None:
     assert context.provider_mode == "test"
 
     with pytest.raises(ValidationError):
-        SubscriptionContext.model_validate(
-            {**context.model_dump(), "provider_mode": "live"}
-        )
+        SubscriptionContext.model_validate({**context.model_dump(), "provider_mode": "live"})
 
 
 def test_entitlement_cannot_claim_communication_authorization() -> None:
@@ -103,9 +101,7 @@ def test_premium_contracts_reject_sensitive_overposting() -> None:
     for value in values:
         for field in sorted(PROHIBITED_PREMIUM_FIELDS):
             with pytest.raises(ValidationError):
-                value.__class__.model_validate(
-                    {**value.model_dump(), field: "attacker-controlled"}
-                )
+                value.__class__.model_validate({**value.model_dump(), field: "attacker-controlled"})
 
 
 def test_tiers_are_bounded() -> None:
