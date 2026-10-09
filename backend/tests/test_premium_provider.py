@@ -24,10 +24,7 @@ def test_disabled_provider_reports_unavailable_and_fails_closed() -> None:
         available=False,
     )
 
-    with pytest.raises(
-        PremiumProviderUnavailable,
-        match="Premium provider unavailable",
-    ):
+    with pytest.raises(PremiumProviderUnavailable, match="Premium provider unavailable"):
         asyncio.run(
             provider.subscription_status(
                 PremiumProviderRequest(
@@ -127,10 +124,7 @@ def test_boundary_normalizes_provider_exceptions() -> None:
 
 def test_builder_allows_fake_only_in_local_or_test_environments() -> None:
     assert isinstance(build_premium_provider(), DisabledPremiumProvider)
-    assert isinstance(
-        build_premium_provider("fake", environment="test"),
-        FakePremiumProvider,
-    )
+    assert isinstance(build_premium_provider("fake", environment="test"), FakePremiumProvider)
 
     with pytest.raises(
         PremiumProviderUnavailable,
@@ -140,9 +134,7 @@ def test_builder_allows_fake_only_in_local_or_test_environments() -> None:
 
 
 def test_no_live_provider_configuration_is_exposed_by_contract() -> None:
-    fields = set(PremiumProviderRequest.model_fields) | set(
-        PremiumProviderResult.model_fields
-    )
+    fields = set(PremiumProviderRequest.model_fields) | set(PremiumProviderResult.model_fields)
     forbidden = {
         "api_key",
         "provider_url",
