@@ -62,10 +62,7 @@ class PremiumProvider(Protocol):
 
 class DisabledPremiumProvider:
     def health(self) -> PremiumProviderHealth:
-        return PremiumProviderHealth(
-            mode=PremiumProviderMode.DISABLED,
-            available=False,
-        )
+        return PremiumProviderHealth(mode=PremiumProviderMode.DISABLED, available=False)
 
     async def subscription_status(
         self,
@@ -87,10 +84,7 @@ class FakePremiumProvider:
         self.requests: list[PremiumProviderRequest] = []
 
     def health(self) -> PremiumProviderHealth:
-        return PremiumProviderHealth(
-            mode=PremiumProviderMode.TEST,
-            available=True,
-        )
+        return PremiumProviderHealth(mode=PremiumProviderMode.TEST, available=True)
 
     async def subscription_status(
         self,
@@ -122,10 +116,7 @@ class PremiumProviderBoundary:
         try:
             health = self._provider.health()
         except Exception:
-            return PremiumProviderHealth(
-                mode=PremiumProviderMode.DISABLED,
-                available=False,
-            )
+            return PremiumProviderHealth(mode=PremiumProviderMode.DISABLED, available=False)
         if health.mode not in {
             PremiumProviderMode.DISABLED,
             PremiumProviderMode.TEST,
