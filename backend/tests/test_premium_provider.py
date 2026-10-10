@@ -96,9 +96,7 @@ def test_boundary_rejects_mismatched_result_identity() -> None:
         PremiumProviderUnavailable,
         match="Premium provider unavailable",
     ):
-        asyncio.run(
-            PremiumProviderBoundary(MismatchedProvider()).subscription_status(request)
-        )
+        asyncio.run(PremiumProviderBoundary(MismatchedProvider()).subscription_status(request))
 
 
 def test_boundary_normalizes_provider_exceptions() -> None:
@@ -116,9 +114,7 @@ def test_boundary_normalizes_provider_exceptions() -> None:
             raise RuntimeError("provider-secret-detail")
 
     with pytest.raises(PremiumProviderUnavailable) as error:
-        asyncio.run(
-            PremiumProviderBoundary(BrokenProvider()).subscription_status(request)
-        )
+        asyncio.run(PremiumProviderBoundary(BrokenProvider()).subscription_status(request))
     assert "provider-secret-detail" not in str(error.value)
 
 
