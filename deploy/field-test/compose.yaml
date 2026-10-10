@@ -1,6 +1,6 @@
 services:
   database:
-    image: postgis/postgis:17-3.5@sha256:6916f5cc87001fa99bc44dbaa3f906d60ef7c813074e943ae4a3cd5a94a16947
+    image: postgis/postgis:17-3.5@sha256:01a6a70e41e6c4467c8f55f6063555ed72db2d6662cd0d571040d42eadaeb6f6
     restart: unless-stopped
     environment:
       POSTGRES_DB: roadtalk
