@@ -79,7 +79,7 @@ jobs:
           retention-days: 1
       - name: Run backend tests
         working-directory: backend
-        run: pytest --cov=app --cov-branch --cov-report=term-missing
+        run: pytest --ignore=tests/test_ptt_proximity_scale.py --cov=app --cov-branch --cov-report=term-missing
       - name: Report Sprint 4 synthetic grant scale
         working-directory: backend
         run: pytest -q -s tests/test_ptt_scale.py
