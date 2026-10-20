@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "RoadTalk control API"
 requires-python = ">=3.12"
 dependencies = [
-  "alembic>=1.14,<1.19",
+  "alembic>=1.20,<1.21",
   "fastapi>=0.139,<0.140",
   "geoalchemy2>=0.20,<0.21",
   "livekit-api>=1.0,<2",
