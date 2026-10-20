@@ -17,6 +17,13 @@
         "react-native"
       ],
       "allowedVersions": "<0.87.0"
+    },
+    {
+      "description": "Keep React Native Jest preset aligned with Expo SDK 57 and React Native 0.86",
+      "matchPackageNames": [
+        "@react-native/jest-preset"
+      ],
+      "allowedVersions": "<0.87.0"
     }
   ]
 }
