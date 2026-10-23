@@ -134,7 +134,7 @@ def eligible_receive_grants_statement(
     sender_position: WKBElement,
     delivery_expires_at: datetime,
     policy: ProximityPolicy,
-) -> Select[tuple[uuid.UUID, uuid.UUID, uuid.UUID, str]]:
+) -> Select[uuid.UUID, uuid.UUID, uuid.UUID, str]:
     active_consent = _active_consent_for_location(policy_version=policy.location_policy_version)
     active_private_membership = exists(
         select(ChannelMembership.account_id).where(

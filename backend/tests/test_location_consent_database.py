@@ -146,10 +146,9 @@ async def _consent_lifecycle() -> None:
 
 
 async def _consent_count(db: AsyncSession, account_id: uuid.UUID) -> int:
-    return int(
-        await db.scalar(
-            select(func.count())
-            .select_from(LocationConsentEvent)
-            .where(LocationConsentEvent.account_id == account_id)
-        )
+    count = await db.scalar(
+        select(func.count())
+        .select_from(LocationConsentEvent)
+        .where(LocationConsentEvent.account_id == account_id)
     )
+    return int(count) if count is not None else 0
