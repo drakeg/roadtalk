@@ -112,7 +112,7 @@ def seed_deterministic_catalog(
     return inserted
 
 
-def _search_statement(query: CampgroundSearchQuery) -> Select[tuple[Campground]]:
+def _search_statement(query: CampgroundSearchQuery) -> Select[Campground]:
     statement = select(Campground)
     if query.query:
         term = f"%{query.query.lower()}%"
