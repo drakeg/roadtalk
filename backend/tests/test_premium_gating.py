@@ -94,7 +94,7 @@ def test_premium_never_creates_existing_roadtalk_authorization() -> None:
 
 
 @pytest.mark.parametrize("state", ["inactive", "expired", "revoked"])
-def test_non_active_entitlement_fails_closed(state: str) -> None:
+def test_non_active_entitlement_fails_closed(state: EntitlementState) -> None:
     account_id = uuid.uuid4()
     decision = evaluate_feature_access(
         account_id=account_id,
