@@ -3,7 +3,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from app.premium.contracts import EntitlementContext
+from app.premium.contracts import EntitlementContext, EntitlementState
 from app.premium.gating import (
     FEATURE_POLICY,
     FeatureClass,
@@ -15,7 +15,7 @@ from app.premium.gating import (
 def entitlement(
     *,
     account_id: uuid.UUID,
-    state: str = "active",
+    state: EntitlementState = "active",
     expires_at: datetime | None = None,
 ) -> EntitlementContext:
     return EntitlementContext(
