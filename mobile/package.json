@@ -29,7 +29,7 @@
     "livekit-client": "2.23.0",
     "react": "19.2.3",
     "react-native": "0.86.3",
-    "react-native-safe-area-context": "~5.10.0",
+    "react-native-safe-area-context": "~5.11.0",
     "react-native-screens": "~4.30.0"
   },
   "devDependencies": {
