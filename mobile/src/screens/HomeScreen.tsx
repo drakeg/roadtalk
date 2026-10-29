@@ -35,6 +35,7 @@ export function HomeScreen({ navigation }: Props) {
       {open("Campgrounds", "Campgrounds", "Browse deterministic campground discovery and current context")}
       {open("Convoys", "Convoys", "Open convoy controls")}
       {open("Notifications", "Notifications", "Open notifications")}
+      {open("Premium", "Premium", "Check server-confirmed Premium status")}
       {open("Safety", "Safety controls", "Open report, mute and block controls")}
       {open("MapAwareness", "Map awareness", "Open map awareness")}
       {open("Channels", "Channels", "Choose a RoadTalk channel")}

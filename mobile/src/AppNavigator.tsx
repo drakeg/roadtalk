@@ -12,6 +12,7 @@ import { LocationPermissionScreen } from "./screens/LocationPermissionScreen";
 import { MapAwarenessScreen } from "./screens/MapAwarenessScreen";
 import { MicrophonePermissionScreen } from "./screens/MicrophonePermissionScreen";
 import { NotificationsScreen } from "./screens/NotificationsScreen";
+import { PremiumScreen } from "./screens/PremiumScreen";
 import { RecoveryScreen } from "./screens/RecoveryScreen";
 import { SafetyScreen } from "./screens/SafetyScreen";
 import { RouteModeScreen } from "./screens/RouteModeScreen";
@@ -29,6 +30,7 @@ export type RootStackParamList = {
   MapAwareness: undefined;
   MicrophonePermission: undefined;
   Notifications: undefined;
+  Premium: undefined;
   Recovery: undefined;
   Safety: undefined;
   RouteMode: undefined;
@@ -66,6 +68,7 @@ export function AppNavigator() {
         <Stack.Screen component={LocationPermissionScreen} name="LocationPermission" options={{ title: "Location privacy" }} />
         <Stack.Screen component={MicrophonePermissionScreen} name="MicrophonePermission" options={{ title: "Microphone and live audio" }} />
         <Stack.Screen component={NotificationsScreen} name="Notifications" options={{ title: "Notifications" }} />
+        <Stack.Screen component={PremiumScreen} name="Premium" options={{ title: "Premium" }} />
         <Stack.Screen component={HomeScreen} name="Foundation" options={{ title: "RoadTalk" }} />
         <Stack.Screen component={IdentityScreen} name="Identity" options={{ title: "Identity" }} />
         <Stack.Screen component={RecoveryScreen} name="Recovery" options={{ title: "Account recovery" }} />
