@@ -14,6 +14,7 @@ from app.api.location import nearby_router
 from app.api.location import router as location_router
 from app.api.moderation import router as moderation_router
 from app.api.notifications import router as notifications_router
+from app.api.premium import router as premium_router
 from app.api.presence import router as presence_router
 from app.api.ptt import router as ptt_router
 from app.api.recovery import router as recovery_router
@@ -36,6 +37,8 @@ from app.moderation.limiter import ModerationReportLimiter
 from app.moderation_web import router as moderation_web_router
 from app.notifications.limiter import UrgentAlertLimiter
 from app.notifications_web import router as notifications_web_router
+from app.premium.provider import PremiumProviderBoundary, build_premium_provider
+from app.premium_web import router as premium_web_router
 from app.problems import install_problem_handlers
 from app.profile_web import router as profile_web_router
 from app.ptt.limiter import PttLimiter
@@ -108,6 +111,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.media_provider = media_provider_from_settings(resolved)
     app.state.route_context_provider = build_route_context_provider(resolved)
+    app.state.premium_provider = PremiumProviderBoundary(
+        build_premium_provider(resolved.premium_provider, environment=resolved.environment)
+    )
     if resolved.database_check_enabled:
         app.state.readiness.register("database", check_database)
     app.add_middleware(RequestContextMiddleware, settings=resolved)
@@ -123,6 +129,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(moderation_web_router)
     app.include_router(campgrounds_web_router)
     app.include_router(convoys_web_router)
+    app.include_router(premium_web_router)
     app.include_router(profile_web_router)
     app.include_router(system_router)
     app.include_router(admin_router)
@@ -137,6 +144,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(nearby_router)
     app.include_router(notifications_router)
     app.include_router(presence_router)
+    app.include_router(premium_router)
     app.include_router(campgrounds_router)
     app.include_router(ptt_router)
     return app

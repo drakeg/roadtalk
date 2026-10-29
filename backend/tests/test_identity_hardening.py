@@ -61,6 +61,7 @@ def test_openapi_exposes_only_approved_contracts() -> None:
         "/api/v1/me/notification-preferences",
         "/api/v1/me/notifications",
         "/api/v1/me/notifications/{notification_id}/state",
+        "/api/v1/me/premium",
         "/api/v1/nearby/summary",
         "/api/v1/moderation/reports",
         "/api/v1/moderation/restrictions",
