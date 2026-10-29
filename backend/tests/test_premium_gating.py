@@ -5,6 +5,8 @@ import pytest
 
 from app.premium.contracts import EntitlementContext, EntitlementState
 from app.premium.gating import (
+    ENTITLEMENT_MAX_FUTURE_SKEW,
+    ENTITLEMENT_MAX_OBSERVATION_AGE,
     FEATURE_POLICY,
     FeatureClass,
     RoadTalkFeature,
@@ -17,13 +19,14 @@ def entitlement(
     account_id: uuid.UUID,
     state: EntitlementState = "active",
     expires_at: datetime | None = None,
+    observed_at: datetime | None = None,
 ) -> EntitlementContext:
     return EntitlementContext(
         entitlement_id=uuid.uuid4(),
         account_id=account_id,
         entitlement="premium",
         state=state,
-        observed_at=datetime.now(UTC),
+        observed_at=observed_at or datetime.now(UTC),
         expires_at=expires_at,
     )
 
@@ -145,6 +148,86 @@ def test_feature_policy_is_closed_and_auditable() -> None:
         RoadTalkFeature.BASELINE_COMMUNICATION: FeatureClass.BASELINE,
         RoadTalkFeature.PREMIUM_EXPERIENCE: FeatureClass.PREMIUM,
     }
+    assert set(FEATURE_POLICY) == set(RoadTalkFeature)
+    with pytest.raises(TypeError):
+        FEATURE_POLICY[RoadTalkFeature.BASELINE_COMMUNICATION] = FeatureClass.PREMIUM  # type: ignore[index]
+
+
+def test_active_entitlement_without_expiry_fails_closed() -> None:
+    account_id = uuid.uuid4()
+    decision = evaluate_feature_access(
+        account_id=account_id,
+        feature=RoadTalkFeature.PREMIUM_EXPERIENCE,
+        existing_authorized=True,
+        entitlement=entitlement(account_id=account_id, expires_at=None),
+        observed_at=datetime.now(UTC),
+    )
+
+    assert decision.allowed is False
+    assert decision.reason == "premium_entitlement_required"
+
+
+@pytest.mark.parametrize(
+    "observation_offset",
+    [
+        -ENTITLEMENT_MAX_OBSERVATION_AGE - timedelta(seconds=1),
+        ENTITLEMENT_MAX_FUTURE_SKEW + timedelta(seconds=1),
+    ],
+)
+def test_stale_or_future_entitlement_observation_fails_closed(
+    observation_offset: timedelta,
+) -> None:
+    account_id = uuid.uuid4()
+    now = datetime.now(UTC)
+    decision = evaluate_feature_access(
+        account_id=account_id,
+        feature=RoadTalkFeature.PREMIUM_EXPERIENCE,
+        existing_authorized=True,
+        entitlement=entitlement(
+            account_id=account_id,
+            expires_at=now + timedelta(days=30),
+            observed_at=now + observation_offset,
+        ),
+        observed_at=now,
+    )
+
+    assert decision.allowed is False
+    assert decision.reason == "premium_entitlement_stale"
+
+
+def test_entitlement_observation_within_bounds_is_accepted() -> None:
+    account_id = uuid.uuid4()
+    now = datetime.now(UTC)
+    for offset in (-ENTITLEMENT_MAX_OBSERVATION_AGE, ENTITLEMENT_MAX_FUTURE_SKEW):
+        decision = evaluate_feature_access(
+            account_id=account_id,
+            feature=RoadTalkFeature.PREMIUM_EXPERIENCE,
+            existing_authorized=True,
+            entitlement=entitlement(
+                account_id=account_id,
+                expires_at=now + timedelta(days=30),
+                observed_at=now + offset,
+            ),
+            observed_at=now,
+        )
+        assert decision.allowed is True
+
+
+def test_decision_does_not_echo_entitlement_identity_or_expiry() -> None:
+    account_id = uuid.uuid4()
+    now = datetime.now(UTC)
+    active = entitlement(account_id=account_id, expires_at=now + timedelta(days=30))
+    decision = evaluate_feature_access(
+        account_id=account_id,
+        feature=RoadTalkFeature.PREMIUM_EXPERIENCE,
+        existing_authorized=True,
+        entitlement=active,
+        observed_at=now,
+    )
+
+    payload = decision.model_dump(mode="json")
+    assert str(active.entitlement_id) not in str(payload)
+    assert "expires_at" not in payload
 
 
 def test_naive_observation_time_is_rejected() -> None:

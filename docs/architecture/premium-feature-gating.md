@@ -24,7 +24,11 @@ The feature gate is intentionally downstream of existing RoadTalk authorization.
 
 Premium-only access is denied when the entitlement is missing, inactive, expired, revoked, stale or belongs to another account. Naive timestamps are rejected.
 
-The decision contract is closed and records feature class, entitlement state, reason and server-authoritative provenance for auditability.
+An entitlement is stale when the gate time has reached its expiry, when its server observation is older than `ENTITLEMENT_MAX_OBSERVATION_AGE` (5 minutes), or when it was observed more than `ENTITLEMENT_MAX_FUTURE_SKEW` (30 seconds) after the gate time. A cached entitlement context therefore cannot keep granting Premium after the lifecycle changes; callers re-read the server-owned lifecycle.
+
+An `active` entitlement without an expiry is treated as malformed and denied, because lifecycle activation and renewal always carry a future expiry.
+
+The decision contract is closed and records feature class, entitlement state, reason and server-authoritative provenance for auditability. It does not echo entitlement identifiers or expiry.
 
 ## Scope
 

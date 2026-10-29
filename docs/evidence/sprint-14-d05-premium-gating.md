@@ -7,6 +7,10 @@
 - Premium-only access requires an active, account-matching, non-stale entitlement.
 - Premium entitlement never overrides an existing RoadTalk authorization denial.
 - Missing, inactive, expired, revoked, stale and cross-account entitlements fail closed.
+- Active entitlements without an expiry, observed more than 5 minutes before the gate time, or observed more than 30 seconds in the future fail closed.
+- Decisions do not echo entitlement identifiers or expiry.
+
+Validation: `pytest tests/test_premium_gating.py` (15 tests), ruff check/format and mypy clean.
 - Decisions expose bounded, server-authoritative audit reasons.
 
 ## Requirements covered
