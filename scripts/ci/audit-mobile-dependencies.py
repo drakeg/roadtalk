@@ -20,11 +20,9 @@ AUDIT_TIMEOUT_SECONDS = 90
 ADVISORY_EXPIRES = {
     "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq": date(2026, 9, 30),
     "https://github.com/advisories/GHSA-w3rx-r6r6-pgpr": date(2026, 9, 30),
-    # Expo SDK 57 currently pulls node-forge 1.4.0 through @expo/cli /
-    # @expo/code-signing-certificates. GHSA-86w9-cpqp-85rv has no patched
-    # npm release as of 2026-10-02. Keep this exception short-lived so CI
-    # automatically becomes blocking when the review window expires.
-    "https://github.com/advisories/GHSA-86w9-cpqp-85rv": date(2026, 10, 31),
+    # GHSA-86w9-cpqp-85rv (node-forge) is resolved by the node-forge 1.4.2
+    # override and GHSA-mrhx-c7xc-m3w5 (zod) by the zod 4.6.7 override in
+    # mobile/package.json; neither needs an exception.
     # braces 3.0.3 is still the latest published release and currently has
     # no fixed npm version for CVE-2026-93687 / GHSA-vfj7-8cjw-p6xm.
     # Expo/Metro/Jest pull it transitively through micromatch, so this single
