@@ -128,3 +128,26 @@ def test_replay_storage_is_bounded_and_secrets_are_not_exposed() -> None:
     assert len(value._seen) == 2
     assert ids[0] not in value._seen
     assert SECRET.decode() not in repr(value._seen)
+
+
+def test_replay_still_requires_a_valid_signature() -> None:
+    value = boundary()
+    event_id = uuid.uuid4()
+    body = b'{"state":"active"}'
+    signature = signed(value, event_id=event_id, timestamp=NOW, body=body)
+    value.verify(
+        event_id=event_id,
+        timestamp=NOW,
+        body=body,
+        signature=signature,
+        now=NOW,
+    )
+
+    with pytest.raises(PremiumWebhookError, match="Premium webhook unavailable"):
+        value.verify(
+            event_id=event_id,
+            timestamp=NOW,
+            body=body,
+            signature="0" * 64,
+            now=NOW + timedelta(seconds=1),
+        )
