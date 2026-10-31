@@ -12,10 +12,7 @@ RUN python -m venv /opt/venv && /opt/venv/bin/pip install --no-cache-dir .
 
 FROM python:3.14-slim@sha256:cd89c30eda26ee911a4611b18680086e0ea42e6f5f8cbe653d07fa7958c9cec8
 ENV PATH="/opt/venv/bin:$PATH" PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-RUN python -m pip install --no-cache-dir --upgrade \
-      "setuptools>=78.1.1" \
-      "msgpack>=1.2.3" \
-      "urllib3>=2.8.0" \
+RUN python -m pip install --no-cache-dir --upgrade "setuptools>=78.1.1" \
     && apt-get update \
     && apt-get upgrade --no-install-recommends -y \
     && apt-get install --only-upgrade --no-install-recommends -y \
@@ -28,6 +25,10 @@ RUN python -m pip install --no-cache-dir --upgrade \
     && useradd --system --gid roadtalk --home /app roadtalk
 WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
+RUN /opt/venv/bin/pip install --no-cache-dir --upgrade \
+      "setuptools>=78.1.1" \
+      "msgpack>=1.2.3" \
+      "urllib3>=2.8.0"
 COPY --from=browser-assets /livekit-client.umd.js /opt/roadtalk/web/livekit-client.umd.js
 COPY backend/alembic.ini ./
 COPY backend/migrations ./migrations
