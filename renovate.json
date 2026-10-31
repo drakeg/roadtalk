@@ -24,6 +24,14 @@
         "@react-native/jest-preset"
       ],
       "allowedVersions": "<0.87.0"
+    },
+    {
+      "description": "Keep LiveKit React Native client and WebRTC peer versions coordinated",
+      "matchPackageNames": [
+        "@livekit/react-native",
+        "@livekit/react-native-webrtc"
+      ],
+      "groupName": "LiveKit React Native"
     }
   ]
 }
