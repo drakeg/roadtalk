@@ -1,4 +1,5 @@
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -283,3 +284,23 @@ def test_lifecycle_event_is_closed_and_requires_valid_expiry() -> None:
                 "payment_method_token": "attacker-controlled",
             }
         )
+
+
+def test_concurrent_identical_event_is_applied_once_and_replayed_afterward() -> None:
+    lifecycle = PremiumLifecycle()
+    now = datetime.now(UTC)
+    activation = event(
+        action="activate",
+        subscription_id=uuid.uuid4(),
+        account_id=uuid.uuid4(),
+        effective_at=now,
+        expires_at=now + timedelta(days=30),
+    )
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        receipts = list(executor.map(lambda _: lifecycle.apply(activation), range(8)))
+
+    assert sum(not receipt.replayed for receipt in receipts) == 1
+    assert sum(receipt.replayed for receipt in receipts) == 7
+    assert {receipt.subscription_state for receipt in receipts} == {"active"}
+    assert {receipt.entitlement_state for receipt in receipts} == {"active"}
