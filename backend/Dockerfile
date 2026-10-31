@@ -4,15 +4,19 @@ ADD --checksum=sha256:a77a2f4c363e93099d7c135721c9ec81d6c5bacc691796dad799222e33
     https://cdn.jsdelivr.net/npm/livekit-client@2.21.0/dist/livekit-client.umd.js \
     /livekit-client.umd.js
 
-FROM python:3.12-slim@sha256:aa943ce411423c7582288f18707ff66eddcbaeb510502d747a72aeb34f30d159 AS builder
+FROM python:3.14-slim@sha256:cd89c30eda26ee911a4611b18680086e0ea42e6f5f8cbe653d07fa7958c9cec8 AS builder
 WORKDIR /build
 COPY backend/pyproject.toml backend/README.md ./
 COPY backend/app ./app
 RUN python -m venv /opt/venv && /opt/venv/bin/pip install --no-cache-dir .
 
-FROM python:3.12-slim@sha256:aa943ce411423c7582288f18707ff66eddcbaeb510502d747a72aeb34f30d159
+FROM python:3.14-slim@sha256:cd89c30eda26ee911a4611b18680086e0ea42e6f5f8cbe653d07fa7958c9cec8
 ENV PATH="/opt/venv/bin:$PATH" PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-RUN apt-get update \
+RUN python -m pip install --no-cache-dir --upgrade \
+      "setuptools>=78.1.1" \
+      "msgpack>=1.2.3" \
+      "urllib3>=2.8.0" \
+    && apt-get update \
     && apt-get upgrade --no-install-recommends -y \
     && apt-get install --only-upgrade --no-install-recommends -y \
       libssl3t64 \
