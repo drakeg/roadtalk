@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from threading import RLock
 from datetime import UTC, datetime
+from threading import RLock
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, model_validator
