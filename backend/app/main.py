@@ -37,6 +37,7 @@ from app.moderation.limiter import ModerationReportLimiter
 from app.moderation_web import router as moderation_web_router
 from app.notifications.limiter import UrgentAlertLimiter
 from app.notifications_web import router as notifications_web_router
+from app.premium.limiter import PremiumStatusLimiter
 from app.premium.provider import PremiumProviderBoundary, build_premium_provider
 from app.premium_web import router as premium_web_router
 from app.problems import install_problem_handlers
@@ -113,6 +114,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.route_context_provider = build_route_context_provider(resolved)
     app.state.premium_provider = PremiumProviderBoundary(
         build_premium_provider(resolved.premium_provider, environment=resolved.environment)
+    )
+    app.state.premium_status_limiter = PremiumStatusLimiter(
+        account_limit=30,
+        device_limit=30,
+        peer_limit=120,
+        window_seconds=60,
     )
     if resolved.database_check_enabled:
         app.state.readiness.register("database", check_database)

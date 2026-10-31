@@ -16,6 +16,7 @@ from app.config import Settings
 from app.db.models import Account, Device, Session
 from app.db.session import get_session
 from app.main import create_app
+from app.premium.limiter import PremiumStatusLimiter
 from app.premium.provider import FakePremiumProvider, PremiumProviderBoundary
 
 
@@ -183,3 +184,23 @@ def test_fake_premium_provider_is_rejected_outside_local_and_test() -> None:
     for environment in ("field-test", "production"):
         with pytest.raises(ValidationError, match="premium provider must remain disabled"):
             Settings(environment=environment, premium_provider="fake")
+
+
+def test_premium_status_rate_limit_is_generic_and_retryable() -> None:
+    application = create_app(_settings())
+    _authenticated(application)
+    application.state.premium_status_limiter = PremiumStatusLimiter(
+        account_limit=1,
+        device_limit=1,
+        peer_limit=1,
+        window_seconds=60,
+    )
+
+    with TestClient(application) as client:
+        first = client.get("/api/v1/me/premium")
+        limited = client.get("/api/v1/me/premium")
+
+    assert first.status_code == 200
+    assert limited.status_code == 429
+    assert limited.headers["retry-after"]
+    assert limited.json()["detail"] == "Premium request is temporarily unavailable."

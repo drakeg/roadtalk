@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from threading import RLock
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, model_validator
@@ -68,36 +69,38 @@ class PremiumLifecycle:
         self._records: dict[uuid.UUID, _LifecycleRecord] = {}
         self._events: dict[uuid.UUID, PremiumLifecycleEvent] = {}
         self._receipts: dict[uuid.UUID, PremiumLifecycleReceipt] = {}
+        self._lock = RLock()
 
     def apply(self, event: PremiumLifecycleEvent) -> PremiumLifecycleReceipt:
         normalized = self._normalized_event(event)
-        replay = self._receipts.get(normalized.event_id)
-        if replay is not None:
-            prior_event = self._events[normalized.event_id]
-            if prior_event != normalized:
-                raise PremiumLifecycleError("Premium lifecycle unavailable")
-            return replay.model_copy(update={"replayed": True})
+        with self._lock:
+            replay = self._receipts.get(normalized.event_id)
+            if replay is not None:
+                prior_event = self._events[normalized.event_id]
+                if prior_event != normalized:
+                    raise PremiumLifecycleError("Premium lifecycle unavailable")
+                return replay.model_copy(update={"replayed": True})
 
-        current = self._records.get(normalized.subscription_id)
-        if current is not None:
-            self._validate_identity(current, normalized)
-            if normalized.effective_at < current.effective_at:
-                raise PremiumLifecycleError("Premium lifecycle unavailable")
+            current = self._records.get(normalized.subscription_id)
+            if current is not None:
+                self._validate_identity(current, normalized)
+                if normalized.effective_at < current.effective_at:
+                    raise PremiumLifecycleError("Premium lifecycle unavailable")
 
-        record = self._transition(current, normalized)
-        receipt = PremiumLifecycleReceipt(
-            event_id=normalized.event_id,
-            subscription_id=record.subscription_id,
-            account_id=record.account_id,
-            subscription_state=record.subscription_state,
-            entitlement_state=record.entitlement_state,
-            effective_at=record.effective_at,
-            expires_at=record.expires_at,
-        )
-        self._records[record.subscription_id] = record
-        self._events[normalized.event_id] = normalized
-        self._receipts[normalized.event_id] = receipt
-        return receipt
+            record = self._transition(current, normalized)
+            receipt = PremiumLifecycleReceipt(
+                event_id=normalized.event_id,
+                subscription_id=record.subscription_id,
+                account_id=record.account_id,
+                subscription_state=record.subscription_state,
+                entitlement_state=record.entitlement_state,
+                effective_at=record.effective_at,
+                expires_at=record.expires_at,
+            )
+            self._records[record.subscription_id] = record
+            self._events[normalized.event_id] = normalized
+            self._receipts[normalized.event_id] = receipt
+            return receipt
 
     def current(
         self,
@@ -105,31 +108,32 @@ class PremiumLifecycle:
         *,
         observed_at: datetime,
     ) -> PremiumLifecycleReceipt | None:
-        record = self._records.get(subscription_id)
-        if record is None:
-            return None
-
         observed = self._as_utc(observed_at)
-        subscription_state = record.subscription_state
-        entitlement_state = record.entitlement_state
+        with self._lock:
+            record = self._records.get(subscription_id)
+            if record is None:
+                return None
 
-        if (
-            record.expires_at is not None
-            and observed >= record.expires_at
-            and record.subscription_state in {"active", "grace", "canceled"}
-        ):
-            subscription_state = "expired"
-            entitlement_state = "expired"
+            subscription_state = record.subscription_state
+            entitlement_state = record.entitlement_state
 
-        return PremiumLifecycleReceipt(
-            event_id=uuid.UUID(int=0),
-            subscription_id=record.subscription_id,
-            account_id=record.account_id,
-            subscription_state=subscription_state,
-            entitlement_state=entitlement_state,
-            effective_at=observed,
-            expires_at=record.expires_at,
-        )
+            if (
+                record.expires_at is not None
+                and observed >= record.expires_at
+                and record.subscription_state in {"active", "grace", "canceled"}
+            ):
+                subscription_state = "expired"
+                entitlement_state = "expired"
+
+            return PremiumLifecycleReceipt(
+                event_id=uuid.UUID(int=0),
+                subscription_id=record.subscription_id,
+                account_id=record.account_id,
+                subscription_state=subscription_state,
+                entitlement_state=entitlement_state,
+                effective_at=observed,
+                expires_at=record.expires_at,
+            )
 
     def _transition(
         self,
