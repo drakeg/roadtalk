@@ -16,7 +16,7 @@ concurrency:
 jobs:
   backend:
     name: Backend, database, and migrations
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     services:
       postgres:
@@ -100,7 +100,7 @@ jobs:
 
   mobile:
     name: Mobile quality
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     defaults:
       run:
@@ -125,7 +125,7 @@ jobs:
 
   security:
     name: Dependencies, secrets, containers, and IaC
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
