@@ -67,6 +67,14 @@ class PremiumWebhookBoundary:
         ):
             raise PremiumWebhookError("Premium webhook unavailable")
 
+        expected = hmac.new(
+            self._secret,
+            self._signed_bytes(event_id=event_id, timestamp=event_time, body=body),
+            hashlib.sha256,
+        ).hexdigest()
+        if not hmac.compare_digest(expected, signature):
+            raise PremiumWebhookError("Premium webhook unavailable")
+
         digest = hashlib.sha256(body).digest()
         prior = self._seen.get(event_id)
         if prior is not None:
@@ -77,14 +85,6 @@ class PremiumWebhookBoundary:
                 accepted_at=observed,
                 replayed=True,
             )
-
-        expected = hmac.new(
-            self._secret,
-            self._signed_bytes(event_id=event_id, timestamp=event_time, body=body),
-            hashlib.sha256,
-        ).hexdigest()
-        if not hmac.compare_digest(expected, signature):
-            raise PremiumWebhookError("Premium webhook unavailable")
 
         if len(self._seen) >= self._max_events:
             evicted = self._order.popleft()
