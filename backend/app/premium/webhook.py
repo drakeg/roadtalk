@@ -5,6 +5,7 @@ import hmac
 import uuid
 from collections import deque
 from datetime import UTC, datetime, timedelta
+from threading import RLock
 from typing import Final
 
 from pydantic import BaseModel, ConfigDict
@@ -47,6 +48,7 @@ class PremiumWebhookBoundary:
         self._max_events = max_events
         self._seen: dict[uuid.UUID, bytes] = {}
         self._order: deque[uuid.UUID] = deque()
+        self._lock = RLock()
 
     def verify(
         self,
@@ -76,22 +78,23 @@ class PremiumWebhookBoundary:
             raise PremiumWebhookError("Premium webhook unavailable")
 
         digest = hashlib.sha256(body).digest()
-        prior = self._seen.get(event_id)
-        if prior is not None:
-            if prior != digest:
-                raise PremiumWebhookError("Premium webhook unavailable")
-            return PremiumWebhookReceipt(
-                event_id=event_id,
-                accepted_at=observed,
-                replayed=True,
-            )
+        with self._lock:
+            prior = self._seen.get(event_id)
+            if prior is not None:
+                if prior != digest:
+                    raise PremiumWebhookError("Premium webhook unavailable")
+                return PremiumWebhookReceipt(
+                    event_id=event_id,
+                    accepted_at=observed,
+                    replayed=True,
+                )
 
-        if len(self._seen) >= self._max_events:
-            evicted = self._order.popleft()
-            self._seen.pop(evicted, None)
-        self._seen[event_id] = digest
-        self._order.append(event_id)
-        return PremiumWebhookReceipt(event_id=event_id, accepted_at=observed)
+            if len(self._seen) >= self._max_events:
+                evicted = self._order.popleft()
+                self._seen.pop(evicted, None)
+            self._seen[event_id] = digest
+            self._order.append(event_id)
+            return PremiumWebhookReceipt(event_id=event_id, accepted_at=observed)
 
     def sign_for_test(
         self,
