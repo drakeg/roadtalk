@@ -32,6 +32,22 @@
         "@livekit/react-native-webrtc"
       ],
       "groupName": "LiveKit React Native"
+    },
+    {
+      "description": "Keep Expo on SDK 57 while React Native remains 0.86",
+      "matchPackageNames": [
+        "expo",
+        "expo-asset",
+        "expo-audio",
+        "expo-crypto",
+        "expo-dev-client",
+        "expo-location",
+        "expo-secure-store",
+        "expo-status-bar",
+        "expo-system-ui",
+        "jest-expo"
+      ],
+      "allowedVersions": "<58.0.0"
     }
   ]
 }
