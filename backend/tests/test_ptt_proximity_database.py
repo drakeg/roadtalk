@@ -99,6 +99,11 @@ async def _receiver_matrix() -> None:
             assert {item.receive_grant_id for item in found} == eligible
             assert all(item.account_id != sender_account for item in found)
 
+            # The fixture is intentionally tiny, so PostgreSQL may rationally choose
+            # a sequential scan even when the GiST index is valid. Disable sequential
+            # scans only for this EXPLAIN probe so the test verifies index usability
+            # rather than depending on cost estimates that vary by runner/database.
+            await db.execute(text("SET LOCAL enable_seqscan = off"))
             plan = await db.execute(
                 text(
                     "EXPLAIN (COSTS OFF) SELECT g.id FROM media_grant g "
