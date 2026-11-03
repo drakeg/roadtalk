@@ -4,13 +4,13 @@ ADD --checksum=sha256:a77a2f4c363e93099d7c135721c9ec81d6c5bacc691796dad799222e33
     https://cdn.jsdelivr.net/npm/livekit-client@2.21.0/dist/livekit-client.umd.js \
     /livekit-client.umd.js
 
-FROM python:3.14-slim@sha256:cd89c30eda26ee911a4611b18680086e0ea42e6f5f8cbe653d07fa7958c9cec8 AS builder
+FROM python:3.14-slim@sha256:930e1abba7c4e8f96ed93e8012c35d174d7732752731bbd5e8e757d7ec6f3966 AS builder
 WORKDIR /build
 COPY backend/pyproject.toml backend/README.md ./
 COPY backend/app ./app
 RUN python -m venv /opt/venv && /opt/venv/bin/pip install --no-cache-dir .
 
-FROM python:3.14-slim@sha256:cd89c30eda26ee911a4611b18680086e0ea42e6f5f8cbe653d07fa7958c9cec8
+FROM python:3.14-slim@sha256:930e1abba7c4e8f96ed93e8012c35d174d7732752731bbd5e8e757d7ec6f3966
 ENV PATH="/opt/venv/bin:$PATH" PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 RUN apt-get update \
     && apt-get upgrade --no-install-recommends -y \
