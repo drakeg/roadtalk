@@ -304,3 +304,66 @@ def test_concurrent_identical_event_is_applied_once_and_replayed_afterward() -> 
     assert sum(receipt.replayed for receipt in receipts) == 7
     assert {receipt.subscription_state for receipt in receipts} == {"active"}
     assert {receipt.entitlement_state for receipt in receipts} == {"active"}
+
+
+def test_grace_keeps_entitlement_active_until_grace_expiry() -> None:
+    lifecycle = PremiumLifecycle()
+    subscription_id = uuid.uuid4()
+    account_id = uuid.uuid4()
+    now = datetime.now(UTC)
+    initial_expiry = now + timedelta(days=30)
+    grace_expiry = initial_expiry + timedelta(days=7)
+
+    lifecycle.apply(
+        event(
+            action="activate",
+            subscription_id=subscription_id,
+            account_id=account_id,
+            effective_at=now,
+            expires_at=initial_expiry,
+        )
+    )
+    grace = lifecycle.apply(
+        event(
+            action="grace",
+            subscription_id=subscription_id,
+            account_id=account_id,
+            effective_at=initial_expiry,
+            expires_at=grace_expiry,
+        )
+    )
+
+    assert grace.subscription_state == "grace"
+    assert grace.entitlement_state == "active"
+    assert grace.expires_at == grace_expiry
+
+    current = lifecycle.current(subscription_id, observed_at=grace_expiry)
+    assert current is not None
+    assert current.subscription_state == "expired"
+    assert current.entitlement_state == "expired"
+
+
+def test_grace_requires_future_expiry_and_valid_prior_state() -> None:
+    lifecycle = PremiumLifecycle()
+    subscription_id = uuid.uuid4()
+    account_id = uuid.uuid4()
+    now = datetime.now(UTC)
+
+    with pytest.raises(ValidationError):
+        event(
+            action="grace",
+            subscription_id=subscription_id,
+            account_id=account_id,
+            effective_at=now,
+        )
+
+    with pytest.raises(PremiumLifecycleError, match="Premium lifecycle unavailable"):
+        lifecycle.apply(
+            event(
+                action="grace",
+                subscription_id=subscription_id,
+                account_id=account_id,
+                effective_at=now,
+                expires_at=now + timedelta(days=7),
+            )
+        )
