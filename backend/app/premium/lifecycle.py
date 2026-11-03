@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, model_validator
 
 from app.premium.contracts import EntitlementState, SubscriptionState
 
-LifecycleAction = Literal["activate", "renew", "cancel", "expire", "revoke"]
+LifecycleAction = Literal["activate", "renew", "grace", "cancel", "expire", "revoke"]
 
 
 class PremiumLifecycleError(RuntimeError):
@@ -29,9 +29,9 @@ class PremiumLifecycleEvent(BaseModel):
 
     @model_validator(mode="after")
     def validate_expiry(self) -> PremiumLifecycleEvent:
-        if self.action in {"activate", "renew"}:
+        if self.action in {"activate", "renew", "grace"}:
             if self.expires_at is None or self.expires_at <= self.effective_at:
-                raise ValueError("activation and renewal require a future expiry")
+                raise ValueError("activation, renewal and grace require a future expiry")
         elif self.expires_at is not None and self.expires_at < self.effective_at:
             raise ValueError("expiry cannot precede the lifecycle event")
         return self
@@ -156,6 +156,11 @@ class PremiumLifecycle:
             if current.subscription_state not in {"active", "grace", "canceled"}:
                 raise PremiumLifecycleError("Premium lifecycle unavailable")
             return self._record(event, "active", "active")
+
+        if event.action == "grace":
+            if current.subscription_state not in {"active", "canceled"}:
+                raise PremiumLifecycleError("Premium lifecycle unavailable")
+            return self._record(event, "grace", "active")
 
         if event.action == "cancel":
             if current.subscription_state not in {"active", "grace"}:
