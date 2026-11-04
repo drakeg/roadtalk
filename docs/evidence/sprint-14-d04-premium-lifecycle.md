@@ -3,6 +3,7 @@
 ## Deterministic evidence
 
 - Activation and renewal produce active server-authoritative entitlement.
+- Grace is an explicit lifecycle transition with a required future grace expiry; entitlement remains active only until that bounded expiry.
 - Cancellation preserves entitlement only until the existing expiry.
 - Expiry fails closed if attempted early and removes entitlement at expiry.
 - Revocation removes entitlement immediately.
@@ -13,7 +14,7 @@
 
 ## Requirements covered
 
-- S14-R04 subscription and entitlement lifecycle semantics.
+- S14-R04 subscription and entitlement activation, renewal, grace, cancellation, expiry and revocation semantics.
 - S14-R07 deterministic event idempotency/replay behavior.
 - S14-R09 payment/provider data remains outside lifecycle payloads.
 - S14-R11 incremental recurring implementation cost remains $0.
