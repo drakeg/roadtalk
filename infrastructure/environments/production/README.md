@@ -1,19 +1,27 @@
 # Production Terraform root
 
-Sprint 15 production work is contract-gated. This directory remains non-deploying in S15-D02.
+Sprint 15 production work is contract-gated. This directory remains non-deploying through S15-D03.
 
 The production root is separate from field test and does not reuse Terraform workspaces,
-state, VPCs, hosts, databases, caches, or runtime-secret prefixes. The accepted machine-
-readable contract is `production-contract.json` and is validated in CI by
-`scripts/ci/check-production-contract.py`.
+state, VPCs, hosts, databases, caches, or runtime-secret prefixes.
 
-The target contract requires a multi-AZ managed-services topology, private compute and
-data services, managed load-balancer ingress, explicit approved domain/TLS inputs,
-immutable digest-selected application artifacts, deployment provenance, and rollback
-semantics.
+Machine-readable production contracts:
 
-D02 does **not** create Terraform resources or authorize an apply. Production/public-beta
-traffic, DNS cutover, recurring spend, real provider/store/payment activation, destructive
-changes, and live-production evidence remain separately gated by later Sprint 15 work.
+- `production-contract.json` — environment, topology, TLS, immutable artifact, release, and rollback boundaries.
+- `identity-contract.json` — CI/CD identity, least privilege, managed secrets, rotation, human access, and break-glass boundaries.
+
+CI validates these contracts with:
+
+- `scripts/ci/check-production-contract.py`
+- `scripts/ci/check-production-identity.py`
+
+Production CI/CD credentials must use short-lived GitHub Actions OIDC federation; shared
+static AWS credentials and long-lived access keys are prohibited. Production runtime
+secrets belong under `/roadtalk/production/` and must not enter repository content,
+CI logs, or Terraform state.
+
+D02/D03 do **not** create production Terraform resources, IAM roles, OIDC trusts, secrets,
+DNS records, certificates, provider credentials, or recurring spend. Production/public-beta
+traffic and live evidence remain separately gated by later Sprint 15 work.
 
 Do not copy the single-host field-test topology into production.
