@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "environment": "production",
+  "ci_identity": {
+    "provider": "github-actions-oidc",
+    "shared_static_credentials_allowed": false,
+    "long_lived_access_keys_allowed": false,
+    "audience": "sts.amazonaws.com",
+    "repository": "drakeg/roadtalk",
+    "branch": "main",
+    "pull_request_deploy_allowed": false,
+    "session_duration_minutes_max": 60
+  },
+  "least_privilege": {
+    "wildcard_actions_allowed": false,
+    "wildcard_resources_allowed": false,
+    "administrator_access_allowed": false,
+    "separate_plan_and_apply_roles_required": true,
+    "apply_role_requires_manual_approval": true,
+    "runtime_role_cannot_modify_iam": true,
+    "runtime_role_cannot_read_unscoped_secrets": true
+  },
+  "secrets": {
+    "source": "managed-secret-store",
+    "parameter_prefix": "/roadtalk/production/",
+    "plaintext_in_repository_allowed": false,
+    "plaintext_in_ci_logs_allowed": false,
+    "plaintext_in_terraform_state_allowed": false,
+    "runtime_fetch_required": true,
+    "rotation_days_max": 90,
+    "provider_credentials_separately_approved": true
+  },
+  "break_glass": {
+    "enabled": true,
+    "shared_account_allowed": false,
+    "mfa_required": true,
+    "time_bounded_required": true,
+    "reason_required": true,
+    "audit_log_required": true,
+    "post_use_review_required": true,
+    "standing_admin_session_allowed": false
+  },
+  "human_access": {
+    "individual_identity_required": true,
+    "mfa_required": true,
+    "shared_users_allowed": false,
+    "direct_long_lived_keys_allowed": false
+  },
+  "evidence": {
+    "live_production_role_created": false,
+    "live_secret_created": false,
+    "live_oidc_trust_created": false,
+    "live_break_glass_exercised": false
+  }
+}
