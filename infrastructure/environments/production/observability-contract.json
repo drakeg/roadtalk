@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "environment": "production",
+  "health": {
+    "liveness_required": true,
+    "readiness_required": true,
+    "readiness_checks_database": true,
+    "readiness_checks_cache": true,
+    "readiness_checks_external_optional_dependencies": false,
+    "health_endpoint_contains_secret_data": false,
+    "health_endpoint_contains_user_data": false
+  },
+  "logging": {
+    "structured_json_required": true,
+    "request_id_required": true,
+    "service_name_required": true,
+    "environment_required": true,
+    "severity_required": true,
+    "raw_authorization_header_allowed": false,
+    "raw_cookie_header_allowed": false,
+    "raw_secret_values_allowed": false,
+    "raw_payment_data_allowed": false,
+    "precise_location_allowed": false,
+    "unrelated_user_payloads_allowed": false,
+    "retention_days_max": 30
+  },
+  "metrics": {
+    "request_rate_required": true,
+    "error_rate_required": true,
+    "latency_required": true,
+    "dependency_health_required": true,
+    "resource_saturation_required": true,
+    "user_id_labels_allowed": false,
+    "email_labels_allowed": false,
+    "precise_location_labels_allowed": false,
+    "unbounded_cardinality_allowed": false
+  },
+  "alerts": {
+    "owner_required": true,
+    "runbook_required": true,
+    "severity_required": true,
+    "duplicate_storm_protection_required": true,
+    "secret_values_allowed": false,
+    "raw_user_payloads_allowed": false
+  },
+  "slo": {
+    "availability_target_percent_min": 99.5,
+    "latency_p95_ms_max": 1000,
+    "server_error_rate_percent_max": 1.0,
+    "error_budget_required": true,
+    "release_block_on_exhausted_error_budget": true
+  },
+  "release_health_gate": {
+    "pre_release_health_check_required": true,
+    "post_release_health_check_required": true,
+    "rollback_on_failed_health_required": true,
+    "minimum_observation_minutes": 10,
+    "automatic_real_user_rollout_allowed": false
+  },
+  "evidence": {
+    "live_production_metrics_collected": false,
+    "live_production_alerts_fired": false,
+    "live_production_slo_measured": false,
+    "live_production_release_gate_exercised": false
+  }
+}
