@@ -243,6 +243,8 @@ jobs:
         run: python scripts/ci/check-sprint-14-planning.py
       - name: Check Sprint 15 production environment contract
         run: python scripts/ci/check-production-contract.py --self-test
+      - name: Check Sprint 15 production identity contract
+        run: python scripts/ci/check-production-identity.py --self-test
       - name: Check Sprint 12 moderation compatibility and evidence
         run: python scripts/ci/check-moderation-compatibility.py
       - name: Check Sprint 12 final review and traceability
