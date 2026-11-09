@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "environment": "production",
+  "deployment_authorized": false,
+  "public_beta_authorized": false,
+  "dns_cutover_authorized": false,
+  "recurring_spend_authorized": false,
+  "environment_separation": {
+    "terraform_workspace_reuse": false,
+    "field_test_state_reuse": false,
+    "field_test_network_reuse": false,
+    "production_state_key": "production/terraform.tfstate",
+    "production_parameter_prefix": "/roadtalk/production/"
+  },
+  "topology": {
+    "model": "multi-az-managed-services",
+    "ingress": "managed-load-balancer",
+    "compute": "private-subnet-service",
+    "database": "managed-multi-az-postgresql",
+    "cache": "managed-private-redis",
+    "availability_zones_minimum": 2,
+    "single_host_allowed": false,
+    "public_database_allowed": false,
+    "public_cache_allowed": false
+  },
+  "domains_tls": {
+    "domain_configuration_mode": "explicit-approved-input",
+    "domain_ownership_required": true,
+    "tls_required": true,
+    "minimum_tls_version": "1.2",
+    "http_to_https_redirect_required": true,
+    "certificate_validation_required": true
+  },
+  "artifacts": {
+    "backend_image_selector": "sha256-digest",
+    "mutable_tags_allowed": false,
+    "provenance_required": true,
+    "sbom_required_before_release": true,
+    "rollback_artifact_required": true
+  },
+  "configuration": {
+    "runtime_environment_value": "production",
+    "plaintext_secrets_in_terraform": false,
+    "plaintext_secrets_in_ci": false,
+    "managed_secret_source_required": true,
+    "premium_provider_default": "disabled",
+    "payment_provider_default": "disabled",
+    "store_provider_default": "disabled"
+  },
+  "release": {
+    "manual_approval_required": true,
+    "exact_artifact_required": true,
+    "exact_plan_required": true,
+    "database_migration_check_required": true,
+    "rollback_target_required": true,
+    "emergency_disable_required": true,
+    "automatic_real_user_rollout_allowed": false,
+    "irreversible_migration_blocks_automatic_rollback": true
+  },
+  "evidence": {
+    "ci_is_live_production_evidence": false,
+    "simulation_is_live_production_evidence": false,
+    "live_load_test_performed": false,
+    "live_failover_performed": false,
+    "live_disaster_recovery_performed": false,
+    "production_traffic_performed": false
+  }
+}
