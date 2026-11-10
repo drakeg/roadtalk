@@ -247,6 +247,8 @@ jobs:
         run: python scripts/ci/check-production-identity.py --self-test
       - name: Check Sprint 15 production observability contract
         run: python scripts/ci/check-production-observability.py --self-test
+      - name: Check Sprint 15 production backup contract
+        run: python scripts/ci/check-production-backup.py --self-test
       - name: Check Sprint 12 moderation compatibility and evidence
         run: python scripts/ci/check-moderation-compatibility.py
       - name: Check Sprint 12 final review and traceability
