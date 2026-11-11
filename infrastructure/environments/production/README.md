@@ -1,6 +1,6 @@
 # Production Terraform root
 
-Sprint 15 production work is contract-gated. This directory remains non-deploying through S15-D06.
+Sprint 15 production work is contract-gated. This directory remains non-deploying through S15-D07.
 
 Machine-readable production contracts:
 
@@ -9,15 +9,16 @@ Machine-readable production contracts:
 - `observability-contract.json` — health/readiness, structured logging, metrics, alerting, SLO/error-budget, privacy, and release-health boundaries.
 - `backup-contract.json` — backup scope, encryption, retention, isolated restore validation, RPO/RTO targets, data protection, and disaster-recovery boundaries.
 - `deployment-contract.json` — immutable release inputs, approval, plan binding, migration safety, health-gated rollout, and rollback boundaries.
+- `resilience-contract.json` — capacity, rate limits, dependency failure behavior, multi-AZ resilience, graceful degradation, and bounded resource use.
 
 CI validates these contracts with the corresponding `scripts/ci/check-production-*.py` checks.
 
-Production recovery must use encrypted recovery points outside the primary failure domain and
-must periodically prove restore integrity in an isolated target. The normal runtime identity
-must not be able to erase all backups. Initial RPO/RTO values are targets, not measured claims.
+Production resilience must fail boundedly: concurrency, queues, retries, request sizes, worker
+counts, and cache lifetimes cannot grow without limit. Optional-provider failures must degrade
+features instead of collapsing core readiness.
 
-D02-D06 do **not** create production infrastructure, IAM/OIDC resources, monitoring services,
-backup services, recovery copies, DNS records, provider credentials, or recurring spend.
-Production traffic and live recovery evidence remain separately gated by later Sprint 15 work.
+D02-D07 do **not** create production infrastructure, live traffic, failover exercises, load
+tests, provider activations, or recurring spend. Live capacity and failure-mode evidence remain
+separately gated by later Sprint 15 work.
 
-Do not copy the single-host field-test topology or its backup assumptions into production.
+Do not copy single-host field-test assumptions into production.

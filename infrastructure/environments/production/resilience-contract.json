@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "environment": "production",
+  "capacity": {
+    "documented_capacity_model_required": true,
+    "headroom_percent_min": 30,
+    "single_instance_capacity_assumption_allowed": false,
+    "bounded_concurrency_required": true,
+    "bounded_queue_depth_required": true,
+    "unbounded_retry_allowed": false
+  },
+  "rate_limits": {
+    "public_api_rate_limit_required": true,
+    "authenticated_abuse_limit_required": true,
+    "per_identity_burst_limit_required": true,
+    "retry_after_required": true,
+    "rate_limit_bypass_default_allowed": false
+  },
+  "dependency_failures": {
+    "timeouts_required": true,
+    "bounded_retries_required": true,
+    "exponential_backoff_required": true,
+    "circuit_breaker_or_fail_fast_required": true,
+    "optional_dependency_failure_blocks_core_readiness": false,
+    "external_provider_failure_requires_graceful_degradation": true
+  },
+  "database": {
+    "connection_pool_bounds_required": true,
+    "query_timeout_required": true,
+    "multi_az_required": true,
+    "automatic_failover_capability_required": true,
+    "application_retry_on_failover_bounded": true
+  },
+  "network": {
+    "multi_az_ingress_required": true,
+    "health_based_target_removal_required": true,
+    "single_az_dependency_allowed": false,
+    "unbounded_connection_lifetime_allowed": false
+  },
+  "graceful_degradation": {
+    "core_read_path_preserved_when_optional_features_fail": true,
+    "premium_provider_failure_disables_premium_actions": true,
+    "notification_provider_failure_queues_or_drops_safely": true,
+    "ai_provider_failure_disables_ai_features": true,
+    "location_provider_failure_preserves_non_location_features": true
+  },
+  "resource_bounds": {
+    "request_body_limit_required": true,
+    "upload_size_limit_required": true,
+    "worker_concurrency_limit_required": true,
+    "background_job_retry_limit_required": true,
+    "cache_ttl_bounds_required": true
+  },
+  "evidence": {
+    "deterministic_resilience_contract_validated": true,
+    "live_load_test_performed": false,
+    "live_database_failover_performed": false,
+    "live_az_failure_performed": false,
+    "live_dependency_chaos_test_performed": false
+  }
+}

@@ -251,6 +251,8 @@ jobs:
         run: python scripts/ci/check-production-backup.py --self-test
       - name: Check Sprint 15 production deployment contract
         run: python scripts/ci/check-production-deployment.py --self-test
+      - name: Check Sprint 15 production resilience contract
+        run: python scripts/ci/check-production-resilience.py --self-test
       - name: Check Sprint 12 moderation compatibility and evidence
         run: python scripts/ci/check-moderation-compatibility.py
       - name: Check Sprint 12 final review and traceability
