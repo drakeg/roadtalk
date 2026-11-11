@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "environment": "production",
+  "authorization": {
+    "deployment_authorized": false,
+    "manual_approval_required": true,
+    "pull_request_deploy_allowed": false,
+    "automatic_real_user_rollout_allowed": false
+  },
+  "artifact": {
+    "immutable_digest_required": true,
+    "mutable_tag_allowed": false,
+    "provenance_required": true,
+    "sbom_required": true,
+    "rollback_artifact_required": true
+  },
+  "plan": {
+    "exact_plan_required": true,
+    "plan_apply_identity_match_required": true,
+    "plan_expiry_minutes_max": 60,
+    "drift_check_required_before_apply": true
+  },
+  "migration": {
+    "preflight_required": true,
+    "backward_compatibility_required": true,
+    "irreversible_change_requires_separate_approval": true,
+    "irreversible_change_blocks_automatic_rollback": true,
+    "destructive_change_default_allowed": false
+  },
+  "deployment": {
+    "pre_health_gate_required": true,
+    "post_health_gate_required": true,
+    "minimum_observation_minutes": 10,
+    "single_batch_full_fleet_replacement_allowed": false,
+    "failed_health_requires_rollback_or_halt": true
+  },
+  "rollback": {
+    "named_target_required": true,
+    "exact_digest_required": true,
+    "database_state_check_required": true,
+    "manual_approval_required": true,
+    "emergency_disable_required": true,
+    "rollback_to_mutable_tag_allowed": false
+  },
+  "evidence": {
+    "dry_run_validation_required": true,
+    "live_production_deploy_performed": false,
+    "live_production_rollback_performed": false,
+    "real_user_traffic_shifted": false
+  }
+}

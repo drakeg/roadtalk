@@ -1,0 +1,56 @@
+name: Production deployment dry run
+
+on:
+  workflow_dispatch:
+    inputs:
+      artifact_digest:
+        description: Immutable application image digest (sha256:...)
+        required: true
+        type: string
+      rollback_digest:
+        description: Immutable rollback image digest (sha256:...)
+        required: true
+        type: string
+      terraform_plan_sha256:
+        description: SHA-256 of the exact approved Terraform plan artifact
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate production release inputs
+    runs-on: ubuntu-26.04
+    environment: production-readiness
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Validate immutable release inputs
+        env:
+          ARTIFACT_DIGEST: ${{ inputs.artifact_digest }}
+          ROLLBACK_DIGEST: ${{ inputs.rollback_digest }}
+          PLAN_SHA256: ${{ inputs.terraform_plan_sha256 }}
+        run: |
+          python - <<'PY'
+          import os
+          import re
+
+          digest = re.compile(r"^sha256:[0-9a-f]{64}$")
+          sha = re.compile(r"^[0-9a-f]{64}$")
+
+          if not digest.fullmatch(os.environ["ARTIFACT_DIGEST"]):
+              raise SystemExit("artifact_digest must be an immutable sha256 digest")
+          if not digest.fullmatch(os.environ["ROLLBACK_DIGEST"]):
+              raise SystemExit("rollback_digest must be an immutable sha256 digest")
+          if not sha.fullmatch(os.environ["PLAN_SHA256"]):
+              raise SystemExit("terraform_plan_sha256 must be a 64-character lowercase SHA-256")
+          if os.environ["ARTIFACT_DIGEST"] == os.environ["ROLLBACK_DIGEST"]:
+              raise SystemExit("rollback_digest must identify a distinct known-good artifact")
+          PY
+      - name: Validate deployment contract
+        run: python scripts/ci/check-production-deployment.py --self-test
+      - name: Refuse live deployment
+        run: |
+          echo "D06 validates release inputs only."
+          echo "No AWS credentials are requested and no production apply/deploy/traffic shift is performed."
