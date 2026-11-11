@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "environment": "production",
+  "scope": {
+    "primary_database_required": true,
+    "object_storage_required_if_used": true,
+    "cache_backup_required": false,
+    "configuration_backup_required": true,
+    "secret_values_in_backup_allowed": false,
+    "terraform_state_backup_required": true
+  },
+  "protection": {
+    "encryption_at_rest_required": true,
+    "encryption_in_transit_required": true,
+    "cross_failure_domain_copy_required": true,
+    "versioning_or_immutable_recovery_points_required": true,
+    "backup_delete_protection_required": true,
+    "production_runtime_identity_can_delete_all_backups": false
+  },
+  "retention": {
+    "daily_recovery_points_min": 7,
+    "weekly_recovery_points_min": 4,
+    "monthly_recovery_points_min": 3,
+    "retention_days_min": 30,
+    "retention_days_max": 365
+  },
+  "recovery_objectives": {
+    "rpo_minutes_max": 60,
+    "rto_minutes_max": 240,
+    "objectives_require_live_validation_before_launch": true
+  },
+  "restore_validation": {
+    "automated_integrity_check_required": true,
+    "restore_to_isolated_target_required": true,
+    "schema_validation_required": true,
+    "application_smoke_validation_required": true,
+    "production_overwrite_during_test_allowed": false,
+    "restore_test_interval_days_max": 90,
+    "evidence_record_required": true
+  },
+  "data_protection": {
+    "restore_target_network_isolated": true,
+    "restored_data_access_limited": true,
+    "temporary_restore_cleanup_required": true,
+    "logs_must_not_contain_restored_sensitive_records": true,
+    "precise_location_exports_allowed": false,
+    "raw_payment_instruments_allowed": false
+  },
+  "disaster_recovery": {
+    "runbook_required": true,
+    "owner_required": true,
+    "declaration_criteria_required": true,
+    "communications_path_required": true,
+    "failover_requires_explicit_approval": true
+  },
+  "evidence": {
+    "deterministic_restore_contract_validated": true,
+    "live_production_backup_created": false,
+    "live_production_restore_performed": false,
+    "live_disaster_recovery_exercise_performed": false,
+    "rpo_rto_measured_in_production": false
+  }
+}
