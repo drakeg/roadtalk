@@ -1,6 +1,6 @@
 # Production Terraform root
 
-Sprint 15 production work is contract-gated. This directory remains non-deploying through S15-D08.
+Sprint 15 production work is contract-gated. This directory remains non-deploying through S15-D09.
 
 Machine-readable production contracts:
 
@@ -11,12 +11,13 @@ Machine-readable production contracts:
 - `deployment-contract.json` — immutable release inputs, approval, plan binding, migration safety, health-gated rollout, and rollback boundaries.
 - `resilience-contract.json` — capacity, rate limits, dependency failure behavior, multi-AZ resilience, graceful degradation, and bounded resource use.
 - `security-privacy-contract.json` — release-blocking security findings, privacy exclusions, credential safety, unsafe configuration, and exception rules.
+- `governance-contract.json` — cost, support ownership, legal/privacy review, provider activation, rollback/disable, and exception boundaries.
 
 CI validates these contracts with the corresponding `scripts/ci/check-production-*.py` checks.
 
-Production security/privacy gates fail closed. Unresolved HIGH/CRITICAL findings, credential leaks,
-unsafe public data services, TLS downgrade, mutable release artifacts, or prohibited telemetry
-data block release unless a separately approved time-bounded exception satisfies the contract.
+Production/public-beta launch remains blocked until cost ownership, support ownership, legal/privacy
+review, provider boundaries, rollback/disable controls, and named exceptions are explicitly
+accepted. Provider credentials and recurring spend remain separately gated.
 
-D02-D08 do **not** authorize production traffic, live security testing, provider activation, or
-recurring spend. Live launch evidence remains separately gated by later Sprint 15 work.
+D02-D09 do **not** authorize production traffic, public beta, DNS cutover, provider activation,
+real-money flows, or recurring spend.
