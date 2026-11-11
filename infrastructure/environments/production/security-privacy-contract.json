@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "environment": "production",
+  "release_gate": {
+    "fail_closed": true,
+    "unresolved_high_or_critical_findings_allowed": false,
+    "unapproved_security_exception_allowed": false,
+    "unapproved_privacy_exception_allowed": false,
+    "manual_release_approval_required": true
+  },
+  "security_scans": {
+    "python_dependency_audit_required": true,
+    "mobile_dependency_audit_required": true,
+    "container_scan_required": true,
+    "filesystem_secret_scan_required": true,
+    "iac_misconfiguration_scan_required": true,
+    "high_severity_blocks_release": true,
+    "critical_severity_blocks_release": true,
+    "ignore_unfixed_allowed_only_when_documented": true
+  },
+  "credentials": {
+    "repository_secret_leak_allowed": false,
+    "ci_log_secret_leak_allowed": false,
+    "static_cloud_credentials_allowed": false,
+    "production_oidc_required": true,
+    "secret_rotation_policy_required": true
+  },
+  "authorization": {
+    "least_privilege_required": true,
+    "admin_access_default_allowed": false,
+    "pull_request_production_deploy_allowed": false,
+    "cross_environment_secret_access_allowed": false,
+    "shared_human_identity_allowed": false
+  },
+  "privacy": {
+    "precise_location_in_logs_allowed": false,
+    "raw_authorization_headers_in_logs_allowed": false,
+    "raw_cookie_headers_in_logs_allowed": false,
+    "payment_instrument_storage_allowed": false,
+    "unrelated_user_payload_logging_allowed": false,
+    "user_identifier_metric_labels_allowed": false,
+    "privacy_regression_checks_required": true
+  },
+  "unsafe_configuration": {
+    "public_database_allowed": false,
+    "public_cache_allowed": false,
+    "tls_required": true,
+    "minimum_tls_version": "1.2",
+    "mutable_release_artifact_allowed": false,
+    "plaintext_secret_configuration_allowed": false
+  },
+  "exceptions": {
+    "owner_required": true,
+    "reason_required": true,
+    "expiry_required": true,
+    "risk_acceptance_required": true,
+    "compensating_control_required": true,
+    "permanent_exception_allowed": false
+  },
+  "evidence": {
+    "deterministic_release_gate_validated": true,
+    "live_penetration_test_performed": false,
+    "live_production_security_test_performed": false,
+    "live_privacy_audit_performed": false
+  }
+}

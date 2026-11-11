@@ -1,6 +1,6 @@
 # Production Terraform root
 
-Sprint 15 production work is contract-gated. This directory remains non-deploying through S15-D07.
+Sprint 15 production work is contract-gated. This directory remains non-deploying through S15-D08.
 
 Machine-readable production contracts:
 
@@ -10,15 +10,13 @@ Machine-readable production contracts:
 - `backup-contract.json` — backup scope, encryption, retention, isolated restore validation, RPO/RTO targets, data protection, and disaster-recovery boundaries.
 - `deployment-contract.json` — immutable release inputs, approval, plan binding, migration safety, health-gated rollout, and rollback boundaries.
 - `resilience-contract.json` — capacity, rate limits, dependency failure behavior, multi-AZ resilience, graceful degradation, and bounded resource use.
+- `security-privacy-contract.json` — release-blocking security findings, privacy exclusions, credential safety, unsafe configuration, and exception rules.
 
 CI validates these contracts with the corresponding `scripts/ci/check-production-*.py` checks.
 
-Production resilience must fail boundedly: concurrency, queues, retries, request sizes, worker
-counts, and cache lifetimes cannot grow without limit. Optional-provider failures must degrade
-features instead of collapsing core readiness.
+Production security/privacy gates fail closed. Unresolved HIGH/CRITICAL findings, credential leaks,
+unsafe public data services, TLS downgrade, mutable release artifacts, or prohibited telemetry
+data block release unless a separately approved time-bounded exception satisfies the contract.
 
-D02-D07 do **not** create production infrastructure, live traffic, failover exercises, load
-tests, provider activations, or recurring spend. Live capacity and failure-mode evidence remain
-separately gated by later Sprint 15 work.
-
-Do not copy single-host field-test assumptions into production.
+D02-D08 do **not** authorize production traffic, live security testing, provider activation, or
+recurring spend. Live launch evidence remains separately gated by later Sprint 15 work.
