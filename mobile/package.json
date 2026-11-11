@@ -39,7 +39,7 @@
     "@types/jest": "30.0.0",
     "@types/node": "26.6.6",
     "@types/react": "~19.3.0",
-    "expo-doctor": "1.21.6",
+    "expo-doctor": "1.21.8",
     "jest": "30.5.2",
     "jest-expo": "~57.0.5",
     "react-dom": "19.3.1",
