@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "environment": "production",
+  "cost": {
+    "recurring_spend_authorized": false,
+    "cost_model_required_before_launch": true,
+    "monthly_budget_owner_required": true,
+    "provider_costs_separately_approved": true,
+    "unbounded_usage_pricing_allowed": false,
+    "cost_alerts_required": true,
+    "cost_anomaly_review_required": true
+  },
+  "support": {
+    "operational_owner_required": true,
+    "incident_owner_required": true,
+    "support_contact_path_required": true,
+    "severity_model_required": true,
+    "escalation_path_required": true,
+    "runbook_index_required": true,
+    "business_hours_only_support_assumption_allowed": false
+  },
+  "legal_privacy": {
+    "privacy_policy_review_required": true,
+    "terms_review_required": true,
+    "data_retention_review_required": true,
+    "data_deletion_review_required": true,
+    "provider_terms_review_required_before_activation": true,
+    "app_store_policy_review_required_before_store_release": true,
+    "payment_tax_obligations_review_required_before_real_money": true,
+    "unsupported_compliance_claims_allowed": false
+  },
+  "providers": {
+    "premium_provider_default": "disabled",
+    "payment_provider_default": "disabled",
+    "store_provider_default": "disabled",
+    "provider_credentials_present_before_approval_allowed": false,
+    "provider_activation_requires_named_approval": true
+  },
+  "rollback_disable": {
+    "named_rollback_target_required": true,
+    "emergency_disable_required": true,
+    "provider_kill_switch_required": true,
+    "public_beta_disable_path_required": true,
+    "dns_rollback_plan_required": true,
+    "irreversible_change_requires_named_exception": true
+  },
+  "exceptions": {
+    "owner_required": true,
+    "reason_required": true,
+    "expiry_required": true,
+    "impact_required": true,
+    "rollback_or_mitigation_required": true,
+    "permanent_exception_allowed": false
+  },
+  "evidence": {
+    "deterministic_review_contract_validated": true,
+    "live_billing_validated": false,
+    "live_support_exercise_performed": false,
+    "legal_counsel_review_claimed": false,
+    "real_provider_activation_performed": false
+  }
+}

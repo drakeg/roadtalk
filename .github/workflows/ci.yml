@@ -255,6 +255,8 @@ jobs:
         run: python scripts/ci/check-production-resilience.py --self-test
       - name: Check Sprint 15 production security privacy contract
         run: python scripts/ci/check-production-security-privacy.py --self-test
+      - name: Check Sprint 15 production governance contract
+        run: python scripts/ci/check-production-governance.py --self-test
       - name: Check Sprint 12 moderation compatibility and evidence
         run: python scripts/ci/check-moderation-compatibility.py
       - name: Check Sprint 12 final review and traceability
