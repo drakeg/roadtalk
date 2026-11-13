@@ -27,7 +27,7 @@ support-exercise, legal-counsel, or production-traffic evidence that was not act
 | S15-R05 Deployment/rollback | S15-T05 | D06 / #450 | #463 | `sprint-15-d06-production-deployment.md` |
 | S15-R06 Resilience | S15-T06 | D07 / #451 | #464 | `sprint-15-d07-production-resilience.md` |
 | S15-R07 Security release gate | S15-T07 | D08 / #452 | #465 | `sprint-15-d08-production-security-privacy.md` |
-| S15-R08 Privacy release gate | S15-T03/T04/T07/T08 | D04/D05/D08 | #461/#462/#465 | observability, backup, security/privacy evidence |
+| S15-R08 Privacy release gate | S15-T03, S15-T04, S15-T07, S15-T08 | D04/D05/D08 | #461/#462/#465 | observability, backup, security/privacy evidence |
 | S15-R09 Cost/support/legal | S15-T09 | D09 / #453 | #466 | `sprint-15-d09-production-governance.md` |
 | S15-R10 Provider boundaries | S15-T10 | D02/D03/D06/D07/D09 | #459/#460/#463/#464/#466 | contract/evidence chain |
 | S15-R11 Evidence honesty | S15-T11 | D02-D10 | #459-#466 + D10 | all Sprint 15 evidence documents |
