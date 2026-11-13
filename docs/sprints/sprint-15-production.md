@@ -39,10 +39,21 @@ Make RoadTalk production-ready through explicit environment, security, observabi
 - **S15-T11:** Evidence documents which production/load/failover/DR/billing checks were not performed and never presents simulations as live evidence.
 - **S15-T12:** Final traceability review covers S15-R01–R12, S15-T01–T12, D01–D10, PRs and named exceptions.
 
-## Delivery order
+## Delivery order and completed PRs
 
-D01 planning/readiness (#444), then strictly #445 → #446 → #447 → #449 → #450 → #451 → #452 → #453 → #454.
+- D01 / #444 → PR #456
+- D02 / #445 → PR #459
+- D03 / #446 → PR #460
+- D04 / #447 → PR #461
+- D05 / #449 → PR #462
+- D06 / #450 → PR #463
+- D07 / #451 → PR #464
+- D08 / #452 → PR #465
+- D09 / #453 → PR #466
+- D10 / #454 → final readiness review PR
 
 ## Explicit exclusions until separately approved
 
-Sprint 15 D01 does not itself authorize a production/public-beta launch, DNS cutover, real-user traffic, real-money/provider/store activation, new recurring spend, destructive infrastructure changes, production data migration, irreversible database changes, public marketing launch, or claims of live load/failover/disaster-recovery/billing evidence not actually collected.
+Sprint 15 acceptance does not itself authorize a production/public-beta launch, DNS cutover, real-user traffic, real-money/provider/store activation, new recurring spend, destructive infrastructure changes, production data migration, irreversible database changes, public marketing launch, or claims of live load/failover/disaster-recovery/billing evidence not actually collected.
+
+The D10 final review is recorded in `docs/evidence/sprint-15-d10-final-production-readiness.md`.
