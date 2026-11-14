@@ -12,6 +12,7 @@ Machine-readable production contracts:
 - `resilience-contract.json` — capacity, rate limits, dependency failure behavior, multi-AZ resilience, graceful degradation, and bounded resource use.
 - `security-privacy-contract.json` — release-blocking security findings, privacy exclusions, credential safety, unsafe configuration, and exception rules.
 - `governance-contract.json` — cost, support ownership, legal/privacy review, provider activation, rollback/disable, and exception boundaries.
+- `launch-authorization.json` — fail-closed, time-bounded public-beta/live-action authorization record; committed disabled by default.
 
 CI validates these contracts with the corresponding `scripts/ci/check-production-*.py` checks and the D10 final traceability checker.
 
@@ -19,4 +20,4 @@ Sprint 15 deterministic readiness does **not** authorize production/public-beta 
 provider/store/payment activation, real-money flows, recurring production spend, destructive
 changes, or claims of unperformed live load/failover/DR/billing evidence.
 
-See `docs/evidence/sprint-15-d10-final-production-readiness.md` for the final acceptance boundary.
+See `docs/evidence/sprint-15-d10-final-production-readiness.md` for the Sprint 15 acceptance boundary. Sprint 16 adds executable public-beta preflight gates without changing the default no-launch/no-spend state.
