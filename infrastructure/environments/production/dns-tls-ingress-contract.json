@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "environment": "production",
+  "dns": {
+    "ownership_verified_required": true,
+    "authoritative_zone_required": true,
+    "hostname_required_before_cutover": true,
+    "change_id_required_before_cutover": true,
+    "ttl_seconds_max": 300,
+    "cutover_authorized": false
+  },
+  "tls": {
+    "certificate_required": true,
+    "certificate_validation_required": true,
+    "hostname_match_required": true,
+    "minimum_tls_version": "1.2",
+    "http_to_https_redirect_required": true,
+    "certificate_expiry_days_min": 14
+  },
+  "ingress": {
+    "managed_load_balancer_required": true,
+    "multi_az_required": true,
+    "public_database_allowed": false,
+    "public_cache_allowed": false,
+    "health_check_required": true,
+    "unhealthy_target_removal_required": true
+  },
+  "cutover": {
+    "pre_health_check_required": true,
+    "post_health_check_required": true,
+    "rollback_plan_required": true,
+    "rollback_dns_target_required": true,
+    "traffic_ramp_required": true,
+    "initial_traffic_percent_max": 10,
+    "observation_minutes_min": 10,
+    "automatic_full_cutover_allowed": false
+  },
+  "rollback": {
+    "dns_revert_required": true,
+    "previous_target_record_required": true,
+    "certificate_rollback_considered": true,
+    "emergency_disable_required": true
+  },
+  "evidence": {
+    "deterministic_preflight_validated": true,
+    "live_dns_cutover_performed": false,
+    "live_certificate_validation_performed": false,
+    "live_public_ingress_exercised": false,
+    "real_user_traffic_shifted": false
+  }
+}
