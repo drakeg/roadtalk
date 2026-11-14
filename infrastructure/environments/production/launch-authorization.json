@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "environment": "production",
+  "authorization": {
+    "public_beta_authorized": false,
+    "production_traffic_authorized": false,
+    "dns_cutover_authorized": false,
+    "recurring_spend_authorized": false,
+    "real_money_authorized": false,
+    "provider_activation_authorized": false,
+    "destructive_change_authorized": false
+  },
+  "approval": {
+    "approval_id": null,
+    "approved_by": null,
+    "approved_at": null,
+    "expires_at": null,
+    "scope": [],
+    "reason": null
+  },
+  "release_identity": {
+    "artifact_digest": null,
+    "terraform_plan_sha256": null,
+    "rollback_digest": null,
+    "environment": "production"
+  },
+  "cutover": {
+    "hostname": null,
+    "traffic_percent_max": 0,
+    "dns_change_id": null,
+    "health_gate_required": true,
+    "rollback_on_failed_health_required": true
+  },
+  "rollback": {
+    "named_target_required": true,
+    "exact_digest_required": true,
+    "emergency_disable_required": true,
+    "provider_kill_switch_required": true
+  },
+  "evidence": {
+    "authorization_contract_validated": true,
+    "live_public_beta_started": false,
+    "live_production_traffic_shifted": false,
+    "live_dns_cutover_performed": false,
+    "live_recurring_spend_started": false
+  }
+}
