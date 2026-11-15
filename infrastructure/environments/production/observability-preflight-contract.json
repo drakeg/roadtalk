@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "environment": "production",
+  "health": {
+    "liveness_required": true,
+    "readiness_required": true,
+    "database_readiness_required": true,
+    "cache_readiness_required": true,
+    "optional_dependency_readiness_required": false,
+    "preflight_health_record_required": true
+  },
+  "slo": {
+    "availability_target_percent_min": 99.5,
+    "latency_p95_ms_max": 1000,
+    "server_error_rate_percent_max": 1.0,
+    "error_budget_required": true,
+    "release_block_on_exhausted_error_budget": true,
+    "measurement_window_documented_required": true
+  },
+  "alerts": {
+    "delivery_path_required": true,
+    "owner_required": true,
+    "severity_required": true,
+    "runbook_required": true,
+    "deduplication_required": true,
+    "test_notification_required_before_launch": true,
+    "secret_values_allowed": false,
+    "raw_user_payloads_allowed": false
+  },
+  "incident": {
+    "incident_owner_required": true,
+    "severity_model_required": true,
+    "escalation_path_required": true,
+    "status_communication_path_required": true,
+    "after_action_review_required": true,
+    "production_incident_exercise_required_before_launch": true
+  },
+  "telemetry_privacy": {
+    "raw_authorization_headers_allowed": false,
+    "raw_cookie_headers_allowed": false,
+    "raw_secret_values_allowed": false,
+    "raw_payment_data_allowed": false,
+    "precise_location_allowed": false,
+    "unrelated_user_payloads_allowed": false,
+    "user_identifier_metric_labels_allowed": false,
+    "unbounded_metric_cardinality_allowed": false
+  },
+  "release_gate": {
+    "pre_release_health_required": true,
+    "post_release_health_required": true,
+    "minimum_observation_minutes": 10,
+    "failed_health_requires_rollback_or_halt": true,
+    "automatic_real_user_rollout_allowed": false
+  },
+  "evidence": {
+    "deterministic_preflight_validated": true,
+    "live_alert_delivery_test_performed": false,
+    "live_slo_measurement_performed": false,
+    "live_incident_exercise_performed": false,
+    "live_release_health_gate_exercised": false
+  }
+}
