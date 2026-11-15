@@ -13,6 +13,7 @@ Machine-readable production contracts:
 - `security-privacy-contract.json` — release-blocking security findings, privacy exclusions, credential safety, unsafe configuration, and exception rules.
 - `governance-contract.json` — cost, support ownership, legal/privacy review, provider activation, rollback/disable, and exception boundaries.
 - `launch-authorization.json` — fail-closed, time-bounded public-beta/live-action authorization record; committed disabled by default.
+- `dns-tls-ingress-contract.json` — DNS ownership, TLS, managed ingress, bounded cutover, health, and rollback readiness; live cutover disabled.
 
 CI validates these contracts with the corresponding `scripts/ci/check-production-*.py` checks and the D10 final traceability checker.
 
