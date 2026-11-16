@@ -15,6 +15,7 @@ Machine-readable production contracts:
 - `launch-authorization.json` — fail-closed, time-bounded public-beta/live-action authorization record; committed disabled by default.
 - `dns-tls-ingress-contract.json` — DNS ownership, TLS, managed ingress, bounded cutover, health, and rollback readiness; live cutover disabled.
 - `identity-preflight-contract.json` — OIDC, least privilege, managed-secret rotation, human access, and break-glass preflight requirements.
+- `observability-preflight-contract.json` — health, SLO/error-budget, alert delivery, incident ownership, telemetry privacy, and release-health preflight requirements.
 
 CI validates these contracts with the corresponding `scripts/ci/check-production-*.py` checks and the D10 final traceability checker.
 
