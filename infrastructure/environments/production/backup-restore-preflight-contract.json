@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "environment": "production",
+  "restore_test": {
+    "isolated_target_required": true,
+    "production_overwrite_allowed": false,
+    "automated_integrity_check_required": true,
+    "schema_validation_required": true,
+    "application_smoke_validation_required": true,
+    "restored_data_access_limited": true,
+    "temporary_cleanup_required": true,
+    "logs_must_not_contain_restored_sensitive_records": true
+  },
+  "recovery_measurement": {
+    "target_rpo_minutes_max": 60,
+    "target_rto_minutes_max": 240,
+    "measured_rpo_required_before_launch": true,
+    "measured_rto_required_before_launch": true,
+    "measurement_timestamp_required": true,
+    "recovery_point_timestamp_required": true,
+    "restore_start_timestamp_required": true,
+    "restore_complete_timestamp_required": true
+  },
+  "backup_integrity": {
+    "recovery_point_identity_required": true,
+    "checksum_or_provider_integrity_required": true,
+    "encryption_at_rest_required": true,
+    "encryption_in_transit_required": true,
+    "cross_failure_domain_copy_required": true,
+    "delete_protection_required": true
+  },
+  "dr": {
+    "owner_required": true,
+    "declaration_criteria_required": true,
+    "communications_path_required": true,
+    "explicit_failover_approval_required": true,
+    "rollback_target_required": true,
+    "destructive_failover_default_allowed": false,
+    "production_failover_authorized": false
+  },
+  "frequency": {
+    "restore_test_interval_days_max": 90,
+    "evidence_record_required": true
+  },
+  "evidence": {
+    "deterministic_preflight_validated": true,
+    "live_production_restore_performed": false,
+    "live_disaster_recovery_exercise_performed": false,
+    "production_rpo_measured": false,
+    "production_rto_measured": false
+  }
+}
