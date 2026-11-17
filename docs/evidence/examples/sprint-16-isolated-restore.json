@@ -1,0 +1,12 @@
+{
+  "environment": "isolated-restore-test",
+  "recovery_point_id": "synthetic-recovery-point",
+  "recovery_point_timestamp": "2030-01-01T00:00:00Z",
+  "restore_start_timestamp": "2030-01-01T00:30:00Z",
+  "restore_complete_timestamp": "2030-01-01T01:45:00Z",
+  "integrity_check_passed": true,
+  "schema_validation_passed": true,
+  "application_smoke_passed": true,
+  "isolated_target": true,
+  "production_overwrite_performed": false
+}
