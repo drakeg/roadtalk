@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "profile": "synthetic-preflight",
+  "environment": "non-production",
+  "operator": "ci",
+  "duration_minutes": 5,
+  "concurrency": 50,
+  "request_rate_per_second": 25,
+  "error_rate_abort_percent": 5.0,
+  "latency_p95_abort_ms": 2000,
+  "cost_guard_usd_max": 0,
+  "failure_injection": false,
+  "live_production_evidence": false
+}
