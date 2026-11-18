@@ -269,6 +269,10 @@ jobs:
         run: python scripts/ci/check-identity-preflight.py --self-test
       - name: Check Sprint 16 observability incident readiness
         run: python scripts/ci/check-observability-preflight.py --self-test
+      - name: Check Sprint 16 backup restore DR readiness
+        run: python scripts/ci/check-backup-restore-preflight.py --self-test
+      - name: Validate Sprint 16 isolated restore evidence format
+        run: python scripts/ci/restore-evidence.py docs/evidence/examples/sprint-16-isolated-restore.json
       - name: Check Sprint 12 moderation compatibility and evidence
         run: python scripts/ci/check-moderation-compatibility.py
       - name: Check Sprint 12 final review and traceability
