@@ -1,22 +1,22 @@
 # RoadTalk
 
+<!-- madmallard-badges:start -->
+[![CI](https://github.com/drakeg/roadtalk/actions/workflows/ci.yml/badge.svg)](https://github.com/drakeg/roadtalk/actions/workflows/ci.yml) [![Python 3.14](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](backend/pyproject.toml) [![FastAPI 0.165.x](https://img.shields.io/badge/FastAPI-0.165.x-009688?logo=fastapi&logoColor=white)](backend/pyproject.toml) [![React Native 0.86.3](https://img.shields.io/badge/React_Native-0.86.3-61DAFB?logo=react&logoColor=black)](mobile/package.json) [![Expo SDK 57](https://img.shields.io/badge/Expo_SDK-57-000020?logo=expo&logoColor=white)](mobile/package.json)
+
+[![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)](compose.yaml) [![PostGIS 3.5](https://img.shields.io/badge/PostGIS-3.5-336791?logo=postgresql&logoColor=white)](compose.yaml) [![Redis 8](https://img.shields.io/badge/Redis-8-DC382D?logo=redis&logoColor=white)](compose.yaml) [![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](compose.yaml) [![Terraform 1.17.2](https://img.shields.io/badge/Terraform-1.17.2-844FBA?logo=terraform&logoColor=white)](.github/workflows/ci.yml)
+
+[![Open issues](https://img.shields.io/github/issues/drakeg/roadtalk)](https://github.com/drakeg/roadtalk/issues) [![Pull requests](https://img.shields.io/github/issues-pr/drakeg/roadtalk)](https://github.com/drakeg/roadtalk/pulls)
+<!-- madmallard-badges:end -->
+
 RoadTalk is a location-aware, voice-first communication platform inspired by classic CB radio culture and designed for modern travelers.
 
 ## Project status
 
-Sprint 0 — Planning & Architecture, Sprint 1 — Project Foundation, Sprint 2 —
-Identity, and Sprint 3 — Location are complete. Sprint 1 is conditionally accepted
-with named exceptions that must close before the first field test.
+Sprints 0–15 are complete through deterministic production-readiness acceptance. Sprint 16 — **Public-beta readiness** — is active. D01–D06 are complete; D07 (load/failover/degraded-mode readiness) is in progress in PR #501, followed by D08–D10.
 
-Sprints 4–10 are complete and accepted: Push-to-Talk, Proximity Engine, Channels,
-Route Awareness, Map & Presence, Notifications, and Campgrounds. Sprint 10 acceptance
-is recorded by merged PR #267. Sprint 11 implementation is not authorized without a
-separate planning/readiness decision.
+RoadTalk remains fail-closed for public-beta traffic, production DNS cutover, destructive failure injection, real-money/provider/store activation, and recurring spend unless separately authorized. The local Docker Compose path remains the primary test environment and includes a LAN HTTPS override.
 
-All accepted work remains within the local/GitHub-CI boundary. External data and
-notification providers, AWS and LiveKit Cloud activation, production/public beta,
-background location/audio, payment methods, and recurring spend remain unauthorized
-unless a later written decision explicitly approves them.
+The repository now follows the [Mad Mallard Repository Standards](https://github.com/drakeg/madmallard-repository-standards) where they do not override stricter RoadTalk-specific security, privacy, cost, or release gates. Root [SPRINTS.md](SPRINTS.md), [BACKLOG.md](BACKLOG.md), [RELEASES.md](RELEASES.md), and [SECURITY.md](SECURITY.md) summarize the current operating state.
 
 ## Repository layout
 
@@ -55,6 +55,10 @@ Sprint 4 is accepted by merged PR #108, Sprint 5 by PR #127, Sprint 6 by PR #149
 Sprint 7 by PR #185, Sprint 8 by PR #219, Sprint 9 by PR #244, and Sprint 10 by
 PR #267. Field testing, cloud/provider activation, and spend remain blocked unless
 separately approved.
+
+## Commercialization
+
+RoadTalk is treated as a potential revenue-generating product, but no demand or revenue is claimed yet. The first SMB hypotheses are campgrounds/RV parks, small guided-tour/outdoor operators, and small convoy/event teams that may benefit from location-aware push-to-talk coordination. The fastest validation path is a bounded paid pilot after Sprint 16 readiness, not a broad public launch. See [docs/COMMERCIALIZATION.md](docs/COMMERCIALIZATION.md).
 
 ## Source of truth
 
