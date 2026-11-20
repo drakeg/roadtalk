@@ -151,7 +151,7 @@ jobs:
           docker compose --env-file .env.example config --quiet
           BACKEND_PORT=18000 docker compose --env-file .env.example config --format json > "$RUNNER_TEMP/compose.json"
           ROADTALK_LAN_HOST=10.0.0.25 docker compose -f compose.yaml -f compose.lan.yaml --env-file .env.example config --format json > "$RUNNER_TEMP/compose-lan.json"
-          docker run --rm -e ROADTALK_LAN_HOST=10.0.0.25 -e ROADTALK_LAN_HTTPS_PORT=8443 -v "$PWD/deploy/local/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2.11.4-alpine caddy validate --config /etc/caddy/Caddyfile
+          docker run --rm -e ROADTALK_LAN_HOST=10.0.0.25 -e ROADTALK_LAN_HTTPS_PORT=8443 -v "$PWD/deploy/local/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2.11.9-alpine caddy validate --config /etc/caddy/Caddyfile
           python - <<'PY'
           import json
           import os
@@ -205,6 +205,8 @@ jobs:
         run: |
           npm ci --prefix mobile
           python scripts/ci/audit-mobile-dependencies.py
+      - name: Check repository standards and README badges
+        run: python scripts/ci/check-repository-standards.py
       - name: Check Sprint 2 privacy and scope
         run: python scripts/ci/check-identity-privacy.py
       - name: Check Sprint 3 location privacy and scope
@@ -273,6 +275,8 @@ jobs:
         run: python scripts/ci/check-backup-restore-preflight.py --self-test
       - name: Validate Sprint 16 isolated restore evidence format
         run: python scripts/ci/restore-evidence.py docs/evidence/examples/sprint-16-isolated-restore.json
+      - name: Check Sprint 16 load failover degraded mode readiness
+        run: python scripts/ci/check-resilience-preflight.py --self-test
       - name: Check Sprint 12 moderation compatibility and evidence
         run: python scripts/ci/check-moderation-compatibility.py
       - name: Check Sprint 12 final review and traceability

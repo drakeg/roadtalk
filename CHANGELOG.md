@@ -2,6 +2,33 @@
 
 All notable RoadTalk changes are recorded here. The repository history and sprint review records remain the detailed source of truth.
 
+## Unreleased — Sprint 16: Public-beta readiness
+
+### Added
+
+- Fail-closed public-beta launch authorization, DNS/TLS/ingress, identity/secrets,
+  observability/incident, backup/restore/DR, and resilience preflight contracts.
+- Bounded load/failover test profiles, mandatory stop conditions, cost guards, and
+  explicit degraded-mode behavior with production failure injection disabled.
+- Root Mad Mallard standards documentation: SPRINTS, BACKLOG, RELEASES, SECURITY,
+  verified README badges, repository standards CI validation, and SMB commercialization
+  hypotheses with a paid-pilot validation path.
+- Coordinated LiveKit React Native dependency grouping so client, WebRTC, and Expo
+  plugin upgrades remain compatible.
+- Updated FastAPI and source-map-js maintenance dependencies while preserving existing
+  test/security gates.
+- Advisory-specific handling for withdrawn GHSA-vfj7-8cjw-p6xm while retaining
+  fail-closed behavior for other high/critical mobile dependency findings.
+
+### Changed
+
+- README project status now reflects Sprint 16 rather than the historical Sprint 10
+  boundary.
+- CI Caddy validation now uses the same 2.11.9-alpine image as the LAN Compose
+  environment.
+- Development guidance now follows Build → Deploy → Test → Fix → Redeploy → Continue
+  within existing RoadTalk authorization, privacy, cost, and production boundaries.
+
 ## Sprint 10: Campgrounds — accepted by PR #267
 
 ### Added

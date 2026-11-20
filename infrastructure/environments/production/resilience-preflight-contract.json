@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "environment": "production",
+  "load_test": {
+    "profile_required": true,
+    "environment_required": true,
+    "operator_required": true,
+    "duration_minutes_max": 30,
+    "concurrency_max": 500,
+    "request_rate_per_second_max": 250,
+    "error_rate_abort_percent": 5.0,
+    "latency_p95_abort_ms": 2000,
+    "cost_guard_usd_max": 25,
+    "automatic_production_execution_allowed": false
+  },
+  "failure_scenarios": {
+    "database_failover_profile_required": true,
+    "az_failure_profile_required": true,
+    "cache_failure_profile_required": true,
+    "external_provider_failure_profile_required": true,
+    "network_partition_profile_required": true,
+    "destructive_failure_injection_default_allowed": false,
+    "production_failure_injection_authorized": false
+  },
+  "stop_conditions": {
+    "health_gate_failure_stops_test": true,
+    "error_budget_breach_stops_test": true,
+    "security_or_privacy_signal_stops_test": true,
+    "operator_abort_required": true,
+    "cost_guard_breach_stops_test": true
+  },
+  "degraded_mode": {
+    "core_read_path_preserved_when_optional_features_fail": true,
+    "premium_provider_failure_disables_premium_actions": true,
+    "notification_provider_failure_queues_or_drops_safely": true,
+    "ai_provider_failure_disables_ai_features": true,
+    "location_provider_failure_preserves_non_location_features": true
+  },
+  "evidence": {
+    "deterministic_preflight_validated": true,
+    "live_load_test_performed": false,
+    "live_database_failover_performed": false,
+    "live_az_failure_performed": false,
+    "live_dependency_failure_exercise_performed": false,
+    "production_failure_injection_performed": false
+  }
+}

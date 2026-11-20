@@ -63,3 +63,18 @@ All implementation work follows these repository-wide standards:
 ## Sprint documentation standard
 
 Every sprint must have an approved specification/readiness record before implementation, a tracker with ordered deliverables, requirements and acceptance tests, synchronized evidence during implementation, and a final review/traceability record before acceptance. Sprint documentation must identify exclusions, provider/cost boundaries, known evidence exceptions and follow-up work. A later sprint does not silently authorize work excluded from an earlier sprint.
+
+
+## Rapid delivery loop
+
+Within approved environments, contributors should use the shortest safe loop: build, deploy, test real workflows, fix failures, redeploy, and continue. A merged PR or completed sprint is a checkpoint, not an automatic stopping point. Broken CI, builds, local test environments, dependency audits, and deployment paths are prioritized as P0 fixes.
+
+## Repository standards
+
+RoadTalk follows `drakeg/madmallard-repository-standards` as a portable baseline, with RoadTalk's stricter product-specific controls taking precedence. Changes that affect supported technologies, workflows, releases, or licensing must also review the README badge block and run `python scripts/ci/check-repository-standards.py`.
+
+Root `SPRINTS.md`, `BACKLOG.md`, `RELEASES.md`, and `SECURITY.md` must remain synchronized with detailed sprint/evidence documentation.
+
+## Commercialization discipline
+
+Features should advance user value, reliability, risk reduction, or a credible path to an SMB paid pilot. Product hypotheses must be labeled as hypotheses until supported by actual customer evidence. Avoid roadmap work that does not improve readiness, usability, validation, or willingness-to-pay learning.

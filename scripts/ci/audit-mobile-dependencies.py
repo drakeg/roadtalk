@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit mobile production dependencies with narrow, expiring exceptions."""
+"""Audit mobile production dependencies with narrow advisory dispositions."""
 
 from __future__ import annotations
 
@@ -17,18 +17,19 @@ MOBILE = ROOT / "mobile"
 BLOCKING_SEVERITIES = {"high", "critical"}
 AUDIT_ATTEMPTS = 2
 AUDIT_TIMEOUT_SECONDS = 90
+WITHDRAWN_ADVISORIES = {
+    # GitHub withdrew GHSA-vfj7-8cjw-p6xm on 2026-10-23 because it was not
+    # practically exploitable. npm audit may continue surfacing the historical
+    # advisory through Expo/Metro/Jest/React Native dependency paths.
+    "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm",
+}
+
 ADVISORY_EXPIRES = {
     "https://github.com/advisories/GHSA-5p2g-fcmc-qvqq": date(2026, 9, 30),
     "https://github.com/advisories/GHSA-w3rx-r6r6-pgpr": date(2026, 9, 30),
     # GHSA-86w9-cpqp-85rv (node-forge) is resolved by the node-forge 1.4.2
     # override and GHSA-mrhx-c7xc-m3w5 (zod) by the zod 4.6.7 override in
     # mobile/package.json; neither needs an exception.
-    # braces 3.0.3 is still the latest published release and currently has
-    # no fixed npm version for CVE-2026-93687 / GHSA-vfj7-8cjw-p6xm.
-    # Expo/Metro/Jest pull it transitively through micromatch, so this single
-    # advisory propagates across many package names in npm audit. Keep the
-    # exception short-lived and advisory-scoped rather than package-scoped.
-    "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm": date(2026, 10, 31),
 }
 
 
@@ -134,9 +135,12 @@ def is_allowlisted(
     advisories = advisory_urls(package, vulnerabilities)
     if not advisories:
         return False
+    active_advisories = advisories - WITHDRAWN_ADVISORIES
+    if not active_advisories:
+        return True
     return all(
         url in ADVISORY_EXPIRES and today <= ADVISORY_EXPIRES[url]
-        for url in advisories
+        for url in active_advisories
     )
 
 
@@ -175,8 +179,8 @@ def main() -> None:
     )
     if excepted:
         print(
-            "Mobile dependency audit: passed with approved, expiring advisory "
-            f"exceptions ({', '.join(excepted)})"
+            "Mobile dependency audit: passed with approved advisory dispositions "
+            f"({', '.join(excepted)})"
         )
     else:
         print("Mobile dependency audit: passed with no high/critical findings")
