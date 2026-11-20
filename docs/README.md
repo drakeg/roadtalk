@@ -7,6 +7,29 @@
 - [Original RoadTalk Development Plan](reference/RoadTalk_Development_Plan.docx)
 - [Agile Workflow](AGILE_WORKFLOW.md)
 
+## Current roadmap and commercial validation
+
+- [Root sprint roadmap](../SPRINTS.md)
+- [Prioritized backlog](../BACKLOG.md)
+- [Release policy](../RELEASES.md)
+- [Security policy](../SECURITY.md)
+- [Commercialization hypotheses](COMMERCIALIZATION.md)
+
+## Sprint 16 — Public-beta readiness (active)
+
+- [Sprint 16 specification](sprints/sprint-16-public-beta.md)
+- [Sprint 16 readiness](sprints/sprint-16-readiness.md)
+- Implementation tracker #486; D01–D06 are complete and D07 is in PR #501
+- D08 #483, D09 #484, and D10 #485 remain planned in locked order
+- Sprint 16 creates fail-closed preflight evidence only; it does not authorize public-beta traffic, DNS cutover, real-money/provider/store activation, destructive production changes, or recurring spend
+
+## Sprint 15 — Production readiness (complete)
+
+- [Sprint 15 production specification](sprints/sprint-15-production.md)
+- [Sprint 15 readiness](sprints/sprint-15-readiness.md)
+- [Sprint 15 final production-readiness evidence](evidence/sprint-15-d10-final-production-readiness.md)
+- Deterministic production-readiness contracts are accepted; live production evidence remains separately gated
+
 ## Sprint 12 — Moderation (planning)
 
 - [Sprint 12: Moderation](sprints/sprint-12-moderation.md)
