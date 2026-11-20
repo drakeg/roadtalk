@@ -205,6 +205,8 @@ jobs:
         run: |
           npm ci --prefix mobile
           python scripts/ci/audit-mobile-dependencies.py
+      - name: Check repository standards and README badges
+        run: python scripts/ci/check-repository-standards.py
       - name: Check Sprint 2 privacy and scope
         run: python scripts/ci/check-identity-privacy.py
       - name: Check Sprint 3 location privacy and scope
