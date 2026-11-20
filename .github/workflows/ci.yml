@@ -151,7 +151,7 @@ jobs:
           docker compose --env-file .env.example config --quiet
           BACKEND_PORT=18000 docker compose --env-file .env.example config --format json > "$RUNNER_TEMP/compose.json"
           ROADTALK_LAN_HOST=10.0.0.25 docker compose -f compose.yaml -f compose.lan.yaml --env-file .env.example config --format json > "$RUNNER_TEMP/compose-lan.json"
-          docker run --rm -e ROADTALK_LAN_HOST=10.0.0.25 -e ROADTALK_LAN_HTTPS_PORT=8443 -v "$PWD/deploy/local/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2.11.4-alpine caddy validate --config /etc/caddy/Caddyfile
+          docker run --rm -e ROADTALK_LAN_HOST=10.0.0.25 -e ROADTALK_LAN_HTTPS_PORT=8443 -v "$PWD/deploy/local/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2.11.9-alpine caddy validate --config /etc/caddy/Caddyfile
           python - <<'PY'
           import json
           import os
