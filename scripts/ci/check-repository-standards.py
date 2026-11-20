@@ -27,6 +27,8 @@ def main() -> None:
     badge_block = text[start:end]
     expected = (
         "actions/workflows/ci.yml/badge.svg",
+        "label=tests",
+        "label=security",
         "Python-3.14",
         "FastAPI-0.165.x",
         "React_Native-0.86.3",
