@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit mobile production dependencies with narrow, expiring exceptions."""
+"""Audit mobile production dependencies with narrow advisory dispositions."""
 
 from __future__ import annotations
 
@@ -179,8 +179,8 @@ def main() -> None:
     )
     if excepted:
         print(
-            "Mobile dependency audit: passed with approved, expiring advisory "
-            f"exceptions ({', '.join(excepted)})"
+            "Mobile dependency audit: passed with approved advisory dispositions "
+            f"({', '.join(excepted)})"
         )
     else:
         print("Mobile dependency audit: passed with no high/critical findings")
