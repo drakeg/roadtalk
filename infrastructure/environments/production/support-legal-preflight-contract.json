@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "environment": "production",
+  "public_beta_ready": false,
+  "launch_gate": {
+    "fail_closed": true,
+    "unresolved_obligations_block_launch": true,
+    "security_privacy_gate_required": true,
+    "support_gate_required": true,
+    "retention_deletion_gate_required": true,
+    "terms_privacy_content_gate_required": true,
+    "legal_review_gate_required": true
+  },
+  "support": {
+    "operational_owner_required": true,
+    "incident_communications_owner_required": true,
+    "support_contact_path_required": true,
+    "severity_and_escalation_required": true,
+    "coverage_model_required": true,
+    "runbook": "docs/runbooks/public-beta-support.md",
+    "operational_owner_assigned": false,
+    "incident_communications_owner_assigned": false,
+    "support_contact_published": false,
+    "coverage_model_approved": false
+  },
+  "security_privacy": {
+    "production_security_privacy_contract_required": true,
+    "high_or_critical_findings_block_launch": true,
+    "privacy_regressions_block_launch": true,
+    "unsafe_tracking_blocks_launch": true,
+    "exceptions_must_be_owned_and_expiring": true,
+    "unsupported_compliance_claims_allowed": false
+  },
+  "retention_deletion": {
+    "inventory_required": true,
+    "retention_schedule_required": true,
+    "account_deletion_behavior_required": true,
+    "backup_deletion_delay_disclosure_required": true,
+    "document": "docs/privacy/retention-deletion.md",
+    "technical_inventory_documented": true,
+    "retention_schedule_drafted": true,
+    "deletion_behavior_drafted": true,
+    "final_policy_review_complete": false
+  },
+  "terms_privacy_content": {
+    "terms_content_required": true,
+    "privacy_notice_content_required": true,
+    "terms_document": "docs/legal/public-beta-terms-draft.md",
+    "privacy_document": "docs/legal/public-beta-privacy-notice-draft.md",
+    "terms_final_approved": false,
+    "privacy_notice_final_approved": false,
+    "legal_counsel_review_claimed": false
+  },
+  "unresolved_obligations": [
+    "assign named operational and incident-communications owners",
+    "publish an approved support contact and coverage model",
+    "complete final retention/deletion policy review",
+    "approve final terms of service and privacy notice",
+    "determine whether legal counsel review is required before public beta"
+  ],
+  "evidence": {
+    "deterministic_preflight_validated": true,
+    "live_support_exercise_performed": false,
+    "live_privacy_audit_performed": false,
+    "legal_counsel_review_performed": false,
+    "public_beta_launched": false
+  }
+}
