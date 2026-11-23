@@ -18,6 +18,7 @@ Machine-readable production contracts:
 - `observability-preflight-contract.json` — health, SLO/error-budget, alert delivery, incident ownership, telemetry privacy, and release-health preflight requirements.
 - `backup-restore-preflight-contract.json` — isolated restore testing, RPO/RTO measurement, backup integrity, and explicit DR approval boundaries.
 - `resilience-preflight-contract.json` — bounded load testing, failure-scenario safety, stop conditions, cost guards, and degraded-mode readiness.
+- `support-legal-preflight-contract.json` — support ownership/contact/coverage, security/privacy inheritance, retention/deletion, terms/privacy content, and unresolved legal-obligation readiness.
 
 CI validates these contracts with the corresponding `scripts/ci/check-production-*.py` checks and the D10 final traceability checker.
 
