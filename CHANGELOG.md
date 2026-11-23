@@ -15,6 +15,7 @@ All notable RoadTalk changes are recorded here. The repository history and sprin
   hypotheses with a paid-pilot validation path.
 - Coordinated LiveKit React Native dependency grouping so client, WebRTC, and Expo
   plugin upgrades remain compatible.
+- Support/privacy/security/legal public-beta preflight with a fail-closed machine-readable checklist, concrete support runbook, retention/deletion matrix, reviewable terms/privacy drafts, and explicit unresolved launch blockers.
 - Updated FastAPI and source-map-js maintenance dependencies while preserving existing
   test/security gates.
 - Advisory-specific handling for withdrawn GHSA-vfj7-8cjw-p6xm while retaining

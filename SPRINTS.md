@@ -20,8 +20,8 @@ RoadTalk uses sequential, acceptance-driven sprints. Detailed specifications and
 | D04 Identity/secrets/break-glass | #479 | Complete |
 | D05 Observability/incident readiness | #480 | Complete |
 | D06 Backup/restore/DR readiness | #481 | Complete |
-| D07 Load/failover/degraded mode | #482 | In progress — PR #501 |
-| D08 Support/privacy/security/legal | #483 | Planned next |
+| D07 Load/failover/degraded mode | #482 | Complete — PR #501 |
+| D08 Support/privacy/security/legal | #483 | In progress |
 | D09 Provider/billing/store/cost | #484 | Planned |
 | D10 Final public-beta go/no-go | #485 | Planned |
 
