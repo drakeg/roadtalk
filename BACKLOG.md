@@ -4,8 +4,7 @@ Priorities reflect current product readiness and the Mad Mallard Development Sta
 
 | Priority | Item | Target | Status |
 | --- | --- | --- | --- |
-| P0 | Repair #501 CI and complete S16-D07 resilience preflight | Sprint 16 | In progress |
-| P0 | Support/privacy/security/legal launch obligations (#483) | Sprint 16 D08 | Ready next |
+| P0 | Support/privacy/security/legal launch obligations (#483) | Sprint 16 D08 | In progress |
 | P0 | Provider/billing/store/cost boundaries (#484) | Sprint 16 D09 | Planned |
 | P0 | Final public-beta go/no-go evidence (#485) | Sprint 16 D10 | Planned |
 | P0 | Keep Docker Compose and LAN test path healthy in CI and local testing | Continuous | Active |
