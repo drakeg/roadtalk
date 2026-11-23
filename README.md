@@ -12,7 +12,7 @@ RoadTalk is a location-aware, voice-first communication platform inspired by cla
 
 ## Project status
 
-Sprints 0–15 are complete through deterministic production-readiness acceptance. Sprint 16 — **Public-beta readiness** — is active. D01–D06 are complete; D07 (load/failover/degraded-mode readiness) is in progress in PR #501, followed by D08–D10.
+Sprints 0–15 are complete through deterministic production-readiness acceptance. Sprint 16 — **Public-beta readiness** — is active. D01–D07 are complete; D08 (support/privacy/security/legal launch obligations) is in progress, followed by D09–D10.
 
 RoadTalk remains fail-closed for public-beta traffic, production DNS cutover, destructive failure injection, real-money/provider/store activation, and recurring spend unless separately authorized. The local Docker Compose path remains the primary test environment and includes a LAN HTTPS override.
 
