@@ -19,8 +19,8 @@
 
 - [Sprint 16 specification](sprints/sprint-16-public-beta.md)
 - [Sprint 16 readiness](sprints/sprint-16-readiness.md)
-- Implementation tracker #486; D01–D06 are complete and D07 is in PR #501
-- D08 #483, D09 #484, and D10 #485 remain planned in locked order
+- Implementation tracker #486; D01–D07 are complete and D08 #483 is active
+- D09 #484 and D10 #485 remain planned in locked order
 - Sprint 16 creates fail-closed preflight evidence only; it does not authorize public-beta traffic, DNS cutover, real-money/provider/store activation, destructive production changes, or recurring spend
 
 ## Sprint 15 — Production readiness (complete)
@@ -180,6 +180,11 @@
 - [Privacy model](privacy/privacy-model.md)
 
 ## Operations
+
+- [Public-beta support preflight](runbooks/public-beta-support.md)
+- [Retention and deletion preflight](privacy/retention-deletion.md)
+- [Public-beta terms review draft](legal/public-beta-terms-draft.md)
+- [Public-beta privacy notice review draft](legal/public-beta-privacy-notice-draft.md)
 
 - [Runbook index](runbooks/README.md)
 - [Clean setup](runbooks/clean-setup.md)
