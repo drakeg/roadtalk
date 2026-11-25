@@ -1,5 +1,8 @@
 # RoadTalk
 
+[![License](https://img.shields.io/github/license/drakeg/roadtalk)](https://github.com/drakeg/roadtalk/blob/main/LICENSE)
+
+
 <!-- madmallard-badges:start -->
 [![CI](https://github.com/drakeg/roadtalk/actions/workflows/ci.yml/badge.svg)](https://github.com/drakeg/roadtalk/actions/workflows/ci.yml) [![Tests](https://img.shields.io/github/actions/workflow/status/drakeg/roadtalk/ci.yml?branch=main&label=tests)](https://github.com/drakeg/roadtalk/actions/workflows/ci.yml) [![Security](https://img.shields.io/github/actions/workflow/status/drakeg/roadtalk/ci.yml?branch=main&label=security)](https://github.com/drakeg/roadtalk/actions/workflows/ci.yml) [![Python 3.14](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](backend/pyproject.toml) [![FastAPI 0.165.x](https://img.shields.io/badge/FastAPI-0.165.x-009688?logo=fastapi&logoColor=white)](backend/pyproject.toml) [![React Native 0.86.3](https://img.shields.io/badge/React_Native-0.86.3-61DAFB?logo=react&logoColor=black)](mobile/package.json) [![Expo SDK 57](https://img.shields.io/badge/Expo_SDK-57-000020?logo=expo&logoColor=white)](mobile/package.json)
 
